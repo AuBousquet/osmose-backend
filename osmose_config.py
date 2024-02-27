@@ -92,10 +92,12 @@ class template_config:
     dir_extracts = modules.config.dir_extracts
     dir_diffs = modules.config.dir_diffs
 
-    db_base: Optional[str] = 'osmose'
-    db_user: Optional[str] = 'osmose'
-    db_password: Optional[str] = '-osmose-'
-    db_host: Optional[str] = os.environ.get('DB_HOST', None) # Use socket by default
+    db_base: Optional[str] = "osmose"
+    db_user: Optional[str] = "osmose"
+    db_password: Optional[str] = "-osmose-"
+    db_host: Optional[str] = (
+        "localhost"  # os.environ.get('DB_HOST', None) # Use socket by default
+    )
     db_schema: Optional[str] = None
     db_schema_path: Optional[str] = None
     db_persistent = False
