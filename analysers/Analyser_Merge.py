@@ -1542,7 +1542,7 @@ class Conflate:
         How data is mapped with OSM data.
         @param select: fetch OSM data, see Select
         @param osmRef: the OSM key for join data on reference, must refer to mapped tag from open data set.
-        @param conflationDistance: if no osmRef, do do conflation, use this threshold
+        @param conflationDistance: if no osmRef, do conflation, use this threshold
         @param extraJoin: an additional OSM key to join on, must refer to mapped tag from open data set.
         @param tag_keep_multiple_values: if tags already have value or multiple values just append the new one
         @param subclass_hash: lambda return dict from dict fields to be used in subclass hash computation (to be stable)
