@@ -1,22 +1,22 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 ###########################################################################
-##                                                                       ##
-## Copyrights: Morray 2020                                               ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
+#                                                                       ##
+# Copyrights: Morray 2020                                               ##
+#                                                                       ##
+# This program is free software: you can redistribute it and/or modify  ##
+# it under the terms of the GNU General Public License as published by  ##
+# the Free Software Foundation, either version 3 of the License, or     ##
+# (at your option) any later version.                                   ##
+#                                                                       ##
+# This program is distributed in the hope that it will be useful,       ##
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
+# GNU General Public License for more details.                          ##
+#                                                                       ##
+# You should have received a copy of the GNU General Public License     ##
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
+#                                                                       ##
 ###########################################################################
 
 from modules.OsmoseTranslation import T_
@@ -29,17 +29,22 @@ class Historic_Wayside_cross_without_material(Plugin):
 
     def init(self, logger):
         Plugin.init(self, logger)
-        self.errors[303242] = self.def_class(item = 3032, level = 3, tags = ['historic', 'fix:survey'],
-            title = T_('Wayside cross node without `material` tag'),
-            detail = T_(
-'''The tag `historic=wayside_cross` can always be used in combination with
-the tag `material=*`.'''),
-            fix = T_(
-'''Fill the tag `material=*` as specific as possible.'''),
-            trap = T_(
-'''The tag `historic=wayside_cross` is sometimes misused. Please cross-check
-if `historic=wayside_shrine` or `summit:cross=yes` is more appropriate.'''))
+        self.errors[303242] = self.def_class(
+            item=3032,
+            level=3,
+            tags=["historic", "fix:survey"],
+            title=T_("Wayside cross node without `material` tag"),
+            detail=T_(
+                """The tag `historic=wayside_cross` can always be used in combination with
+the tag `material=*`."""
+            ),
+            fix=T_("""Fill the tag `material=*` as specific as possible."""),
+            trap=T_(
+                """The tag `historic=wayside_cross` is sometimes misused. Please cross-check
+if `historic=wayside_shrine` or `summit:cross=yes` is more appropriate."""
+            ),
+        )
 
     def node(self, data, tags):
         if tags.get("historic") == "wayside_cross" and "material" not in tags:
-           return {"class": 303242, "subclass": 0}
+            return {"class": 303242, "subclass": 0}

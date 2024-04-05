@@ -1,25 +1,27 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Didier Marchand  <****@free.fr> 2013                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Didier Marchand  <****@free.fr> 2013                       #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
+
 from .Analyser_Osmosis import Analyser_Osmosis
 
 sql10 = """
@@ -278,28 +280,56 @@ GROUP BY
     geom_hash
 """
 
+
 class Analyser_Osmosis_Duplicated_Geotag(Analyser_Osmosis):
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
-        self.classs[1] = self.def_class(item = 1230, level = 1, tags = ['geom', 'fix:chair'],
-            title = T_('Duplicated way geometry and tags'),
-            fix = T_(
-'''Delete one of the two objects.'''))
-        self.classs[2] = self.def_class(item = 1230, level = 2, tags = ['geom', 'fix:chair'],
-            title = T_('Duplicated way geometry but different tags'),
-            fix = T_(
-'''Compare tags and delete object or merge them.'''))
-        self.classs[3] = self.def_class(item = 1230, level = 1, tags = ['geom', 'fix:chair'],
-            title = T_('Duplicated node geometry and tags'))
-        self.classs[4] = self.def_class(item = 1230, level = 2, tags = ['geom', 'fix:chair'],
-            title = T_('Duplicated node geometry but different tags'))
-        self.classs[5] = self.def_class(item = 1230, level = 3, tags = ['geom', 'fix:chair'],
-            title = T_('Duplicated node without tag'))
+        self.classs[1] = self.def_class(
+            item=1230,
+            level=1,
+            tags=["geom", "fix:chair"],
+            title=T_("Duplicated way geometry and tags"),
+            fix=T_("""Delete one of the two objects."""),
+        )
+        self.classs[2] = self.def_class(
+            item=1230,
+            level=2,
+            tags=["geom", "fix:chair"],
+            title=T_("Duplicated way geometry but different tags"),
+            fix=T_("""Compare tags and delete object or merge them."""),
+        )
+        self.classs[3] = self.def_class(
+            item=1230,
+            level=1,
+            tags=["geom", "fix:chair"],
+            title=T_("Duplicated node geometry and tags"),
+        )
+        self.classs[4] = self.def_class(
+            item=1230,
+            level=2,
+            tags=["geom", "fix:chair"],
+            title=T_("Duplicated node geometry but different tags"),
+        )
+        self.classs[5] = self.def_class(
+            item=1230,
+            level=3,
+            tags=["geom", "fix:chair"],
+            title=T_("Duplicated node without tag"),
+        )
 
-        self.callback10 = lambda res: {"class":1, "data":[self.way, self.way, self.positionAsText]}
-        self.callback20 = lambda res: {"class":1 if res[3] else 2, "data":[self.way_full, self.way_full, self.positionAsText]}
-        self.callback30 = lambda res: {"class":3 if res[3] else 4, "data":[self.node_full, self.node_full, self.positionAsText]}
+        self.callback10 = lambda res: {
+            "class": 1,
+            "data": [self.way, self.way, self.positionAsText],
+        }
+        self.callback20 = lambda res: {
+            "class": 1 if res[3] else 2,
+            "data": [self.way_full, self.way_full, self.positionAsText],
+        }
+        self.callback30 = lambda res: {
+            "class": 3 if res[3] else 4,
+            "data": [self.node_full, self.node_full, self.positionAsText],
+        }
 
     def analyser_osmosis_common(self):
         self.run(sql10)
@@ -314,4 +344,7 @@ class Analyser_Osmosis_Duplicated_Geotag(Analyser_Osmosis):
         self.run(sql31)
         self.run(sql32, self.callback30)
 
-        self.run(sql40, lambda res: {"class":5, "data":[self.array_full, self.positionAsText]})
+        self.run(
+            sql40,
+            lambda res: {"class": 5, "data": [self.array_full, self.positionAsText]},
+        )

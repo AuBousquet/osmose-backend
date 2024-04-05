@@ -1,30 +1,39 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 ###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2013                                      ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
+#                                                                       ##
+# Copyrights Frédéric Rodrigo 2013                                      ##
+#                                                                       ##
+# This program is free software: you can redistribute it and/or modify  ##
+# it under the terms of the GNU General Public License as published by  ##
+# the Free Software Foundation, either version 3 of the License, or     ##
+# (at your option) any later version.                                   ##
+#                                                                       ##
+# This program is distributed in the hope that it will be useful,       ##
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
+# GNU General Public License for more details.                          ##
+#                                                                       ##
+# You should have received a copy of the GNU General Public License     ##
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
+#                                                                       ##
 ###########################################################################
 
 from modules.OsmoseTranslation import T_
-from .Analyser_Merge import Analyser_Merge, Source, CSV, LoadGeomCentroid, Conflate, Select, Mapping
 
+from .Analyser_Merge import (
+    CSV,
+    Analyser_Merge,
+    Conflate,
+    LoadGeomCentroid,
+    Mapping,
+    Select,
+    Source,
+)
 
 # http://de.wikipedia.org/wiki/Wikipedia:WikiProjekt_Georeferenzierung/Wikipedia-World/en
+
 
 class _Analyser_Merge_Wikipedia(Analyser_Merge):
 
@@ -324,31 +333,67 @@ class _Analyser_Merge_Wikipedia(Analyser_Merge):
         the_geom geometry
     """
 
-    def __init__(self, config, classs, desc, wikiTypes, wikiCountry, wikiLang, starts, osmTags, osmTypes, conflationDistance, logger = None):
+    def __init__(
+        self,
+        config,
+        classs,
+        desc,
+        wikiTypes,
+        wikiCountry,
+        wikiLang,
+        starts,
+        osmTags,
+        osmTypes,
+        conflationDistance,
+        logger=None,
+    ):
         Analyser_Merge.__init__(self, config, logger)
-        self.possible_merge   = {"item":"8101", "class": classs, "level": 3, "tag": ["merge", "wikipedia"], "desc":desc }
+        self.possible_merge = {
+            "item": "8101",
+            "class": classs,
+            "level": 3,
+            "tag": ["merge", "wikipedia"],
+            "desc": desc,
+        }
         self.init(
-            u"http://toolserver.org/~kolossos/wp-world/pg-dumps/wp-world/",
+            "http://toolserver.org/~kolossos/wp-world/pg-dumps/wp-world/",
             "Wikipedia-World",
-            CSV(Source(file = "wikipedia_point_fr.csv.bz2", bz2 = True),
-                csv = False, separator = None, null = None),
+            CSV(
+                Source(file="wikipedia_point_fr.csv.bz2", bz2=True),
+                csv=False,
+                separator=None,
+                null=None,
+            ),
             LoadGeomCentroid(
-                create = self.create_table,
-                select = {"lang": wikiLang, "Country": wikiCountry},
-                where = (lambda res: not res["titel"].startswith("Liste ") if starts is None else
-                    (lambda res: res["titel"].startswith(starts)))),
+                create=self.create_table,
+                select={"lang": wikiLang, "Country": wikiCountry},
+                where=(
+                    lambda res: (
+                        not res["titel"].startswith("Liste ")
+                        if starts is None
+                        else (lambda res: res["titel"].startswith(starts))
+                    )
+                ),
+            ),
             Conflate(
-                select = Select(
-                    types = osmTypes,
-                    tags = {"name": None}),
-                osmRef = "wikipedia",
-                conflationDistance = conflationDistance,
-                mapping = Mapping(
-                    mapping1 = {"wikipedia": lambda fields: fields["lang"]+":"+fields["titel"]},
-                    text = lambda tags, fields: {fields["lang"]: fields["titel"]} )))
+                select=Select(types=osmTypes, tags={"name": None}),
+                osmRef="wikipedia",
+                conflationDistance=conflationDistance,
+                mapping=Mapping(
+                    mapping1={
+                        "wikipedia": lambda fields: fields["lang"]
+                        + ":"
+                        + fields["titel"]
+                    },
+                    text=lambda tags, fields: {fields["lang"]: fields["titel"]},
+                ),
+            ),
+        )
 
         if wikiTypes is not None:
-            self.load.select["types"] = wikiTypes # http://en.wikipedia.org/wiki/Wikipedia:GEO#type:T
+            self.load.select["types"] = (
+                wikiTypes  # http://en.wikipedia.org/wiki/Wikipedia:GEO#type:T
+            )
 
         if isinstance(osmTags, dict):
             self.mapping.select.tags[0].update(osmTags)
@@ -360,148 +405,221 @@ class _Analyser_Merge_Wikipedia(Analyser_Merge):
 
 # By Wikiepdia Types
 
+
 class _Analyser_Merge_Wikipedia_Airport(_Analyser_Merge_Wikipedia):
-    def __init__(self, config, country, lang, logger = None):
-        _Analyser_Merge_Wikipedia.__init__(self, config,
+    def __init__(self, config, country, lang, logger=None):
+        _Analyser_Merge_Wikipedia.__init__(
+            self,
+            config,
             103,
-            T_(u"Wikipedia, aerodrome integration suggestion"),
-            "airport", country, lang,
+            T_("Wikipedia, aerodrome integration suggestion"),
+            "airport",
+            country,
+            lang,
             None,
             {"aeroway": ["aerodrome"]},
             ["nodes", "ways", "relations"],
             500,
-            logger)
+            logger,
+        )
+
 
 class _Analyser_Merge_Wikipedia_City(_Analyser_Merge_Wikipedia):
-    def __init__(self, config, country, lang, logger = None):
-        _Analyser_Merge_Wikipedia.__init__(self, config,
+    def __init__(self, config, country, lang, logger=None):
+        _Analyser_Merge_Wikipedia.__init__(
+            self,
+            config,
             113,
-            T_(u"Wikipedia, city integration suggestion"),
-            "city", country, lang,
+            T_("Wikipedia, city integration suggestion"),
+            "city",
+            country,
+            lang,
             None,
             {"type": "boundary", "boundary": "administrative", "admin_level": "8"},
             ["relations"],
             1,
-            logger)
+            logger,
+        )
+
 
 class _Analyser_Merge_Wikipedia_Edu(_Analyser_Merge_Wikipedia):
-    def __init__(self, config, country, lang, logger = None):
-        _Analyser_Merge_Wikipedia.__init__(self, config,
+    def __init__(self, config, country, lang, logger=None):
+        _Analyser_Merge_Wikipedia.__init__(
+            self,
+            config,
             123,
-            T_(u"Wikipedia, school integration suggestion"),
-            "edu", country, lang,
+            T_("Wikipedia, school integration suggestion"),
+            "edu",
+            country,
+            lang,
             None,
             {"amenity": ["school", "university", "college"]},
             ["nodes", "ways", "relations"],
             100,
-            logger)
+            logger,
+        )
+
 
 class _Analyser_Merge_Wikipedia_Forest(_Analyser_Merge_Wikipedia):
-    def __init__(self, config, country, lang, logger = None):
-        _Analyser_Merge_Wikipedia.__init__(self, config,
+    def __init__(self, config, country, lang, logger=None):
+        _Analyser_Merge_Wikipedia.__init__(
+            self,
+            config,
             133,
-            T_(u"Wikipedia, forest integration suggestion"),
-            "forest", country, lang,
+            T_("Wikipedia, forest integration suggestion"),
+            "forest",
+            country,
+            lang,
             None,
             {"landuse": ["forest"]},
             ["ways", "relations"],
             1000,
-            logger)
+            logger,
+        )
+
 
 class _Analyser_Merge_Wikipedia_Glacier(_Analyser_Merge_Wikipedia):
-    def __init__(self, config, country, lang, logger = None):
-        _Analyser_Merge_Wikipedia.__init__(self, config,
+    def __init__(self, config, country, lang, logger=None):
+        _Analyser_Merge_Wikipedia.__init__(
+            self,
+            config,
             143,
-            T_(u"Wikipedia, glacier integration suggestion"),
-            "glacier", country, lang,
+            T_("Wikipedia, glacier integration suggestion"),
+            "glacier",
+            country,
+            lang,
             None,
             {"natural": ["glacier"]},
             ["ways", "relations"],
             1000,
-            logger)
+            logger,
+        )
+
 
 class _Analyser_Merge_Wikipedia_Isle(_Analyser_Merge_Wikipedia):
-    def __init__(self, config, country, lang, logger = None):
-        _Analyser_Merge_Wikipedia.__init__(self, config,
+    def __init__(self, config, country, lang, logger=None):
+        _Analyser_Merge_Wikipedia.__init__(
+            self,
+            config,
             153,
-            T_(u"Wikipedia, island integration suggestion"),
-            "isle", country, lang,
+            T_("Wikipedia, island integration suggestion"),
+            "isle",
+            country,
+            lang,
             None,
             {"place": ["island"]},
             ["ways", "relations"],
             100,
-            logger)
+            logger,
+        )
+
 
 class _Analyser_Merge_Wikipedia_Mountain(_Analyser_Merge_Wikipedia):
-    def __init__(self, config, country, lang, logger = None):
-        _Analyser_Merge_Wikipedia.__init__(self, config,
+    def __init__(self, config, country, lang, logger=None):
+        _Analyser_Merge_Wikipedia.__init__(
+            self,
+            config,
             163,
-            T_(u"Wikipedia, peak integration suggestion"),
-            "mountain", country, lang,
+            T_("Wikipedia, peak integration suggestion"),
+            "mountain",
+            country,
+            lang,
             None,
             {"natural": ["peak"]},
             ["nodes"],
             500,
-            logger)
+            logger,
+        )
+
 
 class _Analyser_Merge_Wikipedia_Pass(_Analyser_Merge_Wikipedia):
-    def __init__(self, config, country, lang, logger = None):
-        _Analyser_Merge_Wikipedia.__init__(self, config,
+    def __init__(self, config, country, lang, logger=None):
+        _Analyser_Merge_Wikipedia.__init__(
+            self,
+            config,
             173,
-            T_(u"Wikipedia, mountain pass integration suggestion"),
-            "pass", country, lang,
+            T_("Wikipedia, mountain pass integration suggestion"),
+            "pass",
+            country,
+            lang,
             None,
             {"mountain_pass": None},
             ["nodes"],
             200,
-            logger)
+            logger,
+        )
+
 
 class _Analyser_Merge_Wikipedia_RailwayStation(_Analyser_Merge_Wikipedia):
-    def __init__(self, config, country, lang, logger = None):
-        _Analyser_Merge_Wikipedia.__init__(self, config,
+    def __init__(self, config, country, lang, logger=None):
+        _Analyser_Merge_Wikipedia.__init__(
+            self,
+            config,
             183,
-            T_(u"Wikipedia, railway station integration suggestion"),
-            "railwaystation", country, lang,
+            T_("Wikipedia, railway station integration suggestion"),
+            "railwaystation",
+            country,
+            lang,
             None,
             {"railway": ["station"]},
             ["nodes", "ways", "relations"],
             500,
-            logger)
+            logger,
+        )
+
 
 class _Analyser_Merge_Wikipedia_Waterbody(_Analyser_Merge_Wikipedia):
-    def __init__(self, config, country, lang, logger = None):
-        _Analyser_Merge_Wikipedia.__init__(self, config,
+    def __init__(self, config, country, lang, logger=None):
+        _Analyser_Merge_Wikipedia.__init__(
+            self,
+            config,
             193,
-            T_(u"Wikipedia, water area integration suggestion"),
-            "waterbody", country, lang,
+            T_("Wikipedia, water area integration suggestion"),
+            "waterbody",
+            country,
+            lang,
             None,
             {"natural": ["water"]},
             ["ways", "relations"],
             200,
-            logger)
+            logger,
+        )
+
 
 # By title string
 
+
 class _Analyser_Merge_Wikipedia_fr_Chateau(_Analyser_Merge_Wikipedia):
-    def __init__(self, config, country, logger = None):
-        _Analyser_Merge_Wikipedia.__init__(self, config,
+    def __init__(self, config, country, logger=None):
+        _Analyser_Merge_Wikipedia.__init__(
+            self,
+            config,
             203,
-            T_(u"Wikipedia, castle integration suggestion"),
-            None, country, "fr",
-            u"Château ",
+            T_("Wikipedia, castle integration suggestion"),
+            None,
+            country,
+            "fr",
+            "Château ",
             {"historic": "castle"},
             ["nodes", "ways"],
             200,
-            logger)
+            logger,
+        )
+
 
 class _Analyser_Merge_Wikipedia_fr_Eglise(_Analyser_Merge_Wikipedia):
-    def __init__(self, config, country, logger = None):
-        _Analyser_Merge_Wikipedia.__init__(self, config,
+    def __init__(self, config, country, logger=None):
+        _Analyser_Merge_Wikipedia.__init__(
+            self,
+            config,
             213,
-            T_(u"Wikipedia, church integration suggestion"),
-            None, country, "fr",
-            u"Église ",
+            T_("Wikipedia, church integration suggestion"),
+            None,
+            country,
+            "fr",
+            "Église ",
             {"amenity": "place_of_worship"},
             ["nodes", "ways"],
             200,
-            logger)
+            logger,
+        )

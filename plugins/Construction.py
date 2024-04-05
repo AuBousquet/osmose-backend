@@ -1,45 +1,59 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 ###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2011-2016                                 ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
+#                                                                       ##
+# Copyrights Frédéric Rodrigo 2011-2016                                 ##
+#                                                                       ##
+# This program is free software: you can redistribute it and/or modify  ##
+# it under the terms of the GNU General Public License as published by  ##
+# the Free Software Foundation, either version 3 of the License, or     ##
+# (at your option) any later version.                                   ##
+#                                                                       ##
+# This program is distributed in the hope that it will be useful,       ##
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
+# GNU General Public License for more details.                          ##
+#                                                                       ##
+# You should have received a copy of the GNU General Public License     ##
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
+#                                                                       ##
 ###########################################################################
+
+import datetime
+
+import dateutil.parser
 
 from modules.OsmoseTranslation import T_
 from plugins.Plugin import Plugin
-import datetime
-import dateutil.parser
+
 
 class Construction(Plugin):
 
     def init(self, logger):
         Plugin.init(self, logger)
-        if self.father.config.options.get("project") != 'openstreetmap':
+        if self.father.config.options.get("project") != "openstreetmap":
             return False
-        self.errors[4070] = self.def_class(item = 4070, level = 2, tags = ['tag', 'fix:survey'],
-            title = T_('Finished construction'),
-            detail = T_(
-'''There is no tag `opening_date`, `check_date`, `open_date`,
+        self.errors[4070] = self.def_class(
+            item=4070,
+            level=2,
+            tags=["tag", "fix:survey"],
+            title=T_("Finished construction"),
+            detail=T_(
+                """There is no tag `opening_date`, `check_date`, `open_date`,
 `construction:date`, `temporary:date_on`, `date_on` and the object has
 been in construction for more than two years or opening data is
-exceeded.'''))
+exceeded."""
+            ),
+        )
 
         self.tag_construction = ["highway", "landuse", "building"]
-        self.tag_date = ["opening_date", "open_date", "construction:date", "temporary:date_on", "date_on"]
+        self.tag_date = [
+            "opening_date",
+            "open_date",
+            "construction:date",
+            "temporary:date_on",
+            "date_on",
+        ]
         self.default_date = datetime.datetime(9999, 12, 1)
         self.today = datetime.datetime.today()
         self.date_limit = datetime.timedelta(days=2 * 365)
@@ -67,7 +81,9 @@ exceeded.'''))
     def node(self, data, tags):
         construction_found = False
         for t in tags:
-            if t == "construction" or (t.startswith("construction:") and t != "construction:date"):
+            if t == "construction" or (
+                t.startswith("construction:") and t != "construction:date"
+            ):
                 construction_found = True
                 break
 
@@ -89,7 +105,10 @@ exceeded.'''))
         if date:
             end_date = date
         elif "timestamp" in data:
-            end_date = datetime.datetime.strptime(data["timestamp"][0:10], "%Y-%m-%d") + self.date_limit
+            end_date = (
+                datetime.datetime.strptime(data["timestamp"][0:10], "%Y-%m-%d")
+                + self.date_limit
+            )
         else:
             return
 
@@ -104,13 +123,14 @@ exceeded.'''))
     def relation(self, data, tags, members):
         return self.node(data, tags)
 
-
     def total_seconds(self, td):
         # Note: compared to timedelta.total_seconds(), this function doesn't use microseconds
         return td.seconds + td.days * 24 * 3600
 
+
 ###########################################################################
 from plugins.Plugin import TestPluginCommon
+
 
 class Test(TestPluginCommon):
     def setUp(self):
@@ -120,29 +140,33 @@ class Test(TestPluginCommon):
         self.p.init(None)
 
     def test(self):
-        constr_tags = [{"construction": "yes"},
-                       {"highway": "construction"},
-                       {"landuse": "construction"},
-                       {"building": "construction"},
-                       {"construction:man_made": "water_works"},
-                      ]
-        other_tags = [{"highway": "primary"},
-                      {"landuse": "farm"},
-                      {"building": "yes"},
-                     ]
+        constr_tags = [
+            {"construction": "yes"},
+            {"highway": "construction"},
+            {"landuse": "construction"},
+            {"building": "construction"},
+            {"construction:man_made": "water_works"},
+        ]
+        other_tags = [
+            {"highway": "primary"},
+            {"landuse": "farm"},
+            {"building": "yes"},
+        ]
 
-        correct_dates = ["2010-02-03",
-                         "January 3rd, 2012",
-                         "02/01/1987",
-                         "12/21/1993",
-                         "22/01/2012",
-                        ]
-        not_correct_dates = ["22/01/2123",
-                             "2142-10-01",
-                             "monday",
-                             "yes",
-                             "2018-11-11--2018-12-31",
-                            ]
+        correct_dates = [
+            "2010-02-03",
+            "January 3rd, 2012",
+            "02/01/1987",
+            "12/21/1993",
+            "22/01/2012",
+        ]
+        not_correct_dates = [
+            "22/01/2123",
+            "2142-10-01",
+            "monday",
+            "yes",
+            "2018-11-11--2018-12-31",
+        ]
         for tags in constr_tags:
             for tag_d in self.p.tag_date:
                 for val_d in correct_dates:
@@ -173,6 +197,6 @@ class Test(TestPluginCommon):
         today = datetime.datetime.today()
         td = datetime.timedelta(days=6 * 30)
         for i in range(5, 10, 1):
-            e = self.p.node({"timestamp": (today - i*td).strftime("%Y-%m-%d")}, tags)
+            e = self.p.node({"timestamp": (today - i * td).strftime("%Y-%m-%d")}, tags)
             self.check_err(e, i)
             assert e["subclass"] == i - 5

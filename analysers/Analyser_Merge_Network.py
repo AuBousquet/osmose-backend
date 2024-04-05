@@ -1,30 +1,30 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frederic Rodrigo 2022                                      ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2022                                      #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from collections import defaultdict
+
 from modules.Stablehash import stablehash64
 
 from .Analyser_Merge import Analyser_Merge, Conflate
-
 
 sql10 = """
 CREATE TEMP TABLE osm_item_buffer AS
@@ -89,13 +89,15 @@ FROM
     diff2
 """
 
+
 class ConflateNetwork(Conflate):
-    def __init__(self, minLength = None,**args):
+    def __init__(self, minLength=None, **args):
         """
         @param minLength: raise issue only for part with larger diameter than minLength, default to twice the conflationDistance.
         """
         Conflate.__init__(self, **args)
         self.minLength = minLength
+
 
 class Analyser_Merge_Network(Analyser_Merge):
 
@@ -104,16 +106,35 @@ class Analyser_Merge_Network(Analyser_Merge):
         if not table:
             return
 
-        self.run(sql10.format(buffer = self.conflate.conflationDistance))
+        self.run(sql10.format(buffer=self.conflate.conflationDistance))
         self.run(sql11)
         self.run(sql20.format(table))
-        self.run(sql21.format(minLength = self.conflate.minLength if self.conflate.minLength else 2 * self.conflate.conflationDistance))
-        self.run(sql30, lambda res: {
-            "class": self.missing_official['id'],
-            "subclass": str(stablehash64("{0}{1}{2}".format(
-                            res[1], res[2],
-                            sorted(self.conflate.subclass_hash(res[3]).items())) )),
-            "data": [self.node_new, self.positionAsText],
-            "text": self.conflate.mapping.text(defaultdict(lambda: None, res[2]), defaultdict(lambda: None, res[3])),
-            "fix": self.passTags(res[2]) if res[2] != {} else None,
-        })
+        self.run(
+            sql21.format(
+                minLength=(
+                    self.conflate.minLength
+                    if self.conflate.minLength
+                    else 2 * self.conflate.conflationDistance
+                )
+            )
+        )
+        self.run(
+            sql30,
+            lambda res: {
+                "class": self.missing_official["id"],
+                "subclass": str(
+                    stablehash64(
+                        "{0}{1}{2}".format(
+                            res[1],
+                            res[2],
+                            sorted(self.conflate.subclass_hash(res[3]).items()),
+                        )
+                    )
+                ),
+                "data": [self.node_new, self.positionAsText],
+                "text": self.conflate.mapping.text(
+                    defaultdict(lambda: None, res[2]), defaultdict(lambda: None, res[3])
+                ),
+                "fix": self.passTags(res[2]) if res[2] != {} else None,
+            },
+        )

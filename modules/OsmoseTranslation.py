@@ -1,26 +1,28 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 ###########################################################################
-##                                                                       ##
-## Copyrights Jocelyn Jaubert 2013                                       ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
+#                                                                       ##
+# Copyrights Jocelyn Jaubert 2013                                       ##
+#                                                                       ##
+# This program is free software: you can redistribute it and/or modify  ##
+# it under the terms of the GNU General Public License as published by  ##
+# the Free Software Foundation, either version 3 of the License, or     ##
+# (at your option) any later version.                                   ##
+#                                                                       ##
+# This program is distributed in the hope that it will be useful,       ##
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
+# GNU General Public License for more details.                          ##
+#                                                                       ##
+# You should have received a copy of the GNU General Public License     ##
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
+#                                                                       ##
 ###########################################################################
 
 import os
+
 import polib
+
 
 class OsmoseTranslation:
 
@@ -40,7 +42,7 @@ class OsmoseTranslation:
     def add_po(self, fn, base):
         l = fn[:-3]
         po = polib.pofile(base + l + ".po")
-        if not l in self.trans:
+        if l not in self.trans:
             self.languages.append(l)
             self.trans[l] = {}
         for entry in po:
@@ -63,24 +65,27 @@ class OsmoseTranslation:
             args_translated = []
             for arg in args:
                 if isinstance(arg, dict):
-                    args_basic.append('{' + str(len(args_translated)) + '}')
+                    args_basic.append("{" + str(len(args_translated)) + "}")
                     args_translated.append(arg)
                 elif isinstance(arg, str):
-                    args_basic.append(arg.replace('{', '{{').replace('}', '}}'))
+                    args_basic.append(arg.replace("{", "{{").replace("}", "}}"))
                 else:
                     args_basic.append(arg)
 
             out["en"] = string.format(*args_basic, **kwargs)
             if args_translated:
-                out["en"] = out["en"].format(*map(lambda a: a['en'], args_translated))
+                out["en"] = out["en"].format(*map(lambda a: a["en"], args_translated))
 
             for l in self.languages:
                 if string in self.trans[l] and self.trans[l][string] != "":
                     out[l] = self.trans[l][string].format(*args_basic, **kwargs)
                     if args_translated:
-                        out[l] = out[l].format(*map(lambda a: l in a and a[l] or a['en'], args_translated))
+                        out[l] = out[l].format(
+                            *map(lambda a: l in a and a[l] or a["en"], args_translated)
+                        )
 
         return out
+
 
 translate = OsmoseTranslation()
 

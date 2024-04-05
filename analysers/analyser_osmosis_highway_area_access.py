@@ -1,28 +1,29 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo <@free.fr> 2016                           ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo <@free.fr> 2016                           #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
-from .Analyser_Osmosis import Analyser_Osmosis
 from modules.Stablehash import stablehash64
+
+from .Analyser_Osmosis import Analyser_Osmosis
 
 sql10 = """
 SELECT
@@ -162,76 +163,135 @@ HAVING
 
 class Analyser_Osmosis_HighwayAreaAccess(Analyser_Osmosis):
 
-    requires_tables_common = ['highways', 'highway_ends']
-    requires_tables_diff = ['touched_highways', 'not_touched_highways']
+    requires_tables_common = ["highways", "highway_ends"]
+    requires_tables_diff = ["touched_highways", "not_touched_highways"]
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
-        if not "proj" in self.config.options:
+        if "proj" not in self.config.options:
             return
-        self.classs_change[1] = self.def_class(item = 2130, level = 3, tags = ['highway', 'routing'],
-            title = T_('Inconsistent Access'),
-            detail = T_(
-'''Inconsistent `motor_vehicle` values.'''))
-        self.classs[2] = self.def_class(item = 2130, level = 3, tags = ['highway', 'routing'],
-            title = T_('Inconsistent Access'),
-            detail = T_(
-'''Inconsistent access values between barrier and highway.'''),
-            trap = T_(
-'''Sometimes a barrier can exist on an (otherwise uninterrupted) highway to prevent vehicles from using it for purposes other than destination traffic.'''),
-            fix = T_(
-'''Copy the appropriate access tag to the barrier node.'''))
-        self.classs_change[3] = self.def_class(item = 2130, level = 2, tags = ['highway', 'routing'],
-            title = T_('Barrier blocking major highway'),
-            detail = T_(
-'''A barrier is blocking a major highway. Typically, major highways (`tertiary` and above) are meant for passing traffic.'''),
-            fix = T_(
-'''Check if there is really a barrier on the highway itself (instead of for instance a connecting minor way only).
+        self.classs_change[1] = self.def_class(
+            item=2130,
+            level=3,
+            tags=["highway", "routing"],
+            title=T_("Inconsistent Access"),
+            detail=T_("""Inconsistent `motor_vehicle` values."""),
+        )
+        self.classs[2] = self.def_class(
+            item=2130,
+            level=3,
+            tags=["highway", "routing"],
+            title=T_("Inconsistent Access"),
+            detail=T_("""Inconsistent access values between barrier and highway."""),
+            trap=T_(
+                """Sometimes a barrier can exist on an (otherwise uninterrupted) highway to prevent vehicles from using it for purposes other than destination traffic."""
+            ),
+            fix=T_("""Copy the appropriate access tag to the barrier node."""),
+        )
+        self.classs_change[3] = self.def_class(
+            item=2130,
+            level=2,
+            tags=["highway", "routing"],
+            title=T_("Barrier blocking major highway"),
+            detail=T_(
+                """A barrier is blocking a major highway. Typically, major highways (`tertiary` and above) are meant for passing traffic."""
+            ),
+            fix=T_(
+                """Check if there is really a barrier on the highway itself (instead of for instance a connecting minor way only).
 If there is no such barrier, remove it, or move it to the appropriate connecting way.
-If there is a barrier, check if it has the appropriate (conditional) access keys.'''),
-            example = T_('''![](https://wiki.openstreetmap.org/w/images/e/ef/Kerb-on-highway.png)
+If there is a barrier, check if it has the appropriate (conditional) access keys."""
+            ),
+            example=T_(
+                """![](https://wiki.openstreetmap.org/w/images/e/ef/Kerb-on-highway.png)
 In the top example, the kerb is located next to the road, and only pedestrians that want to cross will cross the kerb.
-In the bottom example, cars will also have to drive over the kerb. Usually, kerbs are not located on the road, but alongsides.'''))
-        self.classs[4] = self.def_class(item = 2130, level = 3, tags = ['highway', 'routing'],
-            title = T_('Barrier blocking highway'),
-            detail = T_(
-'''A barrier is blocking a crossing with another highway.
+In the bottom example, cars will also have to drive over the kerb. Usually, kerbs are not located on the road, but alongsides."""
+            ),
+        )
+        self.classs[4] = self.def_class(
+            item=2130,
+            level=3,
+            tags=["highway", "routing"],
+            title=T_("Barrier blocking highway"),
+            detail=T_(
+                """A barrier is blocking a crossing with another highway.
 Likely the barrier was only supposed to be present on one of the roads.
-In the current situation, traffic coming from any direction has to go through the barrier, to reach any of the destination ways.'''),
-            trap = T_(
-'''Sometimes a barrier can exist on an (otherwise uninterrupted) highway to prevent vehicles from using it for purposes other than destination traffic.'''),
-            fix = T_(
-'''Check if there is really a barrier on the crossing itself (instead of for instance a connecting minor way only).
+In the current situation, traffic coming from any direction has to go through the barrier, to reach any of the destination ways."""
+            ),
+            trap=T_(
+                """Sometimes a barrier can exist on an (otherwise uninterrupted) highway to prevent vehicles from using it for purposes other than destination traffic."""
+            ),
+            fix=T_(
+                """Check if there is really a barrier on the crossing itself (instead of for instance a connecting minor way only).
 If there is no such barrier, remove it, or move it to the appropriate connecting way.
-If there is a barrier, check if it has the appropriate (conditional) access keys.'''),
-            example = T_('''![](https://wiki.openstreetmap.org/w/images/9/95/Badbarrierposition.png)
+If there is a barrier, check if it has the appropriate (conditional) access keys."""
+            ),
+            example=T_(
+                """![](https://wiki.openstreetmap.org/w/images/9/95/Badbarrierposition.png)
 A barrier placed incorrectly. From the service road, one has to cross the gate, but walking
 the (almost) U-turn over the paths can in reality be done without passing the gate.
 
 ![](https://wiki.openstreetmap.org/w/images/e/ef/Kerb-on-highway.png)
 In the top example, the kerb is located next to the road, and only pedestrians that want to cross will cross the kerb.
-In the bottom example, cars will also have to drive over the kerb. Usually, kerbs are not located on the road, but alongsides.'''))
-        self.callback10 = lambda res: {"class":1, "data":[self.node_full, self.way_full, self.positionAsText],
-            "text": T_("Inconsistent motor_vehicle values ('{0}'!='{1}')", res[3] if res[3] else '', res[4] if res[4] else '') }
-        self.callback31 = lambda res: {"class": 3, "data":[self.way, self.node_full, self.positionAsText] }
+In the bottom example, cars will also have to drive over the kerb. Usually, kerbs are not located on the road, but alongsides."""
+            ),
+        )
+        self.callback10 = lambda res: {
+            "class": 1,
+            "data": [self.node_full, self.way_full, self.positionAsText],
+            "text": T_(
+                "Inconsistent motor_vehicle values ('{0}'!='{1}')",
+                res[3] if res[3] else "",
+                res[4] if res[4] else "",
+            ),
+        }
+        self.callback31 = lambda res: {
+            "class": 3,
+            "data": [self.way, self.node_full, self.positionAsText],
+        }
 
     def analyser_osmosis_common(self):
-        self.run(sql20.format(barriertype='bollard'))
-        self.run(sql20.format(barriertype='bus_trap'))
-        for vehicle in ['motorcycle', 'emergency', 'motorcar']:
-            self.run(sql21.format(barriertype='bollard', vehicle=vehicle), lambda res: {
-                "class": 2, "subclass": 0 + stablehash64(str(res[0]) + vehicle + str(res[1])),
-                "data": [self.way_full, self.node_full, self.positionAsText],
-                "text": T_("Inconsistent {0} access: '{1}' on highway, not set on barrier", vehicle, res[3])})
-        for vehicle in ['motorcycle', 'mofa', 'moped', 'agricultural', 'hgv', 'emergency']:
-            self.run(sql21.format(barriertype='bus_trap', vehicle=vehicle), lambda res: {
-                "class": 2, "subclass": 1 + stablehash64(str(res[0]) + vehicle + str(res[1])),
-                "data": [self.way_full, self.node_full, self.positionAsText],
-                "text": T_("Inconsistent {0} access: '{1}' on highway, not set on barrier", vehicle, res[3])})
+        self.run(sql20.format(barriertype="bollard"))
+        self.run(sql20.format(barriertype="bus_trap"))
+        for vehicle in ["motorcycle", "emergency", "motorcar"]:
+            self.run(
+                sql21.format(barriertype="bollard", vehicle=vehicle),
+                lambda res: {
+                    "class": 2,
+                    "subclass": 0 + stablehash64(str(res[0]) + vehicle + str(res[1])),
+                    "data": [self.way_full, self.node_full, self.positionAsText],
+                    "text": T_(
+                        "Inconsistent {0} access: '{1}' on highway, not set on barrier",
+                        vehicle,
+                        res[3],
+                    ),
+                },
+            )
+        for vehicle in [
+            "motorcycle",
+            "mofa",
+            "moped",
+            "agricultural",
+            "hgv",
+            "emergency",
+        ]:
+            self.run(
+                sql21.format(barriertype="bus_trap", vehicle=vehicle),
+                lambda res: {
+                    "class": 2,
+                    "subclass": 1 + stablehash64(str(res[0]) + vehicle + str(res[1])),
+                    "data": [self.way_full, self.node_full, self.positionAsText],
+                    "text": T_(
+                        "Inconsistent {0} access: '{1}' on highway, not set on barrier",
+                        vehicle,
+                        res[3],
+                    ),
+                },
+            )
 
-        self.run(sql41, lambda res: {
-            "class": 4, "data":[self.node_full, self.positionAsText]
-        })
+        self.run(
+            sql41,
+            lambda res: {"class": 4, "data": [self.node_full, self.positionAsText]},
+        )
 
     def analyser_osmosis_full(self):
         self.run(sql10.format("", ""), self.callback10)
@@ -244,19 +304,22 @@ In the bottom example, cars will also have to drive over the kerb. Usually, kerb
         self.run(sql31.format("", "touched_"), self.callback31)
 
 
-
 ###########################################################################
 
 from .Analyser_Osmosis import TestAnalyserOsmosis
+
 
 class Test(TestAnalyserOsmosis):
     @classmethod
     def setup_class(cls):
         from modules import config
+
         TestAnalyserOsmosis.setup_class()
-        cls.analyser_conf = cls.load_osm("tests/osmosis_highway_access_barrier.osm",
-                                         config.dir_tmp + "/tests/osmosis_highway_access_barrier.test.xml",
-                                         {"proj": 2154}) # Random proj to satisfy highway table generation
+        cls.analyser_conf = cls.load_osm(
+            "tests/osmosis_highway_access_barrier.osm",
+            config.dir_tmp + "/tests/osmosis_highway_access_barrier.test.xml",
+            {"proj": 2154},
+        )  # Random proj to satisfy highway table generation
 
     def test_classes(self):
         with Analyser_Osmosis_HighwayAreaAccess(self.analyser_conf, self.logger) as a:

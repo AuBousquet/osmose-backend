@@ -1,45 +1,75 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2012-2015                                 ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2012-2015                                 #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 import re
-from modules.OsmoseTranslation import T_
-from .Analyser_Merge import Analyser_Merge_Point, SourceDataFair, CSV, Load_XY, Conflate, Select, Mapping
 
+from modules.OsmoseTranslation import T_
+
+from .Analyser_Merge import (
+    CSV,
+    Analyser_Merge_Point,
+    Conflate,
+    Load_XY,
+    Mapping,
+    Select,
+    SourceDataFair,
+)
 
 # http://wiki.openstreetmap.org/wiki/WikiProject_France/data.gouv.fr/Import_des_points_de_contact_postaux
 
-class Analyser_Merge_Poste_FR(Analyser_Merge_Point):
-    def __init__(self, config, logger = None):
-        Analyser_Merge_Point.__init__(self, config, logger)
-        self.def_class_missing_official(item = 8020, id = 1, level = 3, tags = ['merge', 'post', 'fix:picture', 'fix:survey'],
-            title = T_('Post office not integrated'))
-        self.def_class_missing_osm(item = 7050, id = 2, level = 3, tags = ['merge', 'post', 'fix:chair'],
-            title = T_('Post office without tag "ref:FR:LaPoste" or invalid'))
-        self.def_class_possible_merge(item = 8021, id = 3, level = 3, tags = ['merge', 'post', 'fix:chair'],
-            title = T_('Post office, integration suggestion'))
-        self.def_class_update_official(item = 8022, id = 4, level = 3, tags = ['merge', 'post', 'fix:chair', 'fix:picture'],
-            title = T_('Post office update'))
 
-        self.APBP = re.compile(' (AP|BP|RP)$')
+class Analyser_Merge_Poste_FR(Analyser_Merge_Point):
+    def __init__(self, config, logger=None):
+        Analyser_Merge_Point.__init__(self, config, logger)
+        self.def_class_missing_official(
+            item=8020,
+            id=1,
+            level=3,
+            tags=["merge", "post", "fix:picture", "fix:survey"],
+            title=T_("Post office not integrated"),
+        )
+        self.def_class_missing_osm(
+            item=7050,
+            id=2,
+            level=3,
+            tags=["merge", "post", "fix:chair"],
+            title=T_('Post office without tag "ref:FR:LaPoste" or invalid'),
+        )
+        self.def_class_possible_merge(
+            item=8021,
+            id=3,
+            level=3,
+            tags=["merge", "post", "fix:chair"],
+            title=T_("Post office, integration suggestion"),
+        )
+        self.def_class_update_official(
+            item=8022,
+            id=4,
+            level=3,
+            tags=["merge", "post", "fix:chair", "fix:picture"],
+            title=T_("Post office update"),
+        )
+
+        self.APBP = re.compile(" (AP|BP|RP)$")
 
         self.init(
             "https://datanova.laposte.fr/datasets/laposte-poincont",
@@ -47,53 +77,124 @@ class Analyser_Merge_Poste_FR(Analyser_Merge_Point):
             CSV(
                 SourceDataFair(
                     attribution="La Poste",
-                    url="https://datanova.laposte.fr/datasets/laposte-poincont", file_name="011PoinCont.csv",
-                    encoding="LATIN1"),
-                separator = ";"),
+                    url="https://datanova.laposte.fr/datasets/laposte-poincont",
+                    file_name="011PoinCont.csv",
+                    encoding="LATIN1",
+                ),
+                separator=";",
+            ),
             Load_XY("Longitude", "Latitude"),
             Conflate(
-                select = Select(
-                    types = ["nodes", "ways"],
-                    tags = {"amenity": "post_office"}),
-                osmRef = "ref:FR:LaPoste",
-                conflationDistance = 1000,
-                mapping = Mapping(
-                    static1 = {"amenity": "post_office"},
-                    static2 = {
+                select=Select(types=["nodes", "ways"], tags={"amenity": "post_office"}),
+                osmRef="ref:FR:LaPoste",
+                conflationDistance=1000,
+                mapping=Mapping(
+                    static1={"amenity": "post_office"},
+                    static2={
                         "source": self.source,
                         "brand": "La Poste",
                         # "brand:wikidata": "Q373724", # non-consensual
-                        "brand:wikipedia": "fr:La Poste (entreprise française)"},
-                    mapping1 = {
+                        "brand:wikipedia": "fr:La Poste (entreprise française)",
+                    },
+                    mapping1={
                         "ref:FR:LaPoste": "#Identifiant_A",
-                        "post_office": lambda res:
-                            "post_annex" if res["Libellé_du_site"].endswith(" AP") else # Bureau de poste annexe
-                            "post_partner" if res["Libellé_du_site"].endswith(" RP") else # Relais poste commerçant
-                            None, # BP: Bureau de poste; other
+                        "post_office": lambda res: (
+                            "post_annex"
+                            if res["Libellé_du_site"].endswith(" AP")
+                            else (  # Bureau de poste annexe
+                                "post_partner"
+                                if res["Libellé_du_site"].endswith(" RP")
+                                else None  # Relais poste commerçant
+                            )
+                        ),  # BP: Bureau de poste; other
                         # localite
                         # pays
                         "atm": lambda res: self.bool[res["Distributeur_de_billets"]],
-                        "stamping_machine": lambda res: self.bool[res["Affranchissement_Libre_Service"]],
-                        "wheelchair": lambda res:
-                            "yes" if self.bool[res["Accessibilité_Absence_de_ressaut_de_plus_de_2_cm_de_haut"]] and self.bool[res["Accessibilité_Entrée_autonome_en_fauteuil_roulant_possible"]] else
-                            "limited" if self.bool[res["Accessibilité_Absence_de_ressaut_de_plus_de_2_cm_de_haut"]] or self.bool[res["Accessibilité_Entrée_autonome_en_fauteuil_roulant_possible"]] else
-                            "no"},
-                    mapping2 = {
-                        "operator": lambda res:
-                            None if res["Libellé_du_site"].endswith(" AP") else # Bureau de poste annexe
-                            None if res["Libellé_du_site"].endswith(" RP") else # Relais poste commerçant
-                            "La Poste", # BP: Bureau de poste; other
+                        "stamping_machine": lambda res: self.bool[
+                            res["Affranchissement_Libre_Service"]
+                        ],
+                        "wheelchair": lambda res: (
+                            "yes"
+                            if self.bool[
+                                res[
+                                    "Accessibilité_Absence_de_ressaut_de_plus_de_2_cm_de_haut"
+                                ]
+                            ]
+                            and self.bool[
+                                res[
+                                    "Accessibilité_Entrée_autonome_en_fauteuil_roulant_possible"
+                                ]
+                            ]
+                            else (
+                                "limited"
+                                if self.bool[
+                                    res[
+                                        "Accessibilité_Absence_de_ressaut_de_plus_de_2_cm_de_haut"
+                                    ]
+                                ]
+                                or self.bool[
+                                    res[
+                                        "Accessibilité_Entrée_autonome_en_fauteuil_roulant_possible"
+                                    ]
+                                ]
+                                else "no"
+                            )
+                        ),
+                    },
+                    mapping2={
+                        "operator": lambda res: (
+                            None
+                            if res["Libellé_du_site"].endswith(" AP")
+                            else (  # Bureau de poste annexe
+                                None
+                                if res["Libellé_du_site"].endswith(" RP")
+                                else "La Poste"  # Relais poste commerçant
+                            )
+                        ),  # BP: Bureau de poste; other
                         # "operator:wikidata": lambda res: # non consensuel
                         #    None if res["Libellé_du_site"].endswith(" AP") else # Bureau de poste annexe
                         #    None if res["Libellé_du_site"].endswith(" RP") else # Relais poste commerçant
                         #    "Q373724", # BP: Bureau de poste; other
-                        "operator:wikipedia": lambda res:
-                            None if res["Libellé_du_site"].endswith(" AP") else # Bureau de poste annexe
-                            None if res["Libellé_du_site"].endswith(" RP") else # Relais poste commerçant
-                            "fr:La Poste (entreprise française)", # BP: Bureau de poste; other
-                        "name": lambda res: re.sub(self.APBP, "", res["Libellé_du_site"]),
-                        "change_machine": lambda res: self.bool[res["Changeur_de_monnaie"]],
-                        "phone": lambda res: ("+33" + res["Numéro_de_téléphone"][1:]) if res["Numéro_de_téléphone"] != "3631" else None},
-                text = lambda tags, fields: {"en": "Post office {0}".format(", ".join(filter(lambda x: x and x != 'None', [fields["Précision_du_géocodage"].lower(), fields["Adresse"], fields["Complement_d_adresse"], fields["Lieu_dit"], fields["Code_postal"], fields["localité"]])))} )))
+                        "operator:wikipedia": lambda res: (
+                            None
+                            if res["Libellé_du_site"].endswith(" AP")
+                            else (  # Bureau de poste annexe
+                                None
+                                if res["Libellé_du_site"].endswith(" RP")
+                                else "fr:La Poste (entreprise française)"  # Relais poste commerçant
+                            )
+                        ),  # BP: Bureau de poste; other
+                        "name": lambda res: re.sub(
+                            self.APBP, "", res["Libellé_du_site"]
+                        ),
+                        "change_machine": lambda res: self.bool[
+                            res["Changeur_de_monnaie"]
+                        ],
+                        "phone": lambda res: (
+                            ("+33" + res["Numéro_de_téléphone"][1:])
+                            if res["Numéro_de_téléphone"] != "3631"
+                            else None
+                        ),
+                    },
+                    text=lambda tags, fields: {
+                        "en": "Post office {0}".format(
+                            ", ".join(
+                                filter(
+                                    lambda x: x and x != "None",
+                                    [
+                                        fields["Précision_du_géocodage"].lower(),
+                                        fields["Adresse"],
+                                        fields["Complement_d_adresse"],
+                                        fields["Lieu_dit"],
+                                        fields["Code_postal"],
+                                        fields["localité"],
+                                    ],
+                                )
+                            )
+                        )
+                    },
+                ),
+            ),
+        )
 
     bool = {"Non": None, "Oui": "yes"}

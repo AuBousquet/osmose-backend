@@ -1,78 +1,109 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 ###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2016                                      ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
+#                                                                       ##
+# Copyrights Frédéric Rodrigo 2016                                      ##
+#                                                                       ##
+# This program is free software: you can redistribute it and/or modify  ##
+# it under the terms of the GNU General Public License as published by  ##
+# the Free Software Foundation, either version 3 of the License, or     ##
+# (at your option) any later version.                                   ##
+#                                                                       ##
+# This program is distributed in the hope that it will be useful,       ##
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
+# GNU General Public License for more details.                          ##
+#                                                                       ##
+# You should have received a copy of the GNU General Public License     ##
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
+#                                                                       ##
 ###########################################################################
 
-from modules.OsmoseTranslation import T_
-from plugins.Plugin import Plugin
-import regex
 import unicodedata
-from modules.languages import language2scripts, gen_regex
+
+import regex
+
 from modules import confusables
+from modules.languages import gen_regex, language2scripts
+from modules.OsmoseTranslation import T_
 from modules.py3 import ilen
 from modules.Stablehash import stablehash64
 from plugins.modules.name_suggestion_index import whitelist_from_nsi
+from plugins.Plugin import Plugin
 
 
 class Name_Script(Plugin):
 
     def init(self, logger):
         Plugin.init(self, logger)
-        self.errors[50701] = self.def_class(item = 5070, level = 2, tags = ['name', 'fix:chair'],
-            title = T_('Some value chars does not match the language charset'),
-            detail = T_(
-'''Words are not written in the appropriate alphabet of the
-language.'''),
-            fix = T_(
-'''Usually, a wrong language has been chosen. Sometimes the word has been
+        self.errors[50701] = self.def_class(
+            item=5070,
+            level=2,
+            tags=["name", "fix:chair"],
+            title=T_("Some value chars does not match the language charset"),
+            detail=T_(
+                """Words are not written in the appropriate alphabet of the
+language."""
+            ),
+            fix=T_(
+                """Usually, a wrong language has been chosen. Sometimes the word has been
 transliterated, and needs to be changed back to the original alphabet.
 `name:ar=Salaam` should be either `name:en=Salaam` (if known by
 untranslated name) or `name:en=Peace` (translated) or `name:ar=سلام`
-(original).'''))
-        self.errors[50702] = self.def_class(item = 5070, level = 2, tags = ['name', 'fix:chair'],
-            title = T_('Non printable char'),
-            detail = T_(
-'''A non-printable character such as linefeed (0x000a) has been
-used.'''),
-            fix = T_(
-'''Remove the character.'''))
-        self.errors[50703] = self.def_class(item = 5070, level = 2, tags = ['name', 'fix:chair'],
-            title = T_('Unexpected symbol in name'),
-            detail = T_(
-'''A symbol is used instead of a letter from the appropriate
-alphabet.'''),
-            fix = T_(
-'''Change the character into a punctuation mark or something else more
-appropriate.'''),
-            resource = 'http://unicode.org/cldr/utility/list-unicodeset.jsp?a=[:General_Category=Other_Symbol:]')
+(original)."""
+            ),
+        )
+        self.errors[50702] = self.def_class(
+            item=5070,
+            level=2,
+            tags=["name", "fix:chair"],
+            title=T_("Non printable char"),
+            detail=T_(
+                """A non-printable character such as linefeed (0x000a) has been
+used."""
+            ),
+            fix=T_("""Remove the character."""),
+        )
+        self.errors[50703] = self.def_class(
+            item=5070,
+            level=2,
+            tags=["name", "fix:chair"],
+            title=T_("Unexpected symbol in name"),
+            detail=T_(
+                """A symbol is used instead of a letter from the appropriate
+alphabet."""
+            ),
+            fix=T_(
+                """Change the character into a punctuation mark or something else more
+appropriate."""
+            ),
+            resource="http://unicode.org/cldr/utility/list-unicodeset.jsp?a=[:General_Category=Other_Symbol:]",
+        )
 
         country = self.father.config.options.get("country")
 
-        self.non_printable = regex.compile(r"[\p{Line_Separator}\p{Paragraph_Separator}\p{Control}\p{Private_Use}\p{Surrogate}\p{Unassigned}]", flags=regex.V1)
+        self.non_printable = regex.compile(
+            r"[\p{Line_Separator}\p{Paragraph_Separator}\p{Control}\p{Private_Use}\p{Surrogate}\p{Unassigned}]",
+            flags=regex.V1,
+        )
         # http://unicode.org/cldr/utility/list-unicodeset.jsp?a=[:General_Category=Other_Symbol:]
-        self.other_symbol = regex.compile(r"[[\p{General_Category=Other_Symbol}]--[\p{Block=Latin 1 Supplement}\p{Block=Braille Patterns}\p{Block=CJK Radicals Supplement}\p{Block=Kangxi Radicals}\p{Block=CJK Strokes}]--[↔→◄►№]]", flags=regex.V1)
-        self.non_letter = regex.compile(r"[^\p{Letter}\p{Mark}\p{Separator}]", flags=regex.V1)
+        self.other_symbol = regex.compile(
+            r"[[\p{General_Category=Other_Symbol}]--[\p{Block=Latin 1 Supplement}\p{Block=Braille Patterns}\p{Block=CJK Radicals Supplement}\p{Block=Kangxi Radicals}\p{Block=CJK Strokes}]--[↔→◄►№]]",
+            flags=regex.V1,
+        )
+        self.non_letter = regex.compile(
+            r"[^\p{Letter}\p{Mark}\p{Separator}]", flags=regex.V1
+        )
         non_look_like_latin = r"\p{Hangul}\p{Bengali}\p{Bopomofo}\p{Braille}\p{Canadian_Aboriginal}\p{Devanagari}\p{Ethiopic}\p{Gujarati}\p{Gurmukhi}\p{Han}\p{Hangul}\p{Hanunoo}\p{Hebrew}\p{Hiragana}\p{Inherited}\p{Kannada}\p{Katakana}\p{Khmer}\p{Lao}\p{Malayalam}\p{Oriya}\p{Runic}\p{Sinhala}\p{Syriac}\p{TaiLe}\p{Tamil}\p{Thaana}\p{Thai}\p{Tibetan}"
         ammend = ""
         if country and country.startswith("BG"):
-            ammend = "|TT" # Bulgarian survey point
-        self.alone_char = regex.compile(r"(^| |[{0}])(?:[A-Z]{1})(?= |[{2}]|$)".format(non_look_like_latin, ammend, non_look_like_latin), flags=regex.V1)
+            ammend = "|TT"  # Bulgarian survey point
+        self.alone_char = regex.compile(
+            r"(^| |[{0}])(?:[A-Z]{1})(?= |[{2}]|$)".format(
+                non_look_like_latin, ammend, non_look_like_latin
+            ),
+            flags=regex.V1,
+        )
         self.roman_number = regex.compile(r"(^| )(?:[IVXLDCM]+)(?= |$)", flags=regex.V1)
 
         self.scripts = language2scripts
@@ -85,7 +116,7 @@ appropriate.'''),
                 self.uniq_scripts[k] = None
 
         self.lang = {}
-        for (k, s) in self.scripts.items():
+        for k, s in self.scripts.items():
             self.lang[k] = gen_regex(s)
 
         self.default = None
@@ -97,7 +128,9 @@ appropriate.'''),
             # Assert the languages are mapped to scripts
             for language in languages:
                 if language not in self.lang:
-                    raise Exception("No script setup for language '{0}'".format(language))
+                    raise Exception(
+                        "No script setup for language '{0}'".format(language)
+                    )
 
             # Disable default scripts if one language is not mapped to scripts
             for language in languages:
@@ -106,17 +139,37 @@ appropriate.'''),
 
             # Build default regex
             if languages:
-                self.default = regex.compile(r"[\p{{Common}}{0}]".format("".join(map(lambda l: self.lang[l], languages))), flags=regex.V1)
+                self.default = regex.compile(
+                    r"[\p{{Common}}{0}]".format(
+                        "".join(map(lambda l: self.lang[l], languages))
+                    ),
+                    flags=regex.V1,
+                )
 
-        self.uniq_script = self.uniq_scripts.get(languages[0]) if languages and len(languages) == 1 else None
+        self.uniq_script = (
+            self.uniq_scripts.get(languages[0])
+            if languages and len(languages) == 1
+            else None
+        )
 
         for l, s in list(self.lang.items()):
             if s is None:
                 del self.lang[l]
             else:
-                self.lang[l] = regex.compile(r"[\p{{Common}}{0}]".format(s), flags=regex.V1)
+                self.lang[l] = regex.compile(
+                    r"[\p{{Common}}{0}]".format(s), flags=regex.V1
+                )
 
-        self.names = [u"name", u"name_1", u"name_2", u"alt_name", u"loc_name", u"old_name", u"official_name", u"short_name"]
+        self.names = [
+            "name",
+            "name_1",
+            "name_2",
+            "alt_name",
+            "loc_name",
+            "old_name",
+            "official_name",
+            "short_name",
+        ]
 
         self.whitelist_names = set()
         if country:
@@ -127,84 +180,237 @@ appropriate.'''),
         for key, value in tags.items():
             m = self.non_printable.search(key)
             if m:
-                err.append({"class": 50702, "subclass": 0 + stablehash64(key), "text": T_("\"{0}\" unexpected non printable char ({1}, 0x{2:04x}) in key at position {3}", key, unicodedata.name(m.group(0), ''), ord(m.group(0)), m.start() + 1)})
+                err.append(
+                    {
+                        "class": 50702,
+                        "subclass": 0 + stablehash64(key),
+                        "text": T_(
+                            '"{0}" unexpected non printable char ({1}, 0x{2:04x}) in key at position {3}',
+                            key,
+                            unicodedata.name(m.group(0), ""),
+                            ord(m.group(0)),
+                            m.start() + 1,
+                        ),
+                    }
+                )
                 break
 
             m = self.non_printable.search(value)
             if m:
-                err.append({"class": 50702, "subclass": 1 + stablehash64(key), "text": T_("\"{0}\"=\"{1}\" unexpected non printable char ({2}, 0x{3:04x}) in value at position {4}", key, value, unicodedata.name(m.group(0), ''), ord(m.group(0)), m.start() + 1)})
+                err.append(
+                    {
+                        "class": 50702,
+                        "subclass": 1 + stablehash64(key),
+                        "text": T_(
+                            '"{0}"="{1}" unexpected non printable char ({2}, 0x{3:04x}) in value at position {4}',
+                            key,
+                            value,
+                            unicodedata.name(m.group(0), ""),
+                            ord(m.group(0)),
+                            m.start() + 1,
+                        ),
+                    }
+                )
                 break
 
             m = self.other_symbol.search(key)
             if m:
-                err.append({"class": 50703, "subclass": 0 + stablehash64(key), "text": T_("\"{0}\" unexpected symbol char ({1}, 0x{2:04x}) in key at position {3}", key, unicodedata.name(m.group(0), ''), ord(m.group(0)), m.start() + 1)})
+                err.append(
+                    {
+                        "class": 50703,
+                        "subclass": 0 + stablehash64(key),
+                        "text": T_(
+                            '"{0}" unexpected symbol char ({1}, 0x{2:04x}) in key at position {3}',
+                            key,
+                            unicodedata.name(m.group(0), ""),
+                            ord(m.group(0)),
+                            m.start() + 1,
+                        ),
+                    }
+                )
                 break
 
             m = self.other_symbol.search(value)
             if m:
-                err.append({"class": 50703, "subclass": 1 + stablehash64(key), "text": T_("\"{0}\"=\"{1}\" unexpected symbol char ({2}, 0x{3:04x}) in value at position {4}", key, value, unicodedata.name(m.group(0), ''), ord(m.group(0)), m.start() + 1)})
+                err.append(
+                    {
+                        "class": 50703,
+                        "subclass": 1 + stablehash64(key),
+                        "text": T_(
+                            '"{0}"="{1}" unexpected symbol char ({2}, 0x{3:04x}) in value at position {4}',
+                            key,
+                            value,
+                            unicodedata.name(m.group(0), ""),
+                            ord(m.group(0)),
+                            m.start() + 1,
+                        ),
+                    }
+                )
                 break
 
             err_size = len(err)
             # https://en.wikipedia.org/wiki/Bi-directional_text#Table_of_possible_BiDi-types
-            for c in u"\u200E\u200F\u061C\u202A\u202D\u202B\u202E\u202C\u2066\u2067\u2068\u2069":
+            for (
+                c
+            ) in "\u200E\u200F\u061C\u202A\u202D\u202B\u202E\u202C\u2066\u2067\u2068\u2069":
                 m = key.find(c)
                 if m > 0:
-                    err.append({"class": 50702, "subclass": 2 + stablehash64(key), "text": T_("\"{0}\" unexpected non printable char ({1}, 0x{2:04x}) in key at position {3}", key, unicodedata.name(c, ''), ord(c), m + 1)})
+                    err.append(
+                        {
+                            "class": 50702,
+                            "subclass": 2 + stablehash64(key),
+                            "text": T_(
+                                '"{0}" unexpected non printable char ({1}, 0x{2:04x}) in key at position {3}',
+                                key,
+                                unicodedata.name(c, ""),
+                                ord(c),
+                                m + 1,
+                            ),
+                        }
+                    )
                     break
 
                 m = value.find(c)
                 if m > 0:
-                    err.append({"class": 50702, "subclass": 3 + stablehash64(key), "text": T_("\"{0}\"=\"{1}\" unexpected non printable char ({2}, 0x{3:04x}) in value at position {4}", key, value, unicodedata.name(c, ''), ord(c), m + 1)})
+                    err.append(
+                        {
+                            "class": 50702,
+                            "subclass": 3 + stablehash64(key),
+                            "text": T_(
+                                '"{0}"="{1}" unexpected non printable char ({2}, 0x{3:04x}) in value at position {4}',
+                                key,
+                                value,
+                                unicodedata.name(c, ""),
+                                ord(c),
+                                m + 1,
+                            ),
+                        }
+                    )
                     break
 
             if err_size != len(err):
                 break
 
             if self.default:
-                if key in self.names and not any(map(lambda whitelist: whitelist in value, self.whitelist_names)):
-                    s = self.non_letter.sub(u" ", value)
-                    s = self.alone_char.sub(u"", s)
-                    s = self.roman_number.sub(u"", s)
-                    s = self.default.sub(u"", s)
-                    if len(s) > 0 and not (len(value) == 2 and len(s) == 1) and len(s) <= len(value) / 10 + 1:
+                if key in self.names and not any(
+                    map(lambda whitelist: whitelist in value, self.whitelist_names)
+                ):
+                    s = self.non_letter.sub(" ", value)
+                    s = self.alone_char.sub("", s)
+                    s = self.roman_number.sub("", s)
+                    s = self.default.sub("", s)
+                    if (
+                        len(s) > 0
+                        and not (len(value) == 2 and len(s) == 1)
+                        and len(s) <= len(value) / 10 + 1
+                    ):
                         if len(s) == 1:
                             c = s[0]
-                            u = self.uniq_script and confusables.unconfuse(c, self.uniq_script)
+                            u = self.uniq_script and confusables.unconfuse(
+                                c, self.uniq_script
+                            )
                             if u:
-                                err.append({"class": 50701, "subclass": 0 + stablehash64(key),
-                                    "text": T_("\"{0}\"=\"{1}\" unexpected char \"{2}\" ({3}, 0x{4:04x}). Means \"{5}\" ({6}, 0x{7:04x})?", key, value, s, unicodedata.name(c, ''), ord(c), u, unicodedata.name(u, ''), ord(u)),
-                                    "fix": {key: value.replace(c, u)}
-                                })
+                                err.append(
+                                    {
+                                        "class": 50701,
+                                        "subclass": 0 + stablehash64(key),
+                                        "text": T_(
+                                            '"{0}"="{1}" unexpected char "{2}" ({3}, 0x{4:04x}). Means "{5}" ({6}, 0x{7:04x})?',
+                                            key,
+                                            value,
+                                            s,
+                                            unicodedata.name(c, ""),
+                                            ord(c),
+                                            u,
+                                            unicodedata.name(u, ""),
+                                            ord(u),
+                                        ),
+                                        "fix": {key: value.replace(c, u)},
+                                    }
+                                )
                             else:
-                                err.append({"class": 50701, "subclass": 0 + stablehash64(key),
-                                    "text": T_("\"{0}\"=\"{1}\" unexpected char \"{2}\" ({3}, 0x{4:04x})", key, value, s, unicodedata.name(c, ''), ord(c))
-                                })
+                                err.append(
+                                    {
+                                        "class": 50701,
+                                        "subclass": 0 + stablehash64(key),
+                                        "text": T_(
+                                            '"{0}"="{1}" unexpected char "{2}" ({3}, 0x{4:04x})',
+                                            key,
+                                            value,
+                                            s,
+                                            unicodedata.name(c, ""),
+                                            ord(c),
+                                        ),
+                                    }
+                                )
                         else:
-                            err.append({"class": 50701, "subclass": 0 + stablehash64(key), "text": T_("\"{0}\"=\"{1}\" unexpected \"{2}\"", key, value, s)})
+                            err.append(
+                                {
+                                    "class": 50701,
+                                    "subclass": 0 + stablehash64(key),
+                                    "text": T_(
+                                        '"{0}"="{1}" unexpected "{2}"', key, value, s
+                                    ),
+                                }
+                            )
                         break
 
-            l = key.split(':')
+            l = key.split(":")
             if len(l) > 1 and l[0] in self.names and l[1] in self.lang:
-                s = self.non_letter.sub(u" ", value)
-                s = self.alone_char.sub(u"\\1", s)
-                s = self.roman_number.sub(u"\\1", s)
-                s = self.lang[l[1]].sub(u"", s)
+                s = self.non_letter.sub(" ", value)
+                s = self.alone_char.sub("\\1", s)
+                s = self.roman_number.sub("\\1", s)
+                s = self.lang[l[1]].sub("", s)
                 if len(s) > 0:
                     if len(s) == 1:
                         c = s[0]
-                        u = self.uniq_scripts.get(l[1]) and confusables.unconfuse(c, self.uniq_scripts.get(l[1]))
+                        u = self.uniq_scripts.get(l[1]) and confusables.unconfuse(
+                            c, self.uniq_scripts.get(l[1])
+                        )
                         if u:
-                            err.append({"class": 50701, "subclass": 1 + stablehash64(key),
-                                "text": T_("\"{0}\"=\"{1}\" unexpected char \"{2}\" ({3}, 0x{4:04x}). Means \"{5}\" ({6}, 0x{7:04x})?", key, value, s, unicodedata.name(c, ''), ord(c), u, unicodedata.name(u, ''), ord(u)),
-                                "fix": {key: value.replace(c, u)}
-                            })
+                            err.append(
+                                {
+                                    "class": 50701,
+                                    "subclass": 1 + stablehash64(key),
+                                    "text": T_(
+                                        '"{0}"="{1}" unexpected char "{2}" ({3}, 0x{4:04x}). Means "{5}" ({6}, 0x{7:04x})?',
+                                        key,
+                                        value,
+                                        s,
+                                        unicodedata.name(c, ""),
+                                        ord(c),
+                                        u,
+                                        unicodedata.name(u, ""),
+                                        ord(u),
+                                    ),
+                                    "fix": {key: value.replace(c, u)},
+                                }
+                            )
                         else:
-                            err.append({"class": 50701, "subclass": 1 + stablehash64(key),
-                                "text": T_("\"{0}\"=\"{1}\" unexpected char \"{2}\" ({3}, 0x{4:04x})", key, value, s, unicodedata.name(c, ''), ord(c))
-                            })
+                            err.append(
+                                {
+                                    "class": 50701,
+                                    "subclass": 1 + stablehash64(key),
+                                    "text": T_(
+                                        '"{0}"="{1}" unexpected char "{2}" ({3}, 0x{4:04x})',
+                                        key,
+                                        value,
+                                        s,
+                                        unicodedata.name(c, ""),
+                                        ord(c),
+                                    ),
+                                }
+                            )
                     else:
-                        err.append({"class": 50701, "subclass": 1 + stablehash64(key), "text": T_("\"{0}\"=\"{1}\" unexpected \"{2}\"", key, value, s)})
+                        err.append(
+                            {
+                                "class": 50701,
+                                "subclass": 1 + stablehash64(key),
+                                "text": T_(
+                                    '"{0}"="{1}" unexpected "{2}"', key, value, s
+                                ),
+                            }
+                        )
                     break
 
         return err
@@ -219,160 +425,195 @@ appropriate.'''),
 ###########################################################################
 from plugins.Plugin import TestPluginCommon
 
+
 class Test(TestPluginCommon):
     def test_(self):
         a = Name_Script(None)
+
         class _config:
             options = {"country": "FR"}
+
         class father:
             config = _config()
+
         a.father = father()
         a.init(None)
 
-        assert not a.node(None, {u"name": u"test ь"})
-        assert not a.node(None, {u"name": u"Sacré-Cœur"})
+        assert not a.node(None, {"name": "test ь"})
+        assert not a.node(None, {"name": "Sacré-Cœur"})
 
-        self.check_err(a.node(None, {u"name:uk": u"Sacré-Cœur"}))
+        self.check_err(a.node(None, {"name:uk": "Sacré-Cœur"}))
 
     def test_NL(self):
         a = Name_Script(None)
+
         class _config:
             options = {"country": "NL-GE", "language": "nl"}
+
         class father:
             config = _config()
+
         a.father = father()
         a.init(None)
 
-        assert not a.node(None, {u"name": u"Søstrene Grene"}) # in NSI
-        assert not a.node(None, {u"name": u"Søstrene Grene Netherlands"}) # Partial name matches with NSI, assume local office
-        assert not a.node(None, {u"name": u"İşbank"}) # in NSI
+        assert not a.node(None, {"name": "Søstrene Grene"})  # in NSI
+        assert not a.node(
+            None, {"name": "Søstrene Grene Netherlands"}
+        )  # Partial name matches with NSI, assume local office
+        assert not a.node(None, {"name": "İşbank"})  # in NSI
 
-        self.check_err(a.node(None, {u"name": u"Abcdefghijklmnø"}))
+        self.check_err(a.node(None, {"name": "Abcdefghijklmnø"}))
 
     def test_fr(self):
         a = Name_Script(None)
+
         class _config:
             options = {"language": "fr"}
+
         class father:
             config = _config()
+
         a.father = father()
         a.init(None)
 
-        assert not a.node(None, {u"seamark:light:information": u"R. 340° -095° , W.-111° , G.-160°"})
-        assert not a.node(None, {u"source": u"©IGN 2010"})
-        assert not a.node(None, {u"name": u"Karditsa → Larisa"})
-        assert not a.node(None, {u"name": u"To Embonas ►"})
+        assert not a.node(
+            None, {"seamark:light:information": "R. 340° -095° , W.-111° , G.-160°"}
+        )
+        assert not a.node(None, {"source": "©IGN 2010"})
+        assert not a.node(None, {"name": "Karditsa → Larisa"})
+        assert not a.node(None, {"name": "To Embonas ►"})
 
-        self.check_err(a.node(None, {u"name": u"test ь"}))
-        self.check_err(a.node(None, {u"name": u"\u1F1EE\u1F1F6\u1F3E0"}))
-        assert not a.node(None, {u"name": u"test кодувань"})
-        assert not a.node(None, {u"name": u"кодувань"})
-        assert not a.node(None, {u"name": u"Sophie II"})
-        assert not a.node(None, {u"name": u"Sacré-Cœur"})
-        assert not a.node(None, {u"name": u"дA"})
+        self.check_err(a.node(None, {"name": "test ь"}))
+        self.check_err(a.node(None, {"name": "\u1F1EE\u1F1F6\u1F3E0"}))
+        assert not a.node(None, {"name": "test кодувань"})
+        assert not a.node(None, {"name": "кодувань"})
+        assert not a.node(None, {"name": "Sophie II"})
+        assert not a.node(None, {"name": "Sacré-Cœur"})
+        assert not a.node(None, {"name": "дA"})
 
-        assert not a.node(None, {u"name:uk": u"кодувань"})
-        assert not a.node(None, {u"name:tg": u"Париж"})
-        self.check_err(a.node(None, {u"name:uk": u"Sacré-Cœur"}))
-        assert not a.node(None, {u"name:uk": u"кодувань A"})
-        assert not a.node(None, {u"name:uk": u"кодувань A33"})
-        assert not a.node(None, {u"name:uk": u"B2"})
-        assert not a.node(None, {u"name:el": u"Διαδρομος 15R/33L"})
-        self.check_err(a.node(None, {u"name:el": u"ροMμος"}))
-        assert not a.node(None, {u"name:fa": u"شیب دِراز"})
-        assert not a.node(None, {u"name:th": u"P T L"})
-        self.check_err(a.node(None, {u"name:ru": u"Кари́бские Нидерла́нды"}))
-        assert not a.node(None, {u"name:ar": u"مسكّن عدي"})
-        assert not a.node(None, {u"name:ko": u"유스페이스2 B동"})
+        assert not a.node(None, {"name:uk": "кодувань"})
+        assert not a.node(None, {"name:tg": "Париж"})
+        self.check_err(a.node(None, {"name:uk": "Sacré-Cœur"}))
+        assert not a.node(None, {"name:uk": "кодувань A"})
+        assert not a.node(None, {"name:uk": "кодувань A33"})
+        assert not a.node(None, {"name:uk": "B2"})
+        assert not a.node(None, {"name:el": "Διαδρομος 15R/33L"})
+        self.check_err(a.node(None, {"name:el": "ροMμος"}))
+        assert not a.node(None, {"name:fa": "شیب دِراز"})
+        assert not a.node(None, {"name:th": "P T L"})
+        self.check_err(a.node(None, {"name:ru": "Кари́бские Нидерла́нды"}))
+        assert not a.node(None, {"name:ar": "مسكّن عدي"})
+        assert not a.node(None, {"name:ko": "유스페이스2 B동"})
 
-        self.check_err(a.node(None, {u"name:el": u"Aιαδρομος"})) # A (Latin) to Α (Greek)
+        self.check_err(a.node(None, {"name:el": "Aιαδρομος"}))  # A (Latin) to Α (Greek)
 
-        assert a.node(None, {u"name": u"ä"})
+        assert a.node(None, {"name": "ä"})
 
     def test_fr_LU(self):
         a = Name_Script(None)
+
         class _config:
             options = {"language": "fr_LU"}
+
         class father:
             config = _config()
+
         a.father = father()
         a.init(None)
 
-        assert not a.node(None, {u"name": u"ä"})
+        assert not a.node(None, {"name": "ä"})
 
     def test_fr_nl(self):
         a = Name_Script(None)
+
         class _config:
             options = {"language": ["fr", "nl"]}
+
         class father:
             config = _config()
+
         a.father = father()
         a.init(None)
 
-        self.check_err(a.node(None, {u"name": u"test ь"}))
-        assert not a.node(None, {u"name": u"test кодувань"})
+        self.check_err(a.node(None, {"name": "test ь"}))
+        assert not a.node(None, {"name": "test кодувань"})
 
-        assert not a.node(None, {u"name:uk": u"кодувань"})
-        self.check_err(a.node(None, {u"name:uk": u"Sacré-Cœur"}))
+        assert not a.node(None, {"name:uk": "кодувань"})
+        self.check_err(a.node(None, {"name:uk": "Sacré-Cœur"}))
 
     def test_zh(self):
         a = Name_Script(None)
+
         class _config:
             options = {"language": "zh"}
+
         class father:
             config = _config()
+
         a.father = father()
         a.init(None)
 
-        assert not a.node(None, {u"name": u"test ь"})
-        assert not a.node(None, {u"name": u"test кодувань"})
+        assert not a.node(None, {"name": "test ь"})
+        assert not a.node(None, {"name": "test кодувань"})
 
-        assert not a.node(None, {u"name:uk": u"кодувань"})
-        self.check_err(a.node(None, {u"name:uk": u"Sacré-Cœur"}))
+        assert not a.node(None, {"name:uk": "кодувань"})
+        self.check_err(a.node(None, {"name:uk": "Sacré-Cœur"}))
 
     def test_uk(self):
         a = Name_Script(None)
+
         class _config:
             options = {"language": "uk"}
+
         class father:
             config = _config()
+
         a.father = father()
         a.init(None)
 
-        assert not a.node(None, {u"name": u"Бу́рти"})
-        assert not a.node(None, {u"name": u"Шкарпи́"})
+        assert not a.node(None, {"name": "Бу́рти"})
+        assert not a.node(None, {"name": "Шкарпи́"})
 
     def test_BG(self):
         a = Name_Script(None)
+
         class _config:
             options = {"language": "bg", "country": "BG"}
+
         class father:
             config = _config()
+
         a.father = father()
         a.init(None)
 
-        assert not a.node(None, {u"name": u"TT190/XXVI/"}) # Bulgarian survey point
+        assert not a.node(None, {"name": "TT190/XXVI/"})  # Bulgarian survey point
 
     def test_non_printable(self):
         a = Name_Script(None)
+
         class _config:
             options = {}
+
         class father:
             config = _config()
+
         a.father = father()
         a.init(None)
 
-        self.check_err(a.node(None, {u"name\u0001": u"test"}))
-        self.check_err(a.node(None, {u"name": u"test \u0000"}))
-        self.check_err(a.node(None, {u"name": u"test \u202B"}))
+        self.check_err(a.node(None, {"name\u0001": "test"}))
+        self.check_err(a.node(None, {"name": "test \u0000"}))
+        self.check_err(a.node(None, {"name": "test \u202B"}))
 
     def test_non_my(self):
         a = Name_Script(None)
+
         class _config:
             options = {"language": "my", "country": "ZZ"}
+
         class father:
             config = _config()
+
         a.father = father()
         a.init(None)
 
-        assert not a.node(None, {u"name:my": u"кодувань"})
+        assert not a.node(None, {"name:my": "кодувань"})

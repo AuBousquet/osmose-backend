@@ -1,31 +1,32 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo <@free.fr> 2009                           ##
-##            Etienne Chové <chove@crans.org> 2009                       ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo <@free.fr> 2009                           #
+#            Etienne Chové <chove@crans.org> 2009                       #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
-from modules.OsmoseTranslation import T_
-from .Analyser_Osmosis import Analyser_Osmosis
 from modules import languages
+from modules.OsmoseTranslation import T_
 
-sql01_fr = u"""
+from .Analyser_Osmosis import Analyser_Osmosis
+
+sql01_fr = """
 -- http://www-lium.univ-lemans.fr/~carlier/recherche/soundex.html
 --
 
@@ -226,31 +227,44 @@ WHERE
 
 class Analyser_Osmosis_Soundex(Analyser_Osmosis):
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
 
         # Check langues for country are writen with alphabets
-        self.scripts = 'language' in config.options and languages.scripts(config.options['language'])
-        if self.scripts and len(self.scripts) == 1 and (self.scripts[0] == 'Latin' or self.scripts[0].startswith('[A-Za-z')):
-            self.classs[1] = self.def_class(item = 5050, level = 2, tags = ['name', 'fix:survey'],
-                title = T_('Soundex test'),
-                detail = T_(
-'''A street name "sounds" similar to that of another street but is
-not spelled the same way.'''),
-                fix = T_(
-'''After you have checked that it is a mistake, change the name.'''),
-                trap = T_(
-'''* The "Rue Desjardins" can be called like that, even though offers
+        self.scripts = "language" in config.options and languages.scripts(
+            config.options["language"]
+        )
+        if (
+            self.scripts
+            and len(self.scripts) == 1
+            and (self.scripts[0] == "Latin" or self.scripts[0].startswith("[A-Za-z"))
+        ):
+            self.classs[1] = self.def_class(
+                item=5050,
+                level=2,
+                tags=["name", "fix:survey"],
+                title=T_("Soundex test"),
+                detail=T_(
+                    """A street name "sounds" similar to that of another street but is
+not spelled the same way."""
+                ),
+                fix=T_(
+                    """After you have checked that it is a mistake, change the name."""
+                ),
+                trap=T_(
+                    """* The "Rue Desjardins" can be called like that, even though offers
 "Rue des Jardins",
 * Beware of homonyms, a local glorious man can be called "Jean Monet",
 his name not need be transformed into "Jean Monnet",
 * The "Rond-Point des Allées" is perhaps not the "Rond-Point des Alliés",
-* The "Rue de Ballevue" may be the right name for this street.'''),
-                example = T_(
-'''* Rue Piere Curie ==> Rue Pierre Curie
+* The "Rue de Ballevue" may be the right name for this street."""
+                ),
+                example=T_(
+                    """* Rue Piere Curie ==> Rue Pierre Curie
 * Rue du Général de Gaules ==> Rue du Général de Gaulle
-* Mac Donald ==> McDonald's'''))
-
+* Mac Donald ==> McDonald's"""
+                ),
+            )
 
         else:
             self.scripts = None
@@ -259,7 +273,11 @@ his name not need be transformed into "Jean Monnet",
         if not self.scripts:
             return
 
-        if "language" in self.config.options and isinstance(self.config.options["language"], str) and self.config.options["language"].startswith("fr"):
+        if (
+            "language" in self.config.options
+            and isinstance(self.config.options["language"], str)
+            and self.config.options["language"].startswith("fr")
+        ):
             self.run(sql01_fr)
             self.run(sql03.format("fn_soundex2"))
         else:
@@ -268,8 +286,11 @@ his name not need be transformed into "Jean Monnet",
         self.run(sql04)
         self.run(sql05)
         self.run(sql05i)
-        self.run(sql06, lambda res: {
-            "class":1,
-            "data":[self.way_full, self.positionAsText],
-            "fix":{"name":res[2].replace(res[3], res[4])}
-        } )
+        self.run(
+            sql06,
+            lambda res: {
+                "class": 1,
+                "data": [self.way_full, self.positionAsText],
+                "fix": {"name": res[2].replace(res[3], res[4])},
+            },
+        )

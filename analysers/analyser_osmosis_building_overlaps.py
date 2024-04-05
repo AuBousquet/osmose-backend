@@ -1,29 +1,30 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Etienne Chové <chove@crans.org> 2009                       ##
-## Copyrights Frédéric Rodrigo 2011-2015                                 ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Etienne Chové <chove@crans.org> 2009                       #
+# Copyrights Frédéric Rodrigo 2011-2015                                 #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
-from .Analyser_Osmosis import Analyser_Osmosis
 from modules.Stablehash import stablehash64
+
+from .Analyser_Osmosis import Analyser_Osmosis
 
 sql20 = """
 CREATE TEMP TABLE bnodes AS
@@ -159,52 +160,110 @@ ORDER BY
    b2.id
 """
 
+
 class Analyser_Osmosis_Building_Overlaps(Analyser_Osmosis):
 
-    requires_tables_full = ['buildings']
-    requires_tables_diff = ['buildings', 'touched_buildings', 'not_touched_buildings']
+    requires_tables_full = ["buildings"]
+    requires_tables_diff = ["buildings", "touched_buildings", "not_touched_buildings"]
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
-        self.FR = config.options and ("country" in config.options and config.options["country"].startswith("FR") or "test" in config.options)
+        self.FR = config.options and (
+            "country" in config.options
+            and config.options["country"].startswith("FR")
+            or "test" in config.options
+        )
         fix = T_(
-'''Fix geometry so that buildings don't overlap, but share nodes if physically joined.
-If geometry is correct and there's some vertical difference then make use of the `layer` tag to indicate this.''')
+            """Fix geometry so that buildings don't overlap, but share nodes if physically joined.
+If geometry is correct and there's some vertical difference then make use of the `layer` tag to indicate this."""
+        )
 
-        self.classs_change[1] = self.def_class(item = 0, level = 3, tags = ['building', 'geom', 'fix:chair'],
-            title = T_('Building intersection'),
-            fix = fix)
-        self.classs_change[2] = self.def_class(item = 0, level = 2, tags = ['building', 'geom', 'fix:chair'],
-            title = T_('Large building intersection'),
-            fix = self.merge_doc(fix, T_(
-'''Large intersections may also be duplicates - in which case you should delete the less accurate elements.''')))
-        self.classs_change[3] = self.def_class(item = 0, level = 3, tags = ['building', 'geom', 'fix:chair'],
-            title = T_('Building too small'),
-            detail = T_('The area of this feature is too small to possibly be a building.'),
-            fix = T_(
-'''- Correct the geometry if inaccurately mapped.
+        self.classs_change[1] = self.def_class(
+            item=0,
+            level=3,
+            tags=["building", "geom", "fix:chair"],
+            title=T_("Building intersection"),
+            fix=fix,
+        )
+        self.classs_change[2] = self.def_class(
+            item=0,
+            level=2,
+            tags=["building", "geom", "fix:chair"],
+            title=T_("Large building intersection"),
+            fix=self.merge_doc(
+                fix,
+                T_(
+                    """Large intersections may also be duplicates - in which case you should delete the less accurate elements."""
+                ),
+            ),
+        )
+        self.classs_change[3] = self.def_class(
+            item=0,
+            level=3,
+            tags=["building", "geom", "fix:chair"],
+            title=T_("Building too small"),
+            detail=T_(
+                "The area of this feature is too small to possibly be a building."
+            ),
+            fix=T_(
+                """- Correct the geometry if inaccurately mapped.
 - Correct the tagging if this isn't a building.
-- Delete the feature if it's invalid.'''))
-        self.classs_change[4] = self.def_class(item = 0, level = 3, tags = ['building', 'geom', 'fix:chair'],
-            title = T_('Gap between buildings'),
-            detail = T_(
-'''It looks like these buildings should be physically joined, but they don't share nodes to indicate this.'''),
-            fix = T_('Connect the buildings by joining nodes where appropriate.'))
-        self.classs_change[5] = self.def_class(item = 0, level = 1, tags = ['building', 'fix:chair'],
-            title = T_('Large building intersection cluster'),
-            fix = self.merge_doc(fix, T_(
-'''Large intersections may also be duplicates - in which case you should delete the less accurate elements.''')))
+- Delete the feature if it's invalid."""
+            ),
+        )
+        self.classs_change[4] = self.def_class(
+            item=0,
+            level=3,
+            tags=["building", "geom", "fix:chair"],
+            title=T_("Gap between buildings"),
+            detail=T_(
+                """It looks like these buildings should be physically joined, but they don't share nodes to indicate this."""
+            ),
+            fix=T_("Connect the buildings by joining nodes where appropriate."),
+        )
+        self.classs_change[5] = self.def_class(
+            item=0,
+            level=1,
+            tags=["building", "fix:chair"],
+            title=T_("Large building intersection cluster"),
+            fix=self.merge_doc(
+                fix,
+                T_(
+                    """Large intersections may also be duplicates - in which case you should delete the less accurate elements."""
+                ),
+            ),
+        )
         if self.FR:
-            self.classs_change[6] = self.def_class(item = 1, level = 3, tags = ['building', 'geom', 'fix:chair'],
-                title = T_("Building in parts"),
-                fix = T_('Merge the building parts together as appropriate.'))
+            self.classs_change[6] = self.def_class(
+                item=1,
+                level=3,
+                tags=["building", "geom", "fix:chair"],
+                title=T_("Building in parts"),
+                fix=T_("Merge the building parts together as appropriate."),
+            )
 
-        self.callback30 = lambda res: {"class":2 if res[3] > res[4] else 1, "data":[self.way, self.way, self.positionAsText]}
-        self.callback40 = lambda res: {"class":3, "data":[self.way, self.positionAsText]}
-        self.callback50 = lambda res: {"class":4, "data":[self.way, self.way, self.positionAsText]}
-        self.callback60 = lambda res: {"class":5, "subclass": stablehash64(res[0]), "data":[self.positionAsText]}
+        self.callback30 = lambda res: {
+            "class": 2 if res[3] > res[4] else 1,
+            "data": [self.way, self.way, self.positionAsText],
+        }
+        self.callback40 = lambda res: {
+            "class": 3,
+            "data": [self.way, self.positionAsText],
+        }
+        self.callback50 = lambda res: {
+            "class": 4,
+            "data": [self.way, self.way, self.positionAsText],
+        }
+        self.callback60 = lambda res: {
+            "class": 5,
+            "subclass": stablehash64(res[0]),
+            "data": [self.positionAsText],
+        }
         if self.FR:
-            self.callback70 = lambda res: {"class":6, "data":[self.way, self.way, self.positionAsText]}
+            self.callback70 = lambda res: {
+                "class": 6,
+                "data": [self.way, self.way, self.positionAsText],
+            }
 
     def analyser_osmosis_full(self):
         self.run(sql20)
@@ -228,7 +287,7 @@ If geometry is correct and there's some vertical difference then make use of the
         self.run(sql40.format("touched_"), self.callback40)
         self.run(sql50.format("touched_", ""), self.callback50)
         self.run(sql50.format("not_touched_", "touched_"), self.callback50)
-        #self.run(sql60.format("", ""), self.callback60) Can be done in diff mode without runing a full sql30
+        # self.run(sql60.format("", ""), self.callback60) Can be done in diff mode without runing a full sql30
         if self.FR:
             self.run(sql70.format("touched_", ""), self.callback70)
             self.run(sql70.format("not_touched_", "touched_"), self.callback70)

@@ -1,26 +1,27 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2012-2015                                 ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2012-2015                                 #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
+
 from .Analyser_Osmosis import Analyser_Osmosis
 
 sql10 = """
@@ -148,34 +149,55 @@ FROM
         nodes.id = t."end"
 """
 
+
 class Analyser_Osmosis_Waterway(Analyser_Osmosis):
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
-        self.classs[1] = self.def_class(item = 1220, level = 3, tags = ['waterway', 'fix:imagery'],
-            title = T_('River bank without river'),
-            detail = T_(
-'''There is one `natural=water` + `water=river` (or `waterway=riverbank`)
-but there is no `waterway=river|canal|stream` inside it.'''),
-            fix = T_(
-'''After checking, create a "river" line inside the river bank polygon or
-eliminate the river bank polygon.'''))
+        self.classs[1] = self.def_class(
+            item=1220,
+            level=3,
+            tags=["waterway", "fix:imagery"],
+            title=T_("River bank without river"),
+            detail=T_(
+                """There is one `natural=water` + `water=river` (or `waterway=riverbank`)
+but there is no `waterway=river|canal|stream` inside it."""
+            ),
+            fix=T_(
+                """After checking, create a "river" line inside the river bank polygon or
+eliminate the river bank polygon."""
+            ),
+        )
         detail = T_(
-'''A `waterway=river` or a `waterway=stream` is an oriented way. The
-water must flow into another waterway or meet a `natural=coastline`.''')
-        fix = T_(
-'''Link the waterway or invert its flow direction.''')
-        self.classs[2] = self.def_class(item = 1220, level = 2, tags = ['waterway', 'fix:imagery'],
-            title = T_('Unconnected river or wrong way flow'),
-            detail = detail,
-            fix = fix)
-        self.classs[3] = self.def_class(item = 1220, level = 3, tags = ['waterway', 'fix:imagery'],
-            title = T_('Unconnected stream or wrong way flow'),
-            detail = detail,
-            fix = fix)
+            """A `waterway=river` or a `waterway=stream` is an oriented way. The
+water must flow into another waterway or meet a `natural=coastline`."""
+        )
+        fix = T_("""Link the waterway or invert its flow direction.""")
+        self.classs[2] = self.def_class(
+            item=1220,
+            level=2,
+            tags=["waterway", "fix:imagery"],
+            title=T_("Unconnected river or wrong way flow"),
+            detail=detail,
+            fix=fix,
+        )
+        self.classs[3] = self.def_class(
+            item=1220,
+            level=3,
+            tags=["waterway", "fix:imagery"],
+            title=T_("Unconnected stream or wrong way flow"),
+            detail=detail,
+            fix=fix,
+        )
 
-        self.callback10 = lambda res: {"class":1, "data":[self.way_full, self.positionAsText]}
-        self.callback20 = lambda res: {"class":2 if res[2] == "river" else 3, "data":[self.way_full, self.positionAsText]}
+        self.callback10 = lambda res: {
+            "class": 1,
+            "data": [self.way_full, self.positionAsText],
+        }
+        self.callback20 = lambda res: {
+            "class": 2 if res[2] == "river" else 3,
+            "data": [self.way_full, self.positionAsText],
+        }
 
     def analyser_osmosis_common(self):
         self.run(sql10, self.callback10)

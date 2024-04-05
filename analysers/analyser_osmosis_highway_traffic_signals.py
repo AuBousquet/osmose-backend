@@ -1,26 +1,27 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2013-2016                                 ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2013-2016                                 #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
+
 from .Analyser_Osmosis import Analyser_Osmosis
 
 sql10 = """
@@ -152,44 +153,81 @@ HAVING
   BOOL_AND(NOT ways.tags?'junction' OR ways.tags->'junction' != 'roundabout')
 """
 
+
 class Analyser_Osmosis_Highway_Traffic_Signals(Analyser_Osmosis):
 
-    requires_tables_full = ['highways']
-    requires_tables_diff = ['highways', 'touched_highways', 'not_touched_highways']
+    requires_tables_full = ["highways"]
+    requires_tables_diff = ["highways", "touched_highways", "not_touched_highways"]
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
         doc = dict(
-            detail = T_(
-'''A nearby node already has the `highway=traffic_signals` tag.'''),
-            fix = T_(
-'''It is very likely that the traffic signals on the junction are
+            detail=T_(
+                """A nearby node already has the `highway=traffic_signals` tag."""
+            ),
+            fix=T_(
+                """It is very likely that the traffic signals on the junction are
 inconsistent with each other, see also
-[highway=traffic_signals](https://wiki.openstreetmap.org/wiki/Tag:highway%3Dtraffic_signals).'''))
-        self.classs_change[1] = self.def_class(item = 2090, level = 3, tags = ['tag', 'highway', 'fix:imagery'],
-            title = T_('Possible crossing=traffic_signals'),
-            **doc)
-        self.classs_change[2] = self.def_class(item = 2090, level = 2, tags = ['tag', 'highway', 'fix:imagery'],
-            title = T_('Possible missing highway=traffic_signals nearby'),
-            **doc)
-        self.classs[3] = self.def_class(item = 2090, level = 2, tags = ['tag', 'highway', 'fix:chair'],
-            title = T_('Possible missing traffic_signals:direction tag or crossing on traffic signals'))
-        self.classs[4] = self.def_class(item = 2090, level = 2, tags = ['tag', 'highway', 'fix:chair'],
-            title = T_('Possible missing direction tag on stop or a give way'))
+[highway=traffic_signals](https://wiki.openstreetmap.org/wiki/Tag:highway%3Dtraffic_signals)."""
+            ),
+        )
+        self.classs_change[1] = self.def_class(
+            item=2090,
+            level=3,
+            tags=["tag", "highway", "fix:imagery"],
+            title=T_("Possible crossing=traffic_signals"),
+            **doc
+        )
+        self.classs_change[2] = self.def_class(
+            item=2090,
+            level=2,
+            tags=["tag", "highway", "fix:imagery"],
+            title=T_("Possible missing highway=traffic_signals nearby"),
+            **doc
+        )
+        self.classs[3] = self.def_class(
+            item=2090,
+            level=2,
+            tags=["tag", "highway", "fix:chair"],
+            title=T_(
+                "Possible missing traffic_signals:direction tag or crossing on traffic signals"
+            ),
+        )
+        self.classs[4] = self.def_class(
+            item=2090,
+            level=2,
+            tags=["tag", "highway", "fix:chair"],
+            title=T_("Possible missing direction tag on stop or a give way"),
+        )
 
-        self.callback10 = lambda res: {"class":1, "data":[self.node_full, self.node_full, self.positionAsText], "fix":[
-            [{"+":{"crossing":"traffic_signals"}}],
-            [{"+":{"crossing":"traffic_signals"}}, {"-":["crossing"]}]
-        ] }
-        self.callback20 = lambda res: {"class":2, "data":[self.node_full, self.positionAsText]}
-        self.callback30 = lambda res: {"class":3, "data":[self.node_full, self.way, self.positionAsText], "fix":[
-            [{"+":{"traffic_signals:direction":"forward"}}],
-            [{"+":{"traffic_signals:direction":"backward"}}],
-        ] }
-        self.callback40 = lambda res: {"class":4, "data":[self.node_full, self.way, self.positionAsText], "fix":[
-            [{"+":{"direction":"forward"}}],
-            [{"+":{"direction":"backward"}}],
-        ] }
+        self.callback10 = lambda res: {
+            "class": 1,
+            "data": [self.node_full, self.node_full, self.positionAsText],
+            "fix": [
+                [{"+": {"crossing": "traffic_signals"}}],
+                [{"+": {"crossing": "traffic_signals"}}, {"-": ["crossing"]}],
+            ],
+        }
+        self.callback20 = lambda res: {
+            "class": 2,
+            "data": [self.node_full, self.positionAsText],
+        }
+        self.callback30 = lambda res: {
+            "class": 3,
+            "data": [self.node_full, self.way, self.positionAsText],
+            "fix": [
+                [{"+": {"traffic_signals:direction": "forward"}}],
+                [{"+": {"traffic_signals:direction": "backward"}}],
+            ],
+        }
+        self.callback40 = lambda res: {
+            "class": 4,
+            "data": [self.node_full, self.way, self.positionAsText],
+            "fix": [
+                [{"+": {"direction": "forward"}}],
+                [{"+": {"direction": "backward"}}],
+            ],
+        }
 
     def analyser_osmosis_common(self):
         self.run(sql10)

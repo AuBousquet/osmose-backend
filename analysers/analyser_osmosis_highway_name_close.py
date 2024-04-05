@@ -1,28 +1,29 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2017                                      ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2017                                      #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
-from modules.OsmoseTranslation import T_
-from .Analyser_Osmosis import Analyser_Osmosis
 from modules import languages
+from modules.OsmoseTranslation import T_
+
+from .Analyser_Osmosis import Analyser_Osmosis
 
 sql10_regex = """regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace(regexp_replace({0},
 '([0-9]+-[а-я]{{2}})( |$)', '_', 'g'), -- Bulgaria
@@ -48,7 +49,9 @@ WHERE
   tags != ''::hstore AND
   tags?'name' AND
   length({0}) >= 4
-""".format(sql10_regex.format("tags->'name'"))
+""".format(
+    sql10_regex.format("tags->'name'")
+)
 
 sql11 = """
 CREATE INDEX idx_highways_name_linestring ON highways_name USING gist(linestring)
@@ -74,20 +77,34 @@ FROM
 
 class Analyser_Osmosis_Highway_Name_Close(Analyser_Osmosis):
 
-    requires_tables_full = ['highways']
+    requires_tables_full = ["highways"]
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
 
         # Check langues for country are writen with alphabets
-        self.alphabet = 'language' in config.options and languages.languages_are_alphabets(config.options['language'])
+        self.alphabet = (
+            "language" in config.options
+            and languages.languages_are_alphabets(config.options["language"])
+        )
 
         if self.alphabet:
-            self.classs[1] = self.def_class(item = 5080, level = 1, tags = ['highway', 'name'],
-                title = T_('Close similar name'))
+            self.classs[1] = self.def_class(
+                item=5080,
+                level=1,
+                tags=["highway", "name"],
+                title=T_("Close similar name"),
+            )
 
     def analyser_osmosis_common(self):
         if self.alphabet:
             self.run(sql10)
             self.run(sql11)
-            self.run(sql12, lambda res: {"class":1, "data":[self.way_full, self.way_full, self.positionAsText], "text": {"en": ', '.join([res[3], res[4]])}})
+            self.run(
+                sql12,
+                lambda res: {
+                    "class": 1,
+                    "data": [self.way_full, self.way_full, self.positionAsText],
+                    "text": {"en": ", ".join([res[3], res[4]])},
+                },
+            )

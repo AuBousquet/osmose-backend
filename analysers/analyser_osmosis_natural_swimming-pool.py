@@ -1,26 +1,27 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2011                                      ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2011                                      #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
+
 from .Analyser_Osmosis import Analyser_Osmosis
 
 sql10 = """
@@ -77,31 +78,49 @@ FROM
         ST_Intersects(w.linestring, geom_union.geom)
 """
 
+
 class Analyser_Osmosis_Natural_SwimmingPool(Analyser_Osmosis):
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
-        self.classs[1] = self.def_class(item = 3080, level = 3, tags = ['tag', 'fix:imagery'],
-            title = T_('Swimming-pool, reservoir, pond as natural=water'),
-            detail = T_(
-'''When importing layer of water from cadastre, the tag water pools have
-not been corrected.'''),
-            fix = T_(
-'''Change the tag `natural=water` in `leisure=swimming_pool`. If it is
+        self.classs[1] = self.def_class(
+            item=3080,
+            level=3,
+            tags=["tag", "fix:imagery"],
+            title=T_("Swimming-pool, reservoir, pond as natural=water"),
+            detail=T_(
+                """When importing layer of water from cadastre, the tag water pools have
+not been corrected."""
+            ),
+            fix=T_(
+                """Change the tag `natural=water` in `leisure=swimming_pool`. If it is
 private then tag it also with `access=private`. If it is actually not a
 swimming pool then you can use e.g. `natural=water` +
-`water=pond`/`water=basin`.'''),
-            example = T_(
-'''![](https://wiki.openstreetmap.org/w/images/a/a1/Osmose-eg-error-3080.png)
+`water=pond`/`water=basin`."""
+            ),
+            example=T_(
+                """![](https://wiki.openstreetmap.org/w/images/a/a1/Osmose-eg-error-3080.png)
 
-Wrong tag for private swimming pool.'''))
+Wrong tag for private swimming pool."""
+            ),
+        )
 
     def analyser_osmosis_common(self):
-        self.run(sql10, lambda res: {"class":1, "data":[self.way_full, self.positionAsText], "fix":[
-            {"-":["natural"], "+":{"leisure":"swimming_pool"}},
-            {"-":["natural"], "+":{"leisure":"swimming_pool", "access":"private"}},
-            {"-":["natural"], "+":{"landuse":"reservoir"}},
-            {"-":["natural"], "+":{"landuse":"basin"}},
-            {"-":["natural"], "+":{"landuse":"pond"}},
-            {"+":{"water":"pond"}},
-        ]})
+        self.run(
+            sql10,
+            lambda res: {
+                "class": 1,
+                "data": [self.way_full, self.positionAsText],
+                "fix": [
+                    {"-": ["natural"], "+": {"leisure": "swimming_pool"}},
+                    {
+                        "-": ["natural"],
+                        "+": {"leisure": "swimming_pool", "access": "private"},
+                    },
+                    {"-": ["natural"], "+": {"landuse": "reservoir"}},
+                    {"-": ["natural"], "+": {"landuse": "basin"}},
+                    {"-": ["natural"], "+": {"landuse": "pond"}},
+                    {"+": {"water": "pond"}},
+                ],
+            },
+        )

@@ -1,27 +1,28 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2012-2015                                 ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2012-2015                                 #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
-from modules.Stablehash import stablehash64
 from modules.OsmoseTranslation import T_
+from modules.Stablehash import stablehash64
+
 from .Analyser_Osmosis import Analyser_Osmosis
 
 sql10 = """
@@ -183,11 +184,27 @@ WHERE
     (
         (ways.tags?'area' AND ways.tags->'area' in ('yes', 'true')) OR
         ways.tags?'landuse' OR
-        (ways.tags?'natural' AND ways.tags->'natural' in ('wood', 'scrub', 'heath', 'moor', 'grassland', 'fell', 'bare_rock', 'scree', 'shingle', 'sand', 'mud', 'water', 'wetland', 'glacier', 'bay', 'beach', 'hot_spring', 'rock', 'stone', 'sinkhole')) OR
+        (ways.tags?'natural' AND ways.tags->'natural' in ('wood', 'scrub', 'heath', 'moor', 'grassland', 'fell', 'bare_rock',
+        'scree', 'shingle', 'sand', 'mud', 'water', 'wetland', 'glacier', 'bay', 'beach', 'hot_spring', 'rock', 'stone', 'sinkhole'))
+        OR
         (ways.tags?'waterway' AND ways.tags->'waterway' in ('boatyard', 'dock', 'riverbank', 'fuel')) OR
-        (ways.tags?'leisure' AND ways.tags->'leisure' in ('adult_gaming_centre', 'amusement_arcade', 'beach_resort', 'bandstand', 'bird_hide', 'common', 'dance', 'dog_park', 'firepit', 'fishing', 'fitness_centre', 'garden', 'golf_course', 'hackerspace', 'horse_riding', 'ice_rink', 'marina', 'miniature_golf', 'nature_reserve', 'park', 'picnic_table', 'pitch', 'playground', 'sports_centre', 'stadium', 'summer_camp', 'swimming_area', 'swimming_pool', 'water_park', 'wildlife_hide')) OR
-        (ways.tags?'amenity' AND ways.tags->'amenity' in ('bar', 'biergarten', 'cafe', 'fast_food', 'food_court', 'ice_cream', 'pub', 'restaurant', 'college', 'kindergarten', 'library', 'public_bookcase', 'school', 'music_school', 'driving_school', 'language_school', 'university', 'bicycle_repair_station', 'bicycle_rental', 'boat_sharing', 'bus_station', 'car_rental', 'car_sharing', 'car_wash', 'ferry_terminal', 'fuel', 'motorcycle_parking', 'parking', 'parking_space', 'taxi', 'bank', 'baby_hatch', 'clinic', 'dentist', 'doctors', 'hospital', 'nursing_home', 'pharmacy', 'social_facility', 'veterinary', 'blood_donation', 'arts_centre', 'brothel', 'casino', 'cinema', 'community_centre', 'fountain', 'gambling', 'nightclub', 'planetarium', 'social_centre', 'studio', 'swingerclub', 'theatre', 'animal_boarding', 'animal_shelter', 'courthouse', 'coworking_space', 'crematorium', 'crypt', 'dive_centre', 'dojo', 'embassy', 'fire_station', 'firepit', 'game_feeding', 'grave_yard', 'gym', 'hunting_stand', 'internet_cafe', 'kneipp_water_cure', 'marketplace', 'place_of_worship', 'police', 'post_office', 'prison', 'public_building', 'ranger_station', 'recycling', 'rescue_station', 'sauna', 'shelter', 'shower', 'toilets', 'townhall', 'waste_transfer_station')) OR
-        ways.tags?'building'
+        (ways.tags?'leisure' AND ways.tags->'leisure' in ('adult_gaming_centre', 'amusement_arcade', 'beach_resort',
+        'bandstand', 'bird_hide', 'common', 'dance', 'dog_park', 'firepit', 'fishing', 'fitness_centre', 'garden',
+        'golf_course', 'hackerspace', 'horse_riding', 'ice_rink', 'marina', 'miniature_golf', 'nature_reserve',
+        'park', 'picnic_table', 'pitch', 'playground', 'sports_centre', 'stadium', 'summer_camp', 'swimming_area',
+        'swimming_pool', 'water_park', 'wildlife_hide')) OR
+        (ways.tags?'amenity' AND ways.tags->'amenity' in ('bar', 'biergarten', 'cafe', 'fast_food', 'food_court',
+        'ice_cream', 'pub', 'restaurant', 'college', 'kindergarten', 'library', 'public_bookcase', 'school', 'music_school',
+        'driving_school', 'language_school', 'university', 'bicycle_repair_station', 'bicycle_rental', 'boat_sharing',
+        'bus_station', 'car_rental', 'car_sharing', 'car_wash', 'ferry_terminal', 'fuel', 'motorcycle_parking', 'parking',
+        'parking_space', 'taxi', 'bank', 'baby_hatch', 'clinic', 'dentist', 'doctors', 'hospital', 'nursing_home',
+        'pharmacy', 'social_facility', 'veterinary', 'blood_donation', 'arts_centre', 'brothel', 'casino', 'cinema',
+        'community_centre', 'fountain', 'gambling', 'nightclub', 'planetarium', 'social_centre', 'studio', 'swingerclub',
+        'theatre', 'animal_boarding', 'animal_shelter', 'courthouse', 'coworking_space', 'crematorium', 'crypt',
+        'dive_centre', 'dojo', 'embassy', 'fire_station', 'firepit', 'game_feeding', 'grave_yard', 'gym', 'hunting_stand',
+        'internet_cafe', 'kneipp_water_cure', 'marketplace', 'place_of_worship', 'police', 'post_office', 'prison', 'public_building',
+        'ranger_station', 'recycling', 'rescue_station', 'sauna', 'shelter', 'shower', 'toilets', 'townhall', 'waste_transfer_station'))
+        OR ways.tags?'building'
     ) AND
     ways.linestring IS NOT NULL AND
     NOT ways.is_polygon AND
@@ -198,45 +215,131 @@ WHERE
     (NOT ST_IsClosed(ways.linestring) OR array_length(ways.nodes,1) = 3)
 """
 
+
 class Analyser_Osmosis_Relation_Multipolygon(Analyser_Osmosis):
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
-        self.classs_change[1] = self.def_class(item = 1170, level = 3, tags = ['relation', 'fix:chair', 'geom'],
-            title = T_('Double inner polygon'),
-            detail = T_(
-'''The geometry of the inner of the multipolygon is duplicated. One in
-relation without tag and another with tags not part of the relation.'''),
-            fix = T_(
-'''Remove the ring without tag. Add in the relation the one with the tags
-as `inner` role.'''))
-        self.classs_change[2] = self.def_class(item = 1170, level = 2, tags = ['relation', 'fix:chair', 'multipolygon'],
-            title = T_('Inconsistent multipolygon nature with members nature'),
-            detail = T_(
-'''Multipolygon defines a nature that is different from that specified in
-the outers roles.'''))
-        self.classs[3] = self.def_class(item = 1170, level = 2, tags = ['relation', 'fix:chair', 'multipolygon'],
-            title = T_('Inconsistent multipolygon member nature'),
-            detail = T_(
-'''Multipolygon does not define nature, several found on the outer role
-members.'''))
-        self.classs_change[4] = self.def_class(item = 1170, level = 1, tags = ['relation', 'fix:chair', 'geom'],
-            title = T_('Should be polygon, part of multipolygon or not having area tag'),
-            detail = T_(
-'''The nature of the way indicates that it is a surface, the way would be
-a polygon or a part of a multipolygon as outer role.'''),
-            fix = T_(
-'''Close the way to make a polygon or add to a multipolygon.'''))
+        self.classs_change[1] = self.def_class(
+            item=1170,
+            level=3,
+            tags=["relation", "fix:chair", "geom"],
+            title=T_("Double inner polygon"),
+            detail=T_(
+                """The geometry of the inner of the multipolygon is duplicated. One in
+relation without tag and another with tags not part of the relation."""
+            ),
+            fix=T_(
+                """Remove the ring without tag. Add in the relation the one with the tags
+as `inner` role."""
+            ),
+        )
+        self.classs_change[2] = self.def_class(
+            item=1170,
+            level=2,
+            tags=["relation", "fix:chair", "multipolygon"],
+            title=T_("Inconsistent multipolygon nature with members nature"),
+            detail=T_(
+                """Multipolygon defines a nature that is different from that specified in
+the outers roles."""
+            ),
+        )
+        self.classs[3] = self.def_class(
+            item=1170,
+            level=2,
+            tags=["relation", "fix:chair", "multipolygon"],
+            title=T_("Inconsistent multipolygon member nature"),
+            detail=T_(
+                """Multipolygon does not define nature, several found on the outer role
+members."""
+            ),
+        )
+        self.classs_change[4] = self.def_class(
+            item=1170,
+            level=1,
+            tags=["relation", "fix:chair", "geom"],
+            title=T_("Should be polygon, part of multipolygon or not having area tag"),
+            detail=T_(
+                """The nature of the way indicates that it is a surface, the way would be
+a polygon or a part of a multipolygon as outer role."""
+            ),
+            fix=T_("""Close the way to make a polygon or add to a multipolygon."""),
+        )
 
-        self.callback10 = lambda res: {"class":1, "data":[self.relation_full, self.way_full, self.way_full, self.positionAsText]}
-        self.callback20 = lambda res: {"class":2, "subclass":stablehash64(res[11]), "data":[self.relation_full, self.way_full, self.positionAsText],
-            "text": {"en": u", ".join(map(lambda k: "{0}=({1},{2})".format(*k), filter(lambda k: k[1], (("landuse",res[3],res[4]), ("natural",res[5],res[6]), ("waterway",res[7],res[8]), ("building",res[9],res[10])))))}
+        self.callback10 = lambda res: {
+            "class": 1,
+            "data": [
+                self.relation_full,
+                self.way_full,
+                self.way_full,
+                self.positionAsText,
+            ],
         }
-        self.callback30 = lambda res: {"class":3, "subclass":1, "data":[self.relation_full, self.positionAsText],
-            "text": {"en": u", ".join(map(lambda k: "{0}=({1})".format(*k), filter(lambda k: k[1], (("landuse",res[2]), ("natural",res[3]), ("waterway",res[4]), ("building",res[5])))))}
+        self.callback20 = lambda res: {
+            "class": 2,
+            "subclass": stablehash64(res[11]),
+            "data": [self.relation_full, self.way_full, self.positionAsText],
+            "text": {
+                "en": ", ".join(
+                    map(
+                        lambda k: "{0}=({1},{2})".format(*k),
+                        filter(
+                            lambda k: k[1],
+                            (
+                                ("landuse", res[3], res[4]),
+                                ("natural", res[5], res[6]),
+                                ("waterway", res[7], res[8]),
+                                ("building", res[9], res[10]),
+                            ),
+                        ),
+                    )
+                )
+            },
         }
-        self.callback40 = lambda res: {"class":4, "subclass":stablehash64(res[9]), "data":[self.way_full, self.positionAsText],
-            "text": {"en": u", ".join(map(lambda k: "{0}={1}".format(*k), filter(lambda k: k[1], (("area",res[2]), ("landuse",res[3]), ("natural",res[4]), ("waterway",res[5]), ("leisure",res[6]), ("amenity",res[7]), ("building",res[8])))))}
+        self.callback30 = lambda res: {
+            "class": 3,
+            "subclass": 1,
+            "data": [self.relation_full, self.positionAsText],
+            "text": {
+                "en": ", ".join(
+                    map(
+                        lambda k: "{0}=({1})".format(*k),
+                        filter(
+                            lambda k: k[1],
+                            (
+                                ("landuse", res[2]),
+                                ("natural", res[3]),
+                                ("waterway", res[4]),
+                                ("building", res[5]),
+                            ),
+                        ),
+                    )
+                )
+            },
+        }
+        self.callback40 = lambda res: {
+            "class": 4,
+            "subclass": stablehash64(res[9]),
+            "data": [self.way_full, self.positionAsText],
+            "text": {
+                "en": ", ".join(
+                    map(
+                        lambda k: "{0}={1}".format(*k),
+                        filter(
+                            lambda k: k[1],
+                            (
+                                ("area", res[2]),
+                                ("landuse", res[3]),
+                                ("natural", res[4]),
+                                ("waterway", res[5]),
+                                ("leisure", res[6]),
+                                ("amenity", res[7]),
+                                ("building", res[8]),
+                            ),
+                        ),
+                    )
+                )
+            },
         }
 
     def analyser_osmosis_common(self):
@@ -255,7 +358,9 @@ a polygon or a part of a multipolygon as outer role.'''),
         self.create_view_touched("rel_poly", "W")
         self.run(sql12.format("touched_", "", ""), self.callback10)
         self.run(sql12.format("not_touched_", "touched_", ""), self.callback10)
-        self.run(sql12.format("not_touched_", "not_touched_", "touched_"), self.callback10)
+        self.run(
+            sql12.format("not_touched_", "not_touched_", "touched_"), self.callback10
+        )
         self.run(sql20.format("touched_", ""), self.callback20)
         self.run(sql20.format("not_touched_", "touched_"), self.callback20)
         self.run(sql40.format("touched_"), self.callback40)

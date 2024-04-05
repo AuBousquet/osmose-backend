@@ -1,27 +1,28 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Etienne Chové <chove@crans.org> 2010                       ##
-##            Frédéric Rodrigo <****@free.fr> 2011                       ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Etienne Chové <chove@crans.org> 2010                       #
+#          Frédéric Rodrigo <****@free.fr> 2011                       #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
+
 from .Analyser_Osmosis import Analyser_Osmosis
 
 sql00 = """
@@ -443,47 +444,152 @@ FROM (
   ) AS t
 """
 
+
 class Analyser_Osmosis_Highway_VS_Building(Analyser_Osmosis):
 
-    requires_tables_full = ['buildings', 'highways']
-    requires_tables_diff = ['buildings', 'touched_buildings', 'highways']
+    requires_tables_full = ["buildings", "highways"]
+    requires_tables_diff = ["buildings", "touched_buildings", "highways"]
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
         doc = dict(
-            detail = T_(
-'''Two features overlap with no shared node to indicate a physical connection or tagging to indicate a vertical separation.'''),
-            fix = T_(
-'''Move a feature if it's in the wrong place. Connect the features if appropriate or update the tags if not.'''),
-            trap = T_(
-'''A feature may be missing a tag, such as `tunnel=*`, `bridge=*`, `covered=*` or `ford=*`.
+            detail=T_(
+                """Two features overlap with no shared node to indicate a physical connection or tagging to indicate a vertical separation."""
+            ),
+            fix=T_(
+                """Move a feature if it's in the wrong place. Connect the features if appropriate or update the tags if not."""
+            ),
+            trap=T_(
+                """A feature may be missing a tag, such as `tunnel=*`, `bridge=*`, `covered=*` or `ford=*`.
 If a road or railway intersects a building, consider adding the `layer=*` tag to it.
-Warning: information sources can be contradictory in time or with spatial offset.'''),
-            example = T_(
-'''![](https://wiki.openstreetmap.org/w/images/d/dc/Osmose-eg-error-1070.png)
+Warning: information sources can be contradictory in time or with spatial offset."""
+            ),
+            example=T_(
+                """![](https://wiki.openstreetmap.org/w/images/d/dc/Osmose-eg-error-1070.png)
 
-Intersection lane / building.'''))
-        self.classs_change[1] = self.def_class(item = 1070, level = 2, tags = ['highway', 'building', 'geom', 'fix:imagery'], title = T_(u'Highway intersecting building'), **doc)
-        self.classs_change[2] = self.def_class(item = 1070, level = 2, tags = ['tree', 'building', 'geom', 'fix:imagery'], title = T_(u'Tree intersecting building'), **doc)
-        self.classs_change[3] = self.def_class(item = 1070, level = 2, tags = ['highway', 'tree', 'geom', 'fix:imagery'], title = T_(u'Tree and highway too close'), **doc)
-        self.classs_change[4] = self.def_class(item = 1070, level = 3, tags = ['highway', 'waterway', 'geom', 'fix:imagery'], title = T_(u'Highway intersecting small water piece'), **doc)
-        self.classs_change[5] = self.def_class(item = 1070, level = 2, tags = ['highway', 'waterway', 'geom', 'fix:imagery'], title = T_(u'Highway intersecting large water piece'), **doc)
-        self.classs_change[6] = self.def_class(item = 1070, level = 2, tags = ['power', 'building', 'geom', 'fix:imagery'], title = T_(u'Power object intersecting building'), **doc)
-        self.classs_change[7] = self.def_class(item = 1070, level = 2, tags = ['highway', 'power', 'geom', 'fix:imagery'], title = T_(u'Power object and highway too close'), **doc)
-        self.classs_change[8] = self.def_class(item = 1070, level = 2, tags = ['highway', 'geom', 'fix:imagery'], title = T_(u'Highway intersecting highway'), **doc)
-        self.classs_change[9] = self.def_class(item = 1070, level = 2, tags = ['highway', 'geom', 'fix:imagery'], title = T_(u'Highway overlaps'), **doc)
-        self.classs_change[10] = self.def_class(item = 1070, level = 3, tags = ['waterway', 'geom', 'fix:imagery'], title = T_(u'Waterway intersecting waterway'), **doc)
-        self.classs_change[11] = self.def_class(item = 1070, level = 3, tags = ['waterway', 'geom', 'fix:imagery'], title = T_(u'Waterway overlaps'), **doc)
-        self.classs_change[16] = self.def_class(item = 1070, level = 2, tags = ['highway', 'shop', 'geom'], title = T_(u'Commercial object or office and highway too close'), **doc)
-        self.callback10 = lambda res: {"class":1, "data":[self.way_full, self.way_full, self.positionAsText]}
-        self.callback20 = lambda res: {"class":2, "data":[self.node_full, self.way_full, self.positionAsText]}
-        self.callback21 = lambda res: {"class":6, "data":[self.node_full, self.way_full, self.positionAsText]}
-        self.callback30 = lambda res: {"class":3, "data":[self.node_full, self.way_full, self.positionAsText]}
-        self.callback31 = lambda res: {"class":7, "data":[self.node_full, self.way_full, self.positionAsText]}
-        self.callback32 = lambda res: {"class":16, "data":[self.node_full, self.way_full, self.positionAsText]}
-        self.callback40 = lambda res: {"class":res[3], "data":[self.way_full, self.way_full, self.positionAsText]}
-        self.callback50 = lambda res: {"class":res[3], "data":[self.way_full, self.way_full, self.positionAsText] }
-        self.callback60 = lambda res: {"class":res[3], "data":[self.way_full, self.way_full, self.positionAsText] }
+Intersection lane / building."""
+            ),
+        )
+        self.classs_change[1] = self.def_class(
+            item=1070,
+            level=2,
+            tags=["highway", "building", "geom", "fix:imagery"],
+            title=T_("Highway intersecting building"),
+            **doc
+        )
+        self.classs_change[2] = self.def_class(
+            item=1070,
+            level=2,
+            tags=["tree", "building", "geom", "fix:imagery"],
+            title=T_("Tree intersecting building"),
+            **doc
+        )
+        self.classs_change[3] = self.def_class(
+            item=1070,
+            level=2,
+            tags=["highway", "tree", "geom", "fix:imagery"],
+            title=T_("Tree and highway too close"),
+            **doc
+        )
+        self.classs_change[4] = self.def_class(
+            item=1070,
+            level=3,
+            tags=["highway", "waterway", "geom", "fix:imagery"],
+            title=T_("Highway intersecting small water piece"),
+            **doc
+        )
+        self.classs_change[5] = self.def_class(
+            item=1070,
+            level=2,
+            tags=["highway", "waterway", "geom", "fix:imagery"],
+            title=T_("Highway intersecting large water piece"),
+            **doc
+        )
+        self.classs_change[6] = self.def_class(
+            item=1070,
+            level=2,
+            tags=["power", "building", "geom", "fix:imagery"],
+            title=T_("Power object intersecting building"),
+            **doc
+        )
+        self.classs_change[7] = self.def_class(
+            item=1070,
+            level=2,
+            tags=["highway", "power", "geom", "fix:imagery"],
+            title=T_("Power object and highway too close"),
+            **doc
+        )
+        self.classs_change[8] = self.def_class(
+            item=1070,
+            level=2,
+            tags=["highway", "geom", "fix:imagery"],
+            title=T_("Highway intersecting highway"),
+            **doc
+        )
+        self.classs_change[9] = self.def_class(
+            item=1070,
+            level=2,
+            tags=["highway", "geom", "fix:imagery"],
+            title=T_("Highway overlaps"),
+            **doc
+        )
+        self.classs_change[10] = self.def_class(
+            item=1070,
+            level=3,
+            tags=["waterway", "geom", "fix:imagery"],
+            title=T_("Waterway intersecting waterway"),
+            **doc
+        )
+        self.classs_change[11] = self.def_class(
+            item=1070,
+            level=3,
+            tags=["waterway", "geom", "fix:imagery"],
+            title=T_("Waterway overlaps"),
+            **doc
+        )
+        self.classs_change[16] = self.def_class(
+            item=1070,
+            level=2,
+            tags=["highway", "shop", "geom"],
+            title=T_("Commercial object or office and highway too close"),
+            **doc
+        )
+        self.callback10 = lambda res: {
+            "class": 1,
+            "data": [self.way_full, self.way_full, self.positionAsText],
+        }
+        self.callback20 = lambda res: {
+            "class": 2,
+            "data": [self.node_full, self.way_full, self.positionAsText],
+        }
+        self.callback21 = lambda res: {
+            "class": 6,
+            "data": [self.node_full, self.way_full, self.positionAsText],
+        }
+        self.callback30 = lambda res: {
+            "class": 3,
+            "data": [self.node_full, self.way_full, self.positionAsText],
+        }
+        self.callback31 = lambda res: {
+            "class": 7,
+            "data": [self.node_full, self.way_full, self.positionAsText],
+        }
+        self.callback32 = lambda res: {
+            "class": 16,
+            "data": [self.node_full, self.way_full, self.positionAsText],
+        }
+        self.callback40 = lambda res: {
+            "class": res[3],
+            "data": [self.way_full, self.way_full, self.positionAsText],
+        }
+        self.callback50 = lambda res: {
+            "class": res[3],
+            "data": [self.way_full, self.way_full, self.positionAsText],
+        }
+        self.callback60 = lambda res: {
+            "class": res[3],
+            "data": [self.way_full, self.way_full, self.positionAsText],
+        }
 
         self.country = self.config.options.get("country")
 
@@ -505,8 +611,10 @@ Intersection lane / building.'''))
         self.run(sql30.format("", ""), self.callback30)
         self.run(sql31.format("", ""), self.callback31)
         self.run(sql32.format("", ""), self.callback32)
-        if self.country and self.country.startswith("CA-BC"): # Too many results
-            self.run(sql40.format("", "", "AND water.waterway != 'stream'"), self.callback40)
+        if self.country and self.country.startswith("CA-BC"):  # Too many results
+            self.run(
+                sql40.format("", "", "AND water.waterway != 'stream'"), self.callback40
+            )
         else:
             self.run(sql40.format("", "", ""), self.callback40)
         self.run(sql50.format("", "", "false"))
@@ -548,9 +656,17 @@ Intersection lane / building.'''))
         self.run(sql31.format("not_touched_", "touched_"), self.callback31)
         self.run(sql32.format("touched_", ""), self.callback31)
         self.run(sql32.format("not_touched_", "touched_"), self.callback31)
-        if self.country and self.country.startswith("CA-BC"): # Too many results
-            self.run(sql40.format("touched_", "not_touched_", "AND water.waterway != 'stream'"), self.callback40)
-            self.run(sql40.format("", "touched_", "AND water.waterway != 'stream'"), self.callback40)
+        if self.country and self.country.startswith("CA-BC"):  # Too many results
+            self.run(
+                sql40.format(
+                    "touched_", "not_touched_", "AND water.waterway != 'stream'"
+                ),
+                self.callback40,
+            )
+            self.run(
+                sql40.format("", "touched_", "AND water.waterway != 'stream'"),
+                self.callback40,
+            )
         else:
             self.run(sql40.format("touched_", "not_touched_", ""), self.callback40)
             self.run(sql40.format("", "touched_", ""), self.callback40)
@@ -570,14 +686,18 @@ Intersection lane / building.'''))
 
 from .Analyser_Osmosis import TestAnalyserOsmosis
 
+
 class Test(TestAnalyserOsmosis):
     @classmethod
     def setup_class(cls):
         from modules import config
+
         TestAnalyserOsmosis.setup_class()
-        cls.analyser_conf = cls.load_osm("tests/osmosis_highway_vs_building.osm",
-                                         config.dir_tmp + "/tests/osmosis_highway_vs_building.test.xml",
-                                         {"proj": 23032})
+        cls.analyser_conf = cls.load_osm(
+            "tests/osmosis_highway_vs_building.osm",
+            config.dir_tmp + "/tests/osmosis_highway_vs_building.test.xml",
+            {"proj": 23032},
+        )
 
     def test_classes(self):
         with Analyser_Osmosis_Highway_VS_Building(self.analyser_conf, self.logger) as a:

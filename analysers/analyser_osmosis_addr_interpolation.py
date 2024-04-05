@@ -1,26 +1,27 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2019                                      ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2019                                      #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
+
 from .Analyser_Osmosis import Analyser_Osmosis
 
 sql00 = """
@@ -183,32 +184,93 @@ HAVING
     COUNT(DISTINCT relations.id) != 1
 """
 
+
 class Analyser_Osmosis_Addr_Interpolation(Analyser_Osmosis):
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
-        self.classs[100] = self.def_class(item = 2060, level = 3, tags = ['addr', 'fix:chair'],
-            title = T_('Interpolation on nodes without tag "addr:housenumber"'))
-        self.classs[101] = self.def_class(item = 2060, level = 3, tags = ['addr', 'fix:chair'],
-            title = T_('"addr:housenumber" in multiple interpolations'))
-        self.classs[102] = self.def_class(item = 2060, level = 2, tags = ['addr', 'fix:chair'],
-            title = T_('Interpolation intersection'))
-        self.classs[103] = self.def_class(item = 2060, level = 3, tags = ['addr', 'fix:chair'],
-            title = T_('Interpolation ends should have tag "addr:housenumber"'))
-        self.classs[104] = self.def_class(item = 2060, level = 3, tags = ['addr', 'fix:chair'],
-            title = T_('Interpolation ends should have different tag "addr:housenumber" values'))
-        self.classs[16] = self.def_class(item ="2060", level = 2, tags = ['addr', 'fix:chair'],
-            title = T_('Interpolation on nodes of multiple street names'))
-        self.classs[17] = self.def_class(item ="2060", level = 2, tags = ['addr', 'fix:chair'],
-            title = T_('Interpolation on nodes of multiple "associatedStreet" relations'))
+        self.classs[100] = self.def_class(
+            item=2060,
+            level=3,
+            tags=["addr", "fix:chair"],
+            title=T_('Interpolation on nodes without tag "addr:housenumber"'),
+        )
+        self.classs[101] = self.def_class(
+            item=2060,
+            level=3,
+            tags=["addr", "fix:chair"],
+            title=T_('"addr:housenumber" in multiple interpolations'),
+        )
+        self.classs[102] = self.def_class(
+            item=2060,
+            level=2,
+            tags=["addr", "fix:chair"],
+            title=T_("Interpolation intersection"),
+        )
+        self.classs[103] = self.def_class(
+            item=2060,
+            level=3,
+            tags=["addr", "fix:chair"],
+            title=T_('Interpolation ends should have tag "addr:housenumber"'),
+        )
+        self.classs[104] = self.def_class(
+            item=2060,
+            level=3,
+            tags=["addr", "fix:chair"],
+            title=T_(
+                'Interpolation ends should have different tag "addr:housenumber" values'
+            ),
+        )
+        self.classs[16] = self.def_class(
+            item="2060",
+            level=2,
+            tags=["addr", "fix:chair"],
+            title=T_("Interpolation on nodes of multiple street names"),
+        )
+        self.classs[17] = self.def_class(
+            item="2060",
+            level=2,
+            tags=["addr", "fix:chair"],
+            title=T_('Interpolation on nodes of multiple "associatedStreet" relations'),
+        )
 
-        self.callback10 = lambda res: {"class":100, "subclass":0, "data":[self.node_full, self.positionAsText] }
-        self.callback20 = lambda res: {"class":101, "subclass":0, "data":[self.node_full, self.positionAsText] }
-        self.callback30 = lambda res: {"class":102, "subclass":0, "data":[self.way_full, self.way_full, self.positionAsText] }
-        self.callback40 = lambda res: {"class":103, "subclass":0, "data":[self.way_full, self.positionAsText] }
-        self.callback50 = lambda res: {"class":104, "subclass":0, "data":[self.way_full, self.positionAsText] }
-        self.callback60 = lambda res: {"class":16, "subclass":1, "data":[self.way_full, self.positionAsText], "text": T_("Interpolation span on streets: {0}", res[2]) }
-        self.callback70 = lambda res: {"class":17, "subclass":1, "data":[self.node_full, self.positionAsText], "text": T_("Interpolation span on streets: {0}", res[2]) }
+        self.callback10 = lambda res: {
+            "class": 100,
+            "subclass": 0,
+            "data": [self.node_full, self.positionAsText],
+        }
+        self.callback20 = lambda res: {
+            "class": 101,
+            "subclass": 0,
+            "data": [self.node_full, self.positionAsText],
+        }
+        self.callback30 = lambda res: {
+            "class": 102,
+            "subclass": 0,
+            "data": [self.way_full, self.way_full, self.positionAsText],
+        }
+        self.callback40 = lambda res: {
+            "class": 103,
+            "subclass": 0,
+            "data": [self.way_full, self.positionAsText],
+        }
+        self.callback50 = lambda res: {
+            "class": 104,
+            "subclass": 0,
+            "data": [self.way_full, self.positionAsText],
+        }
+        self.callback60 = lambda res: {
+            "class": 16,
+            "subclass": 1,
+            "data": [self.way_full, self.positionAsText],
+            "text": T_("Interpolation span on streets: {0}", res[2]),
+        }
+        self.callback70 = lambda res: {
+            "class": 17,
+            "subclass": 1,
+            "data": [self.node_full, self.positionAsText],
+            "text": T_("Interpolation span on streets: {0}", res[2]),
+        }
 
     def analyser_osmosis_common(self):
         self.run(sql00)

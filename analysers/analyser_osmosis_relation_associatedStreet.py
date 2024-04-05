@@ -1,26 +1,27 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2011-2014                                 ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2011-2014                                 #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
+
 from .Analyser_Osmosis import Analyser_Osmosis
 
 sql00 = """
@@ -607,87 +608,241 @@ FROM
         )
 """
 
+
 class Analyser_Osmosis_Relation_AssociatedStreet(Analyser_Osmosis):
 
-    requires_tables_common = ['highways']
+    requires_tables_common = ["highways"]
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
-        self.classs[1] = self.def_class(item = 2060, level = 3, tags = ['addr', 'relation', 'fix:chair'],
-            title = T_('addr:housenumber or addr:housename without addr:street, addr:district, addr:neighbourhood, addr:quarter, addr:suburb, addr:place or addr:hamlet must be in a associatedStreet relation'),
-            detail = T_(
-'''There is only a part of the required tag `addr:*=*`. They do not
-provide a consistent address.'''))
-        self.classs_change[2] = self.def_class(item = 2060, level = 2, tags = ['addr', 'relation', 'fix:chair'],
-            title = T_('No street role'),
-            detail = T_(
-'''The street is not present in relation with the role `street`.'''))
-        self.classs_change[3] = self.def_class(item = 2060, level = 2, tags = ['addr', 'fix:chair'],
-            title = T_('street role is not a highway'),
-            detail = T_(
-'''The street must be a highway.'''))
-        self.classs_change[4] = self.def_class(item = 2060, level = 3, tags = ['addr', 'relation', 'fix:chair'],
-            title = T_('Roleless member'),
-            detail = T_(
-'''A member without role is present in the relation.'''))
-        self.classs_change[5] = self.def_class(item = 2060, level = 3, tags = ['addr', 'fix:chair'],
-            title = T_('Member without addr:housenumber nor addr:housename'),
-            detail = T_(
-'''Address without number is present.'''))
-        self.classs[6] = self.def_class(item = 2060, level = 3, tags = ['addr', 'fix:survey'],
-            title = T_('Number twice in the street'))
-        self.classs[7] = self.def_class(item = 2060, level = 2, tags = ['addr', 'fix:chair'],
-            title = T_('Many street names'))
-        self.classs[8] = self.def_class(item = 2060, level = 2, tags = ['addr', 'relation', 'fix:chair'],
-            title = T_('Many relations on one street'))
-        self.classs[9] = self.def_class(item = 2060, level = 2, tags = ['addr', 'geom', 'fix:chair'],
-            title = T_('House too far away from street'))
+        self.classs[1] = self.def_class(
+            item=2060,
+            level=3,
+            tags=["addr", "relation", "fix:chair"],
+            title=T_(
+                "addr:housenumber or addr:housename without addr:street, addr:district, addr:neighbourhood, addr:quarter, addr:suburb, addr:place or addr:hamlet must be in a associatedStreet relation"
+            ),
+            detail=T_(
+                """There is only a part of the required tag `addr:*=*`. They do not
+provide a consistent address."""
+            ),
+        )
+        self.classs_change[2] = self.def_class(
+            item=2060,
+            level=2,
+            tags=["addr", "relation", "fix:chair"],
+            title=T_("No street role"),
+            detail=T_(
+                """The street is not present in relation with the role `street`."""
+            ),
+        )
+        self.classs_change[3] = self.def_class(
+            item=2060,
+            level=2,
+            tags=["addr", "fix:chair"],
+            title=T_("street role is not a highway"),
+            detail=T_("""The street must be a highway."""),
+        )
+        self.classs_change[4] = self.def_class(
+            item=2060,
+            level=3,
+            tags=["addr", "relation", "fix:chair"],
+            title=T_("Roleless member"),
+            detail=T_("""A member without role is present in the relation."""),
+        )
+        self.classs_change[5] = self.def_class(
+            item=2060,
+            level=3,
+            tags=["addr", "fix:chair"],
+            title=T_("Member without addr:housenumber nor addr:housename"),
+            detail=T_("""Address without number is present."""),
+        )
+        self.classs[6] = self.def_class(
+            item=2060,
+            level=3,
+            tags=["addr", "fix:survey"],
+            title=T_("Number twice in the street"),
+        )
+        self.classs[7] = self.def_class(
+            item=2060,
+            level=2,
+            tags=["addr", "fix:chair"],
+            title=T_("Many street names"),
+        )
+        self.classs[8] = self.def_class(
+            item=2060,
+            level=2,
+            tags=["addr", "relation", "fix:chair"],
+            title=T_("Many relations on one street"),
+        )
+        self.classs[9] = self.def_class(
+            item=2060,
+            level=2,
+            tags=["addr", "geom", "fix:chair"],
+            title=T_("House too far away from street"),
+        )
         if self.config.options.get("addr:city-admin_level"):
-            self.classs[12] = self.def_class(item = 2060, level = 2, tags = ['addr', 'fix:chair'],
-                title = T_('Tag "addr:city" not matching a city'))
-        self.classs[18] = self.def_class(item ="2060", level = 2, tags = ['addr', 'fix:chair'],
-            title = T_('Missing highway in associatedStreet relation'),
-            fix = T_(
-'''Extend the relation to include the way with the same name.'''))
-        self.classs[19] = self.def_class(item ="2060", level = 2, tags = ['addr', 'fix:chair'],
-            title = T_('Tag "addr:street" not matching a street name around'))
+            self.classs[12] = self.def_class(
+                item=2060,
+                level=2,
+                tags=["addr", "fix:chair"],
+                title=T_('Tag "addr:city" not matching a city'),
+            )
+        self.classs[18] = self.def_class(
+            item="2060",
+            level=2,
+            tags=["addr", "fix:chair"],
+            title=T_("Missing highway in associatedStreet relation"),
+            fix=T_("""Extend the relation to include the way with the same name."""),
+        )
+        self.classs[19] = self.def_class(
+            item="2060",
+            level=2,
+            tags=["addr", "fix:chair"],
+            title=T_('Tag "addr:street" not matching a street name around'),
+        )
 
-        self.callback20 = lambda res: res[1] and {"class":2, "subclass":1, "data":[self.relation_full, self.positionAsText]}
-        self.callback30 = lambda res: {"class":3, "subclass":1, "data":[self.way_full, self.relation, self.positionAsText]}
-        self.callback40 = lambda res: {"class":4, "subclass":1, "data":[self.node_full, self.relation, self.positionAsText]}
-        self.callback41 = lambda res: {"class":4, "subclass":2, "data":[self.way_full, self.relation, self.positionAsText]}
-        self.callback50 = lambda res: {"class":5, "subclass":1, "data":[self.node_full, self.relation, self.positionAsText]}
-        self.callback51 = lambda res: {"class":5, "subclass":1, "data":[self.way_full, self.relation, self.positionAsText]}
-        self.callbackC2 = lambda res: {"class":12, "subclass":1, "data":[lambda t: self.typeMapping[res[1]](t), None, self.positionAsText]}
-        self.callbackD1 = lambda res: {"class":19, "subclass":1, "data":[lambda t: self.typeMapping[res[1]](t), None, None, self.positionAsText], "text": T_("No street with name \"{0}\" found around", res[2])}
-        self.callbackF0 = lambda res: {"class":18, "subclass":1, "data":[self.way_full, self.relation, self.positionAsText]}
+        self.callback20 = lambda res: res[1] and {
+            "class": 2,
+            "subclass": 1,
+            "data": [self.relation_full, self.positionAsText],
+        }
+        self.callback30 = lambda res: {
+            "class": 3,
+            "subclass": 1,
+            "data": [self.way_full, self.relation, self.positionAsText],
+        }
+        self.callback40 = lambda res: {
+            "class": 4,
+            "subclass": 1,
+            "data": [self.node_full, self.relation, self.positionAsText],
+        }
+        self.callback41 = lambda res: {
+            "class": 4,
+            "subclass": 2,
+            "data": [self.way_full, self.relation, self.positionAsText],
+        }
+        self.callback50 = lambda res: {
+            "class": 5,
+            "subclass": 1,
+            "data": [self.node_full, self.relation, self.positionAsText],
+        }
+        self.callback51 = lambda res: {
+            "class": 5,
+            "subclass": 1,
+            "data": [self.way_full, self.relation, self.positionAsText],
+        }
+        self.callbackC2 = lambda res: {
+            "class": 12,
+            "subclass": 1,
+            "data": [lambda t: self.typeMapping[res[1]](t), None, self.positionAsText],
+        }
+        self.callbackD1 = lambda res: {
+            "class": 19,
+            "subclass": 1,
+            "data": [
+                lambda t: self.typeMapping[res[1]](t),
+                None,
+                None,
+                self.positionAsText,
+            ],
+            "text": T_('No street with name "{0}" found around', res[2]),
+        }
+        self.callbackF0 = lambda res: {
+            "class": 18,
+            "subclass": 1,
+            "data": [self.way_full, self.relation, self.positionAsText],
+        }
 
     def analyser_osmosis_common(self):
         self.run(sql00.format(self.config.options.get("proj", 4326)))
         self.run(sql01.format(self.config.options.get("proj", 4326)))
-        self.run(sql10, lambda res: {"class":1, "subclass":1, "data":[self.way_full, self.positionAsText]} )
-        self.run(sql11, lambda res: {"class":1, "subclass":2, "data":[self.node_full, self.positionAsText]} )
+        self.run(
+            sql10,
+            lambda res: {
+                "class": 1,
+                "subclass": 1,
+                "data": [self.way_full, self.positionAsText],
+            },
+        )
+        self.run(
+            sql11,
+            lambda res: {
+                "class": 1,
+                "subclass": 2,
+                "data": [self.node_full, self.positionAsText],
+            },
+        )
         if "proj" in self.config.options:
             self.run(sql60.format(self.config.options.get("proj")))
             self.run(sql61)
             self.run(sql62)
-            self.run(sql63, lambda res: {"class":6, "subclass":1,
-                "data":[lambda t: self.typeMapping[res[1]](t), None, self.positionAsText],
-                "text": T_("Multiple numbers \"{numbers}\" in way \"{way}\"", numbers = ",  ".join(filter(lambda z: z, res[4:])), way = res[3]),
-            })
+            self.run(
+                sql63,
+                lambda res: {
+                    "class": 6,
+                    "subclass": 1,
+                    "data": [
+                        lambda t: self.typeMapping[res[1]](t),
+                        None,
+                        self.positionAsText,
+                    ],
+                    "text": T_(
+                        'Multiple numbers "{numbers}" in way "{way}"',
+                        numbers=",  ".join(filter(lambda z: z, res[4:])),
+                        way=res[3],
+                    ),
+                },
+            )
         self.run(sql70)
-        self.run(sql80, lambda res: {"class":7, "subclass":1, "data":[self.relation_full, self.positionAsText], "text":{"en": res[2]}} )
+        self.run(
+            sql80,
+            lambda res: {
+                "class": 7,
+                "subclass": 1,
+                "data": [self.relation_full, self.positionAsText],
+                "text": {"en": res[2]},
+            },
+        )
         self.run(sql90)
         self.run(sql91)
-        self.run(sqlA0, lambda res: {"class":8, "subclass":1, "data":[self.relation_full, self.relation_full, self.positionAsText]} )
-        self.run(sqlB0, lambda res: {"class":9, "subclass":1, "data":[lambda t: self.typeMapping[res[1]](t), None, self.positionAsText, self.relation_full]} )
+        self.run(
+            sqlA0,
+            lambda res: {
+                "class": 8,
+                "subclass": 1,
+                "data": [self.relation_full, self.relation_full, self.positionAsText],
+            },
+        )
+        self.run(
+            sqlB0,
+            lambda res: {
+                "class": 9,
+                "subclass": 1,
+                "data": [
+                    lambda t: self.typeMapping[res[1]](t),
+                    None,
+                    self.positionAsText,
+                    self.relation_full,
+                ],
+            },
+        )
         if self.config.options.get("addr:city-admin_level"):
             self.run(sqlC0)
-            self.run(sqlC1.format( "','".join(self.config.options.get("addr:city-admin_level").split(','))))
+            self.run(
+                sqlC1.format(
+                    "','".join(
+                        self.config.options.get("addr:city-admin_level").split(",")
+                    )
+                )
+            )
             self.run(sqlC2, self.callbackC2)
         if "proj" in self.config.options:
             self.run(sqlD0)
-            self.run(sqlD1.format(self.config.options.get("addr:street_distance", 500)), self.callbackD1)
+            self.run(
+                sqlD1.format(self.config.options.get("addr:street_distance", 500)),
+                self.callbackD1,
+            )
         self.run(sqlF0.format(self.config.options.get("proj")), self.callbackF0)
 
     def analyser_osmosis_full(self):

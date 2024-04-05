@@ -1,26 +1,27 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Osmose project 2023                                        ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2023                                      #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
+
 from .Analyser_Osmosis import Analyser_Osmosis
 
 sql10 = """
@@ -180,87 +181,149 @@ ORDER BY
   tag_polygon
 """
 
+
 class Analyser_Osmosis_Polygon_Intersects(Analyser_Osmosis):
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
-        if not "proj" in self.config.options:
+        if "proj" not in self.config.options:
             return
 
-        self.classIndex = {'highway': 12, 'railway': 13, 'aeroway': 15}
+        self.classIndex = {"highway": 12, "railway": 13, "aeroway": 15}
 
         detailTxt = T_(
-'''A way meant for transport (such as a highway or a railway) intersects with a
-land coverage that would pose an obstacle for this transportation mode.''')
+            """A way meant for transport (such as a highway or a railway) intersects with a
+land coverage that would pose an obstacle for this transportation mode."""
+        )
         exampleTxt = T_(
-'''A major highway usually does not have trees growing on it, so a crossing between
+            """A major highway usually does not have trees growing on it, so a crossing between
 `landuse=forest` and `highway=trunk` is unlikely.
 The same applies for a railway running through an area with `natural=water`,
-without bridge or tunnel.''')
+without bridge or tunnel."""
+        )
         fixTxt = T_(
-'''If the way for transportation (such as a highway) has i.e. a forest growing on
+            """If the way for transportation (such as a highway) has i.e. a forest growing on
 either side of the way, cut out the shape of the highway from the forest polygon.
 However, if the way for transportation is a tunnel or a bridge, add `tunnel=*` or
-`bridge=*` where appropriate, together with `layer=*` if needed.''')
+`bridge=*` where appropriate, together with `layer=*` if needed."""
+        )
 
         self.classs[self.classIndex["highway"]] = self.def_class(
-            item = 1070, level = 2, tags = ['landuse', 'fix:chair', 'highway'],
-            title = T_('Bad intersection with major highway'),
-            detail = detailTxt, example = exampleTxt, fix = fixTxt)
+            item=1070,
+            level=2,
+            tags=["landuse", "fix:chair", "highway"],
+            title=T_("Bad intersection with major highway"),
+            detail=detailTxt,
+            example=exampleTxt,
+            fix=fixTxt,
+        )
         self.classs[self.classIndex["railway"]] = self.def_class(
-            item = 1070, level = 2, tags = ['landuse', 'fix:chair', 'railway'],
-            title = T_('Bad intersection with railway'),
-            detail = detailTxt, example = exampleTxt, fix = fixTxt)
+            item=1070,
+            level=2,
+            tags=["landuse", "fix:chair", "railway"],
+            title=T_("Bad intersection with railway"),
+            detail=detailTxt,
+            example=exampleTxt,
+            fix=fixTxt,
+        )
         self.classs[self.classIndex["aeroway"]] = self.def_class(
-            item = 1070, level = 2, tags = ['landuse', 'fix:chair'],
-            title = T_('Bad intersection with aeroway'),
-            detail = detailTxt, example = exampleTxt, fix = fixTxt)
+            item=1070,
+            level=2,
+            tags=["landuse", "fix:chair"],
+            title=T_("Bad intersection with aeroway"),
+            detail=detailTxt,
+            example=exampleTxt,
+            fix=fixTxt,
+        )
 
-    requires_tables_common = ['highways', 'multipolygons']
+    requires_tables_common = ["highways", "multipolygons"]
 
     def analyser_osmosis_common(self):
         self.run(sql10.format(proj=self.config.options["proj"]))
         self.run(sql11.format(proj=self.config.options["proj"]))
         self.run(sql12)
         self.run(sql13)
-        self.run(sql14, lambda res: {
-            "class": self.classIndex[res[3]],
-            "data": [self.way, self.any_id, self.positionAsText],
-            "text": T_("`{0}` intersects `{1}`", res[4], res[5])
-        })
-
+        self.run(
+            sql14,
+            lambda res: {
+                "class": self.classIndex[res[3]],
+                "data": [self.way, self.any_id, self.positionAsText],
+                "text": T_("`{0}` intersects `{1}`", res[4], res[5]),
+            },
+        )
 
 
 from .Analyser_Osmosis import TestAnalyserOsmosis
+
 
 class Test(TestAnalyserOsmosis):
     @classmethod
     def setup_class(cls):
         from modules import config
+
         TestAnalyserOsmosis.setup_class()
-        cls.analyser_conf = cls.load_osm("tests/osmosis_polygon_intersects.osm",
-                                         config.dir_tmp + "/tests/osmosis_polygon_intersects.test.xml",
-                                         {"proj": 23032})
+        cls.analyser_conf = cls.load_osm(
+            "tests/osmosis_polygon_intersects.osm",
+            config.dir_tmp + "/tests/osmosis_polygon_intersects.test.xml",
+            {"proj": 23032},
+        )
 
     def test_classes(self):
         with Analyser_Osmosis_Polygon_Intersects(self.analyser_conf, self.logger) as a:
             a.analyser()
 
         self.root_err = self.load_errors()
-        self.check_err(cl=str(a.classIndex["railway"]), elems=[("way", "1012"), ("way", "1011")])
-        self.check_err(cl=str(a.classIndex["aeroway"]), elems=[("way", "1013"), ("way", "1011")])
-        self.check_err(cl=str(a.classIndex["highway"]), elems=[("way", "1017"), ("way", "1016")])
-        self.check_err(cl=str(a.classIndex["aeroway"]), elems=[("way", "1018"), ("way", "1016")])
-        self.check_err(cl=str(a.classIndex["railway"]), elems=[("way", "1019"), ("way", "1016")])
-        self.check_err(cl=str(a.classIndex["railway"]), elems=[("way", "1025"), ("way", "1023")])
-        self.check_err(cl=str(a.classIndex["aeroway"]), elems=[("way", "1026"), ("way", "1023")])
-        self.check_err(cl=str(a.classIndex["aeroway"]), elems=[("way", "1058"), ("way", "1023")])
-        self.check_err(cl=str(a.classIndex["highway"]), elems=[("way", "1027"), ("way", "1023")])
-        self.check_err(cl=str(a.classIndex["highway"]), elems=[("way", "1036"), ("way", "1035")])
-        self.check_err(cl=str(a.classIndex["highway"]), elems=[("way", "1049"), ("relation", "10002")])
-        self.check_err(cl=str(a.classIndex["railway"]), elems=[("way", "1050"), ("relation", "10001")])
-        self.check_err(cl=str(a.classIndex["railway"]), elems=[("way", "1063"), ("relation", "10001")])
-        self.check_err(cl=str(a.classIndex["aeroway"]), elems=[("way", "1064"), ("relation", "10001")])
-        self.check_err(cl=str(a.classIndex["railway"]), elems=[("way", "1055"), ("relation", "10003")])
-        self.check_err(cl=str(a.classIndex["highway"]), elems=[("way", "1062"), ("way", "1059")])
+        self.check_err(
+            cl=str(a.classIndex["railway"]), elems=[("way", "1012"), ("way", "1011")]
+        )
+        self.check_err(
+            cl=str(a.classIndex["aeroway"]), elems=[("way", "1013"), ("way", "1011")]
+        )
+        self.check_err(
+            cl=str(a.classIndex["highway"]), elems=[("way", "1017"), ("way", "1016")]
+        )
+        self.check_err(
+            cl=str(a.classIndex["aeroway"]), elems=[("way", "1018"), ("way", "1016")]
+        )
+        self.check_err(
+            cl=str(a.classIndex["railway"]), elems=[("way", "1019"), ("way", "1016")]
+        )
+        self.check_err(
+            cl=str(a.classIndex["railway"]), elems=[("way", "1025"), ("way", "1023")]
+        )
+        self.check_err(
+            cl=str(a.classIndex["aeroway"]), elems=[("way", "1026"), ("way", "1023")]
+        )
+        self.check_err(
+            cl=str(a.classIndex["aeroway"]), elems=[("way", "1058"), ("way", "1023")]
+        )
+        self.check_err(
+            cl=str(a.classIndex["highway"]), elems=[("way", "1027"), ("way", "1023")]
+        )
+        self.check_err(
+            cl=str(a.classIndex["highway"]), elems=[("way", "1036"), ("way", "1035")]
+        )
+        self.check_err(
+            cl=str(a.classIndex["highway"]),
+            elems=[("way", "1049"), ("relation", "10002")],
+        )
+        self.check_err(
+            cl=str(a.classIndex["railway"]),
+            elems=[("way", "1050"), ("relation", "10001")],
+        )
+        self.check_err(
+            cl=str(a.classIndex["railway"]),
+            elems=[("way", "1063"), ("relation", "10001")],
+        )
+        self.check_err(
+            cl=str(a.classIndex["aeroway"]),
+            elems=[("way", "1064"), ("relation", "10001")],
+        )
+        self.check_err(
+            cl=str(a.classIndex["railway"]),
+            elems=[("way", "1055"), ("relation", "10003")],
+        )
+        self.check_err(
+            cl=str(a.classIndex["highway"]), elems=[("way", "1062"), ("way", "1059")]
+        )
         self.check_num_err(16)

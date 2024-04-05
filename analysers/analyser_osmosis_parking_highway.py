@@ -1,26 +1,27 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2015                                      ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2015                                      #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
+
 from .Analyser_Osmosis import Analyser_Osmosis
 
 sql10 = """
@@ -111,61 +112,96 @@ HAVING
   array_agg(parking_way.access) <@ array['private', 'permit', 'delivery', 'customers']
 """
 
+
 class Analyser_Osmosis_Parking_highway(Analyser_Osmosis):
 
-    requires_tables_common = ['highways', 'multipolygons']
+    requires_tables_common = ["highways", "multipolygons"]
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
-        self.classs[1] = self.def_class(item = 3161, level = 1, tags = ['highway', 'fix:chair'],
-            title = T_('Missing access way to parking'),
-            detail = T_('There should be a `highway` feature leading to this parking facility to allow for correct routing.'))
-        self.classs[2] = self.def_class(item = 3161, level = 3, tags = ['highway', 'fix:chair'],
-            title = T_('Missing access way to parking'),
-            detail = T_(
-'''There should be a `highway` feature leading to this parking facility
+        self.classs[1] = self.def_class(
+            item=3161,
+            level=1,
+            tags=["highway", "fix:chair"],
+            title=T_("Missing access way to parking"),
+            detail=T_(
+                "There should be a `highway` feature leading to this parking facility to allow for correct routing."
+            ),
+        )
+        self.classs[2] = self.def_class(
+            item=3161,
+            level=3,
+            tags=["highway", "fix:chair"],
+            title=T_("Missing access way to parking"),
+            detail=T_(
+                """There should be a `highway` feature leading to this parking facility
 to allow for correct routing. Add a road or check if `parking=*` is
 correct. If it is a street side parking (`parking=street_side`) or lane,
 then add appropriate tags.
 
-See [parking](https://wiki.openstreetmap.org/wiki/Key:parking) tag on the wiki.'''))
-        self.classs[3] = self.def_class(item = 3161, level = 3, tags = ['highway'],
-            title = T_('Inconsistent access of parking'),
-            detail = T_('''The `access` tag of the parking does not match the `access` tag of the ways inside the parking.
-As a result, this public parking space can only be reached via limited-access roads.'''),
-            fix = T_('Check which access restrictions are correct and apply them accordingly to the highways and the parking.'),
-            trap = T_('A parking may be partially publicly accessible and partially private.'))
+See [parking](https://wiki.openstreetmap.org/wiki/Key:parking) tag on the wiki."""
+            ),
+        )
+        self.classs[3] = self.def_class(
+            item=3161,
+            level=3,
+            tags=["highway"],
+            title=T_("Inconsistent access of parking"),
+            detail=T_(
+                """The `access` tag of the parking does not match the `access` tag of the ways inside the parking.
+As a result, this public parking space can only be reached via limited-access roads."""
+            ),
+            fix=T_(
+                "Check which access restrictions are correct and apply them accordingly to the highways and the parking."
+            ),
+            trap=T_(
+                "A parking may be partially publicly accessible and partially private."
+            ),
+        )
 
     def analyser_osmosis_common(self):
         self.run(sql10)
         self.run(sql11)
         self.run(sql12)
-        self.run(sql13.format(proj=self.config.options["proj"]), lambda res: {
-            "class": 1 if res[2] else 2,
-            "data": [self.any_full, self.positionAsText],
-            # Street side parkings typically have a perimeter/area ratio > 0.1
-            "fix": {"+": {"parking": "street_side"}} if res[3] > 0.1 else None,
-        })
-        self.run(sql20, lambda res: {
-            "class": 3,
-            "data": [self.any_full, self.array_full, self.positionAsText],
-            "text": T_("highway: `access={0}` - parking: `access={1}`", '/'.join(set(res[3])), res[4] if res[4] else '')
-        })
-
+        self.run(
+            sql13.format(proj=self.config.options["proj"]),
+            lambda res: {
+                "class": 1 if res[2] else 2,
+                "data": [self.any_full, self.positionAsText],
+                # Street side parkings typically have a perimeter/area ratio > 0.1
+                "fix": {"+": {"parking": "street_side"}} if res[3] > 0.1 else None,
+            },
+        )
+        self.run(
+            sql20,
+            lambda res: {
+                "class": 3,
+                "data": [self.any_full, self.array_full, self.positionAsText],
+                "text": T_(
+                    "highway: `access={0}` - parking: `access={1}`",
+                    "/".join(set(res[3])),
+                    res[4] if res[4] else "",
+                ),
+            },
+        )
 
 
 ###########################################################################
 
 from .Analyser_Osmosis import TestAnalyserOsmosis
 
+
 class Test(TestAnalyserOsmosis):
     @classmethod
     def setup_class(cls):
         from modules import config
+
         TestAnalyserOsmosis.setup_class()
-        cls.analyser_conf = cls.load_osm("tests/osmosis_parking_highway.osm",
-                                         config.dir_tmp + "/tests/osmosis_parking_highway.test.xml",
-                                         {"proj": 2154}) # Random proj to satisfy highway table generation
+        cls.analyser_conf = cls.load_osm(
+            "tests/osmosis_parking_highway.osm",
+            config.dir_tmp + "/tests/osmosis_parking_highway.test.xml",
+            {"proj": 2154},
+        )  # Random proj to satisfy highway table generation
 
     def test_classes(self):
         with Analyser_Osmosis_Parking_highway(self.analyser_conf, self.logger) as a:
@@ -173,7 +209,9 @@ class Test(TestAnalyserOsmosis):
 
         self.root_err = self.load_errors()
         self.check_err(cl="1", elems=[("way", "101")])
-        self.check_err(cl="2", elems=[("way", "100")], fixes=[{"+": {"parking": "street_side"}}])
+        self.check_err(
+            cl="2", elems=[("way", "100")], fixes=[{"+": {"parking": "street_side"}}]
+        )
         self.check_err(cl="2", elems=[("way", "124")], fixes=[])
         self.check_err(cl="2", elems=[("way", "125")], fixes=[])
         self.check_err(cl="3", elems=[("way", "103"), ("way", "102")])

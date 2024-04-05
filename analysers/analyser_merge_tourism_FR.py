@@ -1,71 +1,125 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Noémie Lehuby 2020                                         ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Noémie Lehuby 2020                                         #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 import json
+
 from modules.OsmoseTranslation import T_
+
+from .Analyser_Merge import CSV, Conflate, Load_XY, Mapping, Select, Source
 from .Analyser_Merge_Dynamic import Analyser_Merge_Dynamic, SubAnalyser_Merge_Dynamic
-from .Analyser_Merge import Source, CSV, Load_XY, Conflate, Select, Mapping
 
 
 class Analyser_Merge_tourism_FR(Analyser_Merge_Dynamic):
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Merge_Dynamic.__init__(self, config, logger)
 
         mapingfile = json.loads(open("merge_data/tourism_FR.mapping.json").read())
         for r in mapingfile:
-            self.classFactory(SubAnalyser_Datatourisme_FR, r['classes'], r['items'], r['classes'], r['title'], r['type'], r['tags_select'], r.get('osm_types', ['nodes', 'ways']), r['conflationDistance'], r['tags_generate'])
+            self.classFactory(
+                SubAnalyser_Datatourisme_FR,
+                r["classes"],
+                r["items"],
+                r["classes"],
+                r["title"],
+                r["type"],
+                r["tags_select"],
+                r.get("osm_types", ["nodes", "ways"]),
+                r["conflationDistance"],
+                r["tags_generate"],
+            )
 
 
 class SubAnalyser_Datatourisme_FR(SubAnalyser_Merge_Dynamic):
-    def __init__(self, config, error_file, logger, items, classs, title, type_, tags_select, osm_types, conflationDistance, tags_generate):
+    def __init__(
+        self,
+        config,
+        error_file,
+        logger,
+        items,
+        classs,
+        title,
+        type_,
+        tags_select,
+        osm_types,
+        conflationDistance,
+        tags_generate,
+    ):
         SubAnalyser_Merge_Dynamic.__init__(self, config, error_file, logger)
-        self.def_class_missing_official(item = items, id = classs, level = 3, tags = ['merge', 'fix:survey', 'fix:picture'],
-            title = T_('{0} not integrated', T_(title)))
+        self.def_class_missing_official(
+            item=items,
+            id=classs,
+            level=3,
+            tags=["merge", "fix:survey", "fix:picture"],
+            title=T_("{0} not integrated", T_(title)),
+        )
 
         self.init(
             "https://data.datatourisme.gouv.fr",
             "DATAtourisme, la base nationale des données du tourisme en Open Data",
-            CSV(Source(attribution = "data.gouv.fr:DATAtourisme", millesime = "05/2020", fileUrlCache = 7, # 7d to avoid auto-disable of the data source
-                    fileUrl = "https://diffuseur.datatourisme.fr/webservice/84c2e2e54073df2b931c9f4bf8a3ccf3/b7f07a07-2b8f-4fcb-a74f-fdd68b0f57d5")),
-            Load_XY("Longitude", "Latitude",
-                select = {'type': type_},
-                unique = ["elem"]),
+            CSV(
+                Source(
+                    attribution="data.gouv.fr:DATAtourisme",
+                    millesime="05/2020",
+                    fileUrlCache=7,  # 7d to avoid auto-disable of the data source
+                    fileUrl="https://diffuseur.datatourisme.fr/webservice/84c2e2e54073df2b931c9f4bf8a3ccf3/b7f07a07-2b8f-4fcb-a74f-fdd68b0f57d5",
+                )
+            ),
+            Load_XY("Longitude", "Latitude", select={"type": type_}, unique=["elem"]),
             Conflate(
-                select = Select(
-                    types = osm_types,
-                    tags = tags_select),
-                conflationDistance = conflationDistance,
-                mapping = Mapping(
-                    static1 = tags_generate,
-                    static2 = {"source": self.source},
-                    mapping1 = {
-                        "ref:FR:CRTA": lambda fields: fields["identifier"] if fields["publisher_name"] == "SIRTAQUI Nouvelle-Aquitaine" else None,
+                select=Select(types=osm_types, tags=tags_select),
+                conflationDistance=conflationDistance,
+                mapping=Mapping(
+                    static1=tags_generate,
+                    static2={"source": self.source},
+                    mapping1={
+                        "ref:FR:CRTA": lambda fields: (
+                            fields["identifier"]
+                            if fields["publisher_name"] == "SIRTAQUI Nouvelle-Aquitaine"
+                            else None
+                        ),
                         "contact:phone": "contact_phone",
                         "contact:email": "contact_email",
                         "contact:website": "contact_website",
-                        "wheelchair": lambda fields: {"true": "yes", "false": "no"}.get(fields["wheelchair"]),
-                        "takeaway": lambda fields: {"true": "yes", "false": "no"}.get(fields["takeaway"]),
-                        "official_name": "label"},
-                text = lambda tags, fields: {"en": "{} - {} - {} {} - {}".format(fields["label"], fields["street_address"], fields["postalcode_address"], fields["city_address"], fields["elem"])} )))
+                        "wheelchair": lambda fields: {"true": "yes", "false": "no"}.get(
+                            fields["wheelchair"]
+                        ),
+                        "takeaway": lambda fields: {"true": "yes", "false": "no"}.get(
+                            fields["takeaway"]
+                        ),
+                        "official_name": "label",
+                    },
+                    text=lambda tags, fields: {
+                        "en": "{} - {} - {} {} - {}".format(
+                            fields["label"],
+                            fields["street_address"],
+                            fields["postalcode_address"],
+                            fields["city_address"],
+                            fields["elem"],
+                        )
+                    },
+                ),
+            ),
+        )
+
 
 # the csv data is generated with the following request:
 sparql = """

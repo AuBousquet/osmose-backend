@@ -1,26 +1,27 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2012                                      ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2012                                      #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
+
 from .Analyser_Osmosis import Analyser_Osmosis
 
 sql10 = """
@@ -117,32 +118,62 @@ FROM
         r.tags - ARRAY['created_by', 'source', 'note:qadastre', 'name'] = ''::hstore
 """
 
+
 class Analyser_Osmosis_Useless(Analyser_Osmosis):
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
         doc = dict(
-            detail = T_(
-'''An object without any relevant tags (no other tags than `source`,
+            detail=T_(
+                """An object without any relevant tags (no other tags than `source`,
 `created_by`, `note:qadastre`, `area` or `name`) nor a relation member with a
-role.'''),
-            fix = T_(
-'''Add tags, role into a relation or delete.'''),
-            trap = T_(
-'''The object may be a duplicate.'''))
+role."""
+            ),
+            fix=T_("""Add tags, role into a relation or delete."""),
+            trap=T_("""The object may be a duplicate."""),
+        )
 
-        self.classs_change[1] = self.def_class(item = 1140, level = 3, tags = ['fix:chair'],
-            title = T_('Missing tag or role on node'),
-            **doc)
-        self.classs_change[2] = self.def_class(item = 1140, level = 3, tags = ['fix:chair'],
-            title = T_('Missing tag or role on way'),
-            **doc)
-        self.classs_change[3] = self.def_class(item = 1140, level = 3, tags = ['fix:chair'],
-            title = T_('Missing tag or role on relation'),
-            **doc)
-        self.callback10 = lambda res: {"class":1, "data":[self.node_full, self.relation_full, self.positionAsText]}
-        self.callback20 = lambda res: {"class":2, "data":[self.way_full, self.relation_full if res[1] else None, self.positionAsText]}
-        self.callback30 = lambda res: {"class":3, "data":[self.relation_full, self.relation_full if res[1] else None, self.positionAsText]}
+        self.classs_change[1] = self.def_class(
+            item=1140,
+            level=3,
+            tags=["fix:chair"],
+            title=T_("Missing tag or role on node"),
+            **doc
+        )
+        self.classs_change[2] = self.def_class(
+            item=1140,
+            level=3,
+            tags=["fix:chair"],
+            title=T_("Missing tag or role on way"),
+            **doc
+        )
+        self.classs_change[3] = self.def_class(
+            item=1140,
+            level=3,
+            tags=["fix:chair"],
+            title=T_("Missing tag or role on relation"),
+            **doc
+        )
+        self.callback10 = lambda res: {
+            "class": 1,
+            "data": [self.node_full, self.relation_full, self.positionAsText],
+        }
+        self.callback20 = lambda res: {
+            "class": 2,
+            "data": [
+                self.way_full,
+                self.relation_full if res[1] else None,
+                self.positionAsText,
+            ],
+        }
+        self.callback30 = lambda res: {
+            "class": 3,
+            "data": [
+                self.relation_full,
+                self.relation_full if res[1] else None,
+                self.positionAsText,
+            ],
+        }
 
     def analyser_osmosis_full(self):
         self.run(sql10.format(""), self.callback10)

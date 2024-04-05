@@ -11,13 +11,13 @@ other helping file:
   https://equipements-sgsocialgouv.opendatasoft.com/explore/dataset/ref-caracteristiques-es/information/
     => "Décrit les caractéristiques utilisées sur les équipements sportifs (jeu de données Data ES)"
 """
+
 import logging
 import os.path
 
 import pandas as pd
 
-
-logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
+logging.basicConfig(format="%(asctime)s - %(message)s", level=logging.INFO)
 log = logging.getLogger()
 
 ES_SOURCE = "data-es.csv"
@@ -35,7 +35,7 @@ SURFACE_MAP = {
     "Métal": "metal",
     "Stabilisé/cendrée": "compacted",
     "Synthétique (hors gazon)": "tartan",
-    "Sciure/copeaux": "woodchips"
+    "Sciure/copeaux": "woodchips",
     # 12900 Carrelage
     # 16799 Parquet
 }
@@ -65,12 +65,17 @@ coverage = 0
 for equipment in equipments_es:
     if equipments_matrix.__contains__(equipment) is False:
         log.info(
-            f"    '{equipment}' does not exist in '{MERGE_MATRIX}', it is {es_equipments_count.loc[equipment]} equipments")
+            f"    '{equipment}' does not exist in '{MERGE_MATRIX}', it is {es_equipments_count.loc[equipment]} equipments"
+        )
     else:
         coverage += es_equipments_count.loc[equipment]
-log.info(f"  -> current coverage is {coverage / df_es[EQUIPMENT_COL].count():.2%}, (missing: {df_es[EQUIPMENT_COL].count() - coverage})")
+log.info(
+    f"  -> current coverage is {coverage / df_es[EQUIPMENT_COL].count():.2%}, (missing: {df_es[EQUIPMENT_COL].count() - coverage})"
+)
 
-log.info(f"  Step 1.2: do we have all values from '{MERGE_MATRIX}' in '{EQUIPMENT_COL}' column?")
+log.info(
+    f"  Step 1.2: do we have all values from '{MERGE_MATRIX}' in '{EQUIPMENT_COL}' column?"
+)
 for equipment in equipments_matrix:
     if equipments_es.__contains__(equipment) is False:
         log.info(f"    '{equipment}' does not exist in '{ES_SOURCE}'")
@@ -86,13 +91,19 @@ log.info(f"  Step 2.1: do we have all '{SURFACE_COL}' in '{MERGE_MATRIX}'?")
 coverage = 0
 for surface in surface_es:
     if surface_matrix.__contains__(surface) is False:
-        log.info(f"    '{surface}' does not exist in '{MERGE_MATRIX}', it is {es_surface_count.loc[surface]} equipments")
+        log.info(
+            f"    '{surface}' does not exist in '{MERGE_MATRIX}', it is {es_surface_count.loc[surface]} equipments"
+        )
     else:
         coverage += es_surface_count.loc[surface]
-log.info(f"  -> current coverage is {coverage / df_es[SURFACE_COL].count():.2%}, (missing: {df_es[SURFACE_COL].count() - coverage})")
+log.info(
+    f"  -> current coverage is {coverage / df_es[SURFACE_COL].count():.2%}, (missing: {df_es[SURFACE_COL].count() - coverage})"
+)
 
 
-log.info(f"  Step 2.2: do we have all values from '{MERGE_MATRIX}' in '{SURFACE_COL}' column?")
+log.info(
+    f"  Step 2.2: do we have all values from '{MERGE_MATRIX}' in '{SURFACE_COL}' column?"
+)
 for surface in surface_matrix:
     if surface_es.__contains__(surface) is False:
         log.info(f"    '{surface}' does not exist in {ES_SOURCE}")

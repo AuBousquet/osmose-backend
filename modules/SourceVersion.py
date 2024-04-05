@@ -1,45 +1,45 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 ###########################################################################
-##                                                                       ##
-## Copyrights Frederic Rodrigo 2018                                      ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
+#                                                                       ##
+# Copyrights Frederic Rodrigo 2018                                      ##
+#                                                                       ##
+# This program is free software: you can redistribute it and/or modify  ##
+# it under the terms of the GNU General Public License as published by  ##
+# the Free Software Foundation, either version 3 of the License, or     ##
+# (at your option) any later version.                                   ##
+#                                                                       ##
+# This program is distributed in the hope that it will be useful,       ##
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
+# GNU General Public License for more details.                          ##
+#                                                                       ##
+# You should have received a copy of the GNU General Public License     ##
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
+#                                                                       ##
 ###########################################################################
 
+import hashlib
 import inspect
 import os
-import hashlib
 
 
 def version(*sources):
     h = hashlib.md5()
     for source in sources:
         if isinstance(source, str) and os.path.exists(source):
-            h.update(open(source, 'rb').read())
+            h.update(open(source, "rb").read())
         elif isinstance(source, int):
-            h.update(str(source).encode('utf-8'))
+            h.update(str(source).encode("utf-8"))
         elif inspect.isclass(source):
             cc = inspect.getmro(source)
             for c in cc:
                 try:
-                    h.update(open(inspect.getsourcefile(c), 'rb').read())
-                except TypeError: # No python source file
+                    h.update(open(inspect.getsourcefile(c), "rb").read())
+                except TypeError:  # No python source file
                     try:
                         h.update(inspect.getsource(c))
-                    except TypeError: # Built-in
+                    except TypeError:  # Built-in
                         pass
         else:
             raise NotImplementedError(source.__class__)
@@ -51,6 +51,7 @@ def version(*sources):
 import unittest
 
 from .PointInPolygon import PointInPolygon
+
 
 class Test(unittest.TestCase):
 

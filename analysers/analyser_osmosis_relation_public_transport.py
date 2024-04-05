@@ -1,26 +1,27 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2016, Noémie Lehuby 2021                  ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2016, Noémie Lehuby 2021                  #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
+
 from .Analyser_Osmosis import Analyser_Osmosis
 
 sql00 = """
@@ -571,52 +572,157 @@ WHERE
     platform_that_can_project.stop_order != 1
 """
 
+
 class Analyser_Osmosis_Relation_Public_Transport(Analyser_Osmosis):
-    requires_tables_common = ['highways']
+    requires_tables_common = ["highways"]
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
-        self.classs[1] = self.def_class(item = 1260, level = 3, tags = ['public_transport'],
-            title = T_('The track of this route contains gaps'))
-        self.classs[2] = self.def_class(item = 1260, level = 3, tags = ['public_transport'],
-            title = T_('The stop or platform is too far from the track of this route'))
-        self.classs[3] = self.def_class(item = 1260, level = 3, tags = ['public_transport'],
-            title = T_('Non route relation member in route_master relation'))
-        self.classs[4] = self.def_class(item = 1260, level = 2, tags = ['public_transport'],
-            title = T_('Public transport relation route not in route_master relation'))
-        self.classs[5] = self.def_class(item = 1260, level = 3, tags = ['public_transport'],
-            title = T_('network, operator, ref, colour tag should be the same on route and route_master relations'))
-        self.classs[6] = self.def_class(item = 1260, level = 3, tags = ['public_transport'],
-            title = T_('The bus stop is part of a way, it should have public_transport=stop_position tag'))
-        self.classs[7] = self.def_class(item = 1260, level = 3, tags = ['public_transport'],
-            title = T_('The stop_position is not part of a way'))
-        self.classs[8] = self.def_class(item = 1260, level = 3, tags = ['public_transport'],
-            title = T_('The platform is part of a way, it should have the role stop'))
-        self.classs[9] = self.def_class(item = 1260, level = 3, tags = ['public_transport'],
-            title = T_('The stop is not part of a way'),
-            fix = T_('Change the role in the relation to platform or add the stop to the way and turn it to a public_transport=stop_position'))
-        self.classs[10] = self.def_class(item = 1260, level = 3, tags = ['public_transport'],
-            title = T_('Stop position without platform nor bus stop'),
-            fix = T_('A bus `public_transport=stop_position` without close `public_transport=platform` nor `highway=bus_stop`.'))
-        self.classs[11] = self.def_class(item = 1260, level = 3, tags = ['public_transport'],
-            title = T_('The stops may not be in the right order'))
-        self.classs[12] = self.def_class(item = 1260, level = 3, tags = ['public_transport'],
-            title = T_('The platform is not on the right side of the road'))
+        self.classs[1] = self.def_class(
+            item=1260,
+            level=3,
+            tags=["public_transport"],
+            title=T_("The track of this route contains gaps"),
+        )
+        self.classs[2] = self.def_class(
+            item=1260,
+            level=3,
+            tags=["public_transport"],
+            title=T_("The stop or platform is too far from the track of this route"),
+        )
+        self.classs[3] = self.def_class(
+            item=1260,
+            level=3,
+            tags=["public_transport"],
+            title=T_("Non route relation member in route_master relation"),
+        )
+        self.classs[4] = self.def_class(
+            item=1260,
+            level=2,
+            tags=["public_transport"],
+            title=T_("Public transport relation route not in route_master relation"),
+        )
+        self.classs[5] = self.def_class(
+            item=1260,
+            level=3,
+            tags=["public_transport"],
+            title=T_(
+                "network, operator, ref, colour tag should be the same on route and route_master relations"
+            ),
+        )
+        self.classs[6] = self.def_class(
+            item=1260,
+            level=3,
+            tags=["public_transport"],
+            title=T_(
+                "The bus stop is part of a way, it should have public_transport=stop_position tag"
+            ),
+        )
+        self.classs[7] = self.def_class(
+            item=1260,
+            level=3,
+            tags=["public_transport"],
+            title=T_("The stop_position is not part of a way"),
+        )
+        self.classs[8] = self.def_class(
+            item=1260,
+            level=3,
+            tags=["public_transport"],
+            title=T_("The platform is part of a way, it should have the role stop"),
+        )
+        self.classs[9] = self.def_class(
+            item=1260,
+            level=3,
+            tags=["public_transport"],
+            title=T_("The stop is not part of a way"),
+            fix=T_(
+                "Change the role in the relation to platform or add the stop to the way and turn it to a public_transport=stop_position"
+            ),
+        )
+        self.classs[10] = self.def_class(
+            item=1260,
+            level=3,
+            tags=["public_transport"],
+            title=T_("Stop position without platform nor bus stop"),
+            fix=T_(
+                "A bus `public_transport=stop_position` without close `public_transport=platform` nor `highway=bus_stop`."
+            ),
+        )
+        self.classs[11] = self.def_class(
+            item=1260,
+            level=3,
+            tags=["public_transport"],
+            title=T_("The stops may not be in the right order"),
+        )
+        self.classs[12] = self.def_class(
+            item=1260,
+            level=3,
+            tags=["public_transport"],
+            title=T_("The platform is not on the right side of the road"),
+        )
 
-        self.callback10 = lambda res: {"class":1, "data":[self.relation_full, self.positionAsText]}
-        self.callback20 = lambda res: {"class":2, "data":[self.relation_full, self.any_full, self.positionAsText]}
-        self.callback30 = lambda res: {"class":3, "data":[self.relation_full, self.any_full, self.positionAsText]}
-        self.callback40 = lambda res: {"class":4, "data":[self.relation_full, self.positionAsText]}
-        self.callback50 = lambda res: {"class":5,
-             "text": T_("{0} are different", ", ".join(filter(lambda r: r, [res[3] and "network", res[4] and "operator", res[5] and "ref", res[6] and "colour"]))),
-             "data": [self.relation_full, self.relation_full, self.positionAsText] }
-        self.callback60 = lambda res: {"class":6, "data":[self.node_full, self.positionAsText]}
-        self.callback70 = lambda res: {"class":7, "data":[self.node_full, self.positionAsText]}
-        self.callback80 = lambda res: {"class":8, "data":[self.relation_full, self.any_full, self.positionAsText]}
-        self.callback90 = lambda res: {"class":9, "data":[self.relation_full, self.any_full, self.positionAsText]}
-        self.callbackA0 = lambda res: {"class":10, "data":[self.node_full, self.positionAsText]}
-        self.callback100 = lambda res: {"class":11, "data":[self.relation_full, self.positionAsText]}
-        self.callback110 = lambda res: {"class":12, "data":[self.relation_full, self.any_full, self.positionAsText]}
+        self.callback10 = lambda res: {
+            "class": 1,
+            "data": [self.relation_full, self.positionAsText],
+        }
+        self.callback20 = lambda res: {
+            "class": 2,
+            "data": [self.relation_full, self.any_full, self.positionAsText],
+        }
+        self.callback30 = lambda res: {
+            "class": 3,
+            "data": [self.relation_full, self.any_full, self.positionAsText],
+        }
+        self.callback40 = lambda res: {
+            "class": 4,
+            "data": [self.relation_full, self.positionAsText],
+        }
+        self.callback50 = lambda res: {
+            "class": 5,
+            "text": T_(
+                "{0} are different",
+                ", ".join(
+                    filter(
+                        lambda r: r,
+                        [
+                            res[3] and "network",
+                            res[4] and "operator",
+                            res[5] and "ref",
+                            res[6] and "colour",
+                        ],
+                    )
+                ),
+            ),
+            "data": [self.relation_full, self.relation_full, self.positionAsText],
+        }
+        self.callback60 = lambda res: {
+            "class": 6,
+            "data": [self.node_full, self.positionAsText],
+        }
+        self.callback70 = lambda res: {
+            "class": 7,
+            "data": [self.node_full, self.positionAsText],
+        }
+        self.callback80 = lambda res: {
+            "class": 8,
+            "data": [self.relation_full, self.any_full, self.positionAsText],
+        }
+        self.callback90 = lambda res: {
+            "class": 9,
+            "data": [self.relation_full, self.any_full, self.positionAsText],
+        }
+        self.callbackA0 = lambda res: {
+            "class": 10,
+            "data": [self.node_full, self.positionAsText],
+        }
+        self.callback100 = lambda res: {
+            "class": 11,
+            "data": [self.relation_full, self.positionAsText],
+        }
+        self.callback110 = lambda res: {
+            "class": 12,
+            "data": [self.relation_full, self.any_full, self.positionAsText],
+        }
 
         if self.config.options.get("driving_side") == "left":
             self.buffer_driving_side = "left"

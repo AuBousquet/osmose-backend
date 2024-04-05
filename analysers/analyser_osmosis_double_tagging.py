@@ -1,26 +1,27 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2011                                      ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2011                                      #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
+
 from .Analyser_Osmosis import Analyser_Osmosis
 
 sql10 = """
@@ -93,25 +94,41 @@ FROM
         )
 """
 
+
 class Analyser_Osmosis_Double_Tagging(Analyser_Osmosis):
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
         doc = dict(
-            fix = T_(
-'''An entity must be present only once, remove one and eventually merge
-the tags.'''),
-            example = T_(
-'''![](https://wiki.openstreetmap.org/w/images/0/08/Osmose-eg-error-4080.png)'''))
-        self.classs_change[1] = self.def_class(item = 4080, level = 1, tags = ['tag', 'fix:chair'],
-            title = T_('Object tagged twice as node and way'),
-            **doc)
-        self.classs_change[2] = self.def_class(item = 4080, level = 1, tags = ['tag', 'fix:chair'],
-            title = T_('Object tagged twice as way and relation'),
-            **doc)
-        self.classs_change[3] = self.def_class(item = 4080, level = 1, tags = ['tag', 'fix:chair'],
-            title = T_('Object tagged twice as node and relation'),
-            **doc)
+            fix=T_(
+                """An entity must be present only once, remove one and eventually merge
+the tags."""
+            ),
+            example=T_(
+                """![](https://wiki.openstreetmap.org/w/images/0/08/Osmose-eg-error-4080.png)"""
+            ),
+        )
+        self.classs_change[1] = self.def_class(
+            item=4080,
+            level=1,
+            tags=["tag", "fix:chair"],
+            title=T_("Object tagged twice as node and way"),
+            **doc
+        )
+        self.classs_change[2] = self.def_class(
+            item=4080,
+            level=1,
+            tags=["tag", "fix:chair"],
+            title=T_("Object tagged twice as way and relation"),
+            **doc
+        )
+        self.classs_change[3] = self.def_class(
+            item=4080,
+            level=1,
+            tags=["tag", "fix:chair"],
+            title=T_("Object tagged twice as node and relation"),
+            **doc
+        )
 
     def analyser_osmosis_full(self):
         self.run(sql10)
@@ -119,8 +136,16 @@ the tags.'''),
         self.run(sql12)
         self.run(sql13)
         self.run(sql14)
+
         def f(o1, o2, ret1, ret2, class_):
-            self.run(sql20.format("", "", o1, o2), lambda res: {"class":class_, "data":[ret1, ret2, self.positionAsText]})
+            self.run(
+                sql20.format("", "", o1, o2),
+                lambda res: {
+                    "class": class_,
+                    "data": [ret1, ret2, self.positionAsText],
+                },
+            )
+
         self.apply(f)
 
     def analyser_osmosis_diff(self):
@@ -135,12 +160,34 @@ the tags.'''),
         self.create_view_not_touched("nodes_alb", "N")
         self.create_view_touched("ways_alb", "W")
         self.create_view_not_touched("ways_alb", "W")
+
         def f(o1, o2, ret1, ret2, class_):
-            self.run(sql20.format("touched_", "", o1, o2), lambda res: {"class":class_, "data":[ret1, ret2, self.positionAsText]})
-            self.run(sql20.format("not_touched_", "touched_", o1, o2), lambda res: {"class":class_, "data":[ret1, ret2, self.positionAsText]})
+            self.run(
+                sql20.format("touched_", "", o1, o2),
+                lambda res: {
+                    "class": class_,
+                    "data": [ret1, ret2, self.positionAsText],
+                },
+            )
+            self.run(
+                sql20.format("not_touched_", "touched_", o1, o2),
+                lambda res: {
+                    "class": class_,
+                    "data": [ret1, ret2, self.positionAsText],
+                },
+            )
+
         self.apply(f)
 
     def apply(self, callback):
-        ret = {"nodes_alb": self.node_full, "ways_alb": self.way_full, "relations_alb": self.relation_full}
-        for c in [["ways_alb", "nodes_alb", 1], ["relations_alb", "ways_alb", 2], ["relations_alb", "nodes_alb", 3]]:
+        ret = {
+            "nodes_alb": self.node_full,
+            "ways_alb": self.way_full,
+            "relations_alb": self.relation_full,
+        }
+        for c in [
+            ["ways_alb", "nodes_alb", 1],
+            ["relations_alb", "ways_alb", 2],
+            ["relations_alb", "nodes_alb", 3],
+        ]:
             callback(c[0], c[1], ret[c[0]], ret[c[1]], c[2])

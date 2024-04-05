@@ -1,26 +1,25 @@
 ###########################################################################
-##                                                                       ##
-## Copyrights Éric Gillet 2020                                           ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
+#                                                                       ##
+# Copyrights Éric Gillet 2020                                           ##
+#                                                                       ##
+# This program is free software: you can redistribute it and/or modify  ##
+# it under the terms of the GNU General Public License as published by  ##
+# the Free Software Foundation, either version 3 of the License, or     ##
+# (at your option) any later version.                                   ##
+#                                                                       ##
+# This program is distributed in the hope that it will be useful,       ##
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
+# GNU General Public License for more details.                          ##
+#                                                                       ##
+# You should have received a copy of the GNU General Public License     ##
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
+#                                                                       ##
 ###########################################################################
 
-from modules.Stablehash import stablehash64
 from modules.OsmoseTranslation import T_
-from plugins.Plugin import Plugin
-from plugins.Plugin import TestPluginCommon
+from modules.Stablehash import stablehash64
+from plugins.Plugin import Plugin, TestPluginCommon
 
 
 class Capacity(Plugin):
@@ -46,27 +45,41 @@ class Capacity(Plugin):
 
     def node(self, data, tags):
         errors = []
-        if ("capacity" not in tags
-                # Ignore errors that should be reported by generic analysers
-                or tags["capacity"] == ""):
+        if (
+            "capacity" not in tags
+            # Ignore errors that should be reported by generic analysers
+            or tags["capacity"] == ""
+        ):
             return []
         # capacity (non-round number in cubic meters or liters) is also for volumes: storage_tank, reservoir_covered, water_tower
-        if "man_made" in tags or ("amenity" in tags and tags["amenity"] in ("waste_disposal", "recycling")):
+        if "man_made" in tags or (
+            "amenity" in tags and tags["amenity"] in ("waste_disposal", "recycling")
+        ):
             return []
         try:
             total_capacity = int(tags["capacity"])
             if total_capacity < 0:
-                return [{
-                    "class": 30913,
-                    "subclass": stablehash64('5capacity'),
-                    "text": T_('"{0}" value "{1}" is negative', "capacity", total_capacity),
-                }]
+                return [
+                    {
+                        "class": 30913,
+                        "subclass": stablehash64("5capacity"),
+                        "text": T_(
+                            '"{0}" value "{1}" is negative', "capacity", total_capacity
+                        ),
+                    }
+                ]
         except ValueError:
-            errors.append({
-                "class": 30912,
-                "subclass": stablehash64('4capacity'),
-                "text": T_('"{0}" value "{1}" is not an integer', "capacity", tags["capacity"]),
-            })
+            errors.append(
+                {
+                    "class": 30912,
+                    "subclass": stablehash64("4capacity"),
+                    "text": T_(
+                        '"{0}" value "{1}" is not an integer',
+                        "capacity",
+                        tags["capacity"],
+                    ),
+                }
+            )
             total_capacity = None
 
         for key, value in tags.items():
@@ -82,29 +95,35 @@ class Capacity(Plugin):
             try:
                 capacity_int = int(value)
                 if total_capacity is not None and capacity_int > total_capacity:
-                    errors.append({
-                        "class": 30913,
-                        "subclass": stablehash64('1' + key),
-                        "text": T_(
-                            'Specific "{0}" value "{1}" should be lower than total capacity {2}',
-                            key,
-                            value,
-                            total_capacity,
-                        ),
-                    })
+                    errors.append(
+                        {
+                            "class": 30913,
+                            "subclass": stablehash64("1" + key),
+                            "text": T_(
+                                'Specific "{0}" value "{1}" should be lower than total capacity {2}',
+                                key,
+                                value,
+                                total_capacity,
+                            ),
+                        }
+                    )
 
                 if capacity_int < 0:
-                    errors.append({
-                        "class": 30912,
-                        "subclass": stablehash64('5' + key),
-                        "text": T_('"{0}" value "{1}" is negative', key, value),
-                    })
+                    errors.append(
+                        {
+                            "class": 30912,
+                            "subclass": stablehash64("5" + key),
+                            "text": T_('"{0}" value "{1}" is negative', key, value),
+                        }
+                    )
             except ValueError:
-                errors.append({
-                    "class": 30912,
-                    "subclass": stablehash64('4' + key),
-                    "text": T_('"{0}" value "{1}" is not an integer', key, value),
-                })
+                errors.append(
+                    {
+                        "class": 30912,
+                        "subclass": stablehash64("4" + key),
+                        "text": T_('"{0}" value "{1}" is not an integer', key, value),
+                    }
+                )
                 continue
 
         return errors
@@ -130,7 +149,9 @@ class Test(TestPluginCommon):
             {"class": 30912, "subclass": 5},
         )
         self.check_err(
-            a.node(None, {"capacity": "1", "capacity:disabled": "a", "amenity": "parking"}),
+            a.node(
+                None, {"capacity": "1", "capacity:disabled": "a", "amenity": "parking"}
+            ),
             {"class": 30912, "subclass": 5},
         )
         self.check_err(

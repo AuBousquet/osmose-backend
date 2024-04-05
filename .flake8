@@ -1,0 +1,4 @@
+[flake8]
+max-line-length = 300
+exclude = *.md,**/*.md,**/*.c,**/*.sql,*.sh,**/*.sh,dictionaries/**/*,osmosis/osmosis-0.48.3-36-gada1b6f5-SNAPSHOT/**/*,analysers/disabled/*,docker/work/.jupyter/*,plugins/Colour.py,plugins/Josm_*.py,plugins/Name_Dictionary_Lang_fr.py,plugins/Name_Script.py,plugins/TagFix_Wikidata.py,plugins/disabled/*
+ignore = W503,W504,E203,E741,E402,B011,B006,B008,B023,B001,E722,W391,E731,B017

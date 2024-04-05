@@ -9,7 +9,7 @@ Osmose-QA is composed of two parts:
 
 Backends can be this project or any other application able to produce issues lists in the Osmose-QA XML format and able to upload it to the Frontend.
 
-This Backend project is composed by an engine and lot of the rules of validation written in analyzers. An analyzer can implement multiple checks, and so report many class of issues.
+This Backend project is composed by an engine and a lot of the rules of validation written in analyzers. An analyzer can implement multiple checks, and so report many classes of issues.
 
 There are several type of analyzers, each type implementing a particular way to access the data.
 
@@ -17,10 +17,10 @@ There are several type of analyzers, each type implementing a particular way to 
 ## Analyzers organization
 
 The abstract root classes:
-* `Aanalyser` (Analyser.py): the main root class
+* `Analyser` (Analyser.py): the main root class
   * `Analyser_Osmosis` (Analyser_Osmosis.py): the root class for all SQL analyzers using the PostgreSQL/PostGIS database imported by the Osmosis tool.
     * `Analyser_Merge` (Analyser_Merge.py): the root class for merging OpenData source with OSM data.
-      * `SubAnalyser_Merge_Dynamic` (Analyser_Merge_Dynamic.py): the same, but form multiple type of OSM Objects.
+      * `SubAnalyser_Merge_Dynamic` (Analyser_Merge_Dynamic.py): the same, but form multiple types of OSM Objects.
 
 This abstract classes are implemented by few kind of classes:
 * `Analyser_Osmosis_*`: directly implementing `Analyser_Osmosis` to run SQL queries on the database.
@@ -61,7 +61,7 @@ The issues are defined and produced by analyzers (and plugins).
 A class of issue is a definition of the issues the analyzer will yield.
 The classes of issues are defined by the following fields :
 
-* `id`: each class of issue should have an unique `id` in the scope of the analyzer. Note: all plugins are in the same scope of the `Analyser_Sax`.
+* `id`: each class of issue should have a unique `id` in the scope of the analyzer. Note: all plugins are in the same scope of the `Analyser_Sax`.
 
 Documentation:
 * `title`: short string which describes the issue (answers "what is the issue?"). Ideally titles should not contain any OSM tagging. Only the first word of the title should be capitalized (and any proper nouns or acronyms) and there should be no end period.
@@ -151,4 +151,4 @@ There are multiple way to run Osmose-QA Backend and test your code. The easier t
 Lastly, if you don’t support Docker and love the old school way, you can directly use Python Virtualenv. You will also have to install and setup PostgreSQL yourself.
 
 ### Translation
-Translation are make in Osmose-QA but without language destination. The translation are make in all languages at the same time. For that we use `T_()` (like `string.format()`). This function return a dictionary of all available translations. When no translation is requited, just use `{'en': 'foobar'}`.
+Translations are made in Osmose-QA but without language destination. Translations are made in all languages at the same time. For that we use `T_()` (like `string.format()`). This function return a dictionary of all available translations. When no translation is required, just use `{'en': 'foobar'}`.
