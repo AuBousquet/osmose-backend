@@ -26,7 +26,7 @@ meta[lang=fr] {
     throwWarning: tr("Fountain here");
     -osmoseItemClassLevel: "4030/40301/2";
     -osmoseTags: list("fix:survey"); // The tags are added to the on of the global declaration
-    
+
     assertMatch: "way amenity=fountain";
     assertMatch: "way amenity=fountain name='Eau Claire'";
     assertNoMatch: "node sport=boules";

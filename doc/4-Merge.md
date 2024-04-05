@@ -15,7 +15,7 @@ The global idea is to:
 
 ## General implementation
 
-We aim here to have configuration over code. Nevertheless this configuration is written in Python and may contain Python code when necessary (but not on typical use case). The goal is to easy the process of creating and maintaining this kind of merger analyzers.
+We aim here to have configuration over code. Nevertheless this configuration is written in Python and may contain Python code when necessary (but not on typical use case). The goal is to ease the process of creating and maintaining this kind of merger analyzers.
 
 The configuration can be seen as a chain:
 - Content is fetched from a `Source`: remote or local file or archive.
@@ -109,7 +109,7 @@ from .Analyser_Merge import SourceDataGouv
 Retrieve the `millesime` from the `Last-modified` HTTP header. Otherwise it is identical to `Source`.
 
 ### Source
-Base class that can be used data sources not covered by specific classes.
+Base class that can be used for data sources not covered by specific classes.
 
 It uses the following attributes:
 - Either:
@@ -172,7 +172,7 @@ from .Analyser_Merge import CSV
 ```
 
 Common option to all parsers:
-- `srid`: SIRD code of the data coordinates. Overwrite the projection of geometry, by default projection comes from parsed content, or if no fallback to 4326.
+- `srid`: SRID code of the data coordinates. Overwrites the projection of geometry, by default projection comes from parsed content, or if no, falls back to 4326.
 
 
 ## Load
@@ -194,7 +194,7 @@ from .Analyser_Merge import Load_XY
     Load_XY('lon', 'lat', ...)
 ```
 
-Note: sometime the both coordinates are in the same field, then the field must be given twice.
+Note: sometimes both coordinates are in the same field, then the field must be given twice.
 
 A lambda function may be applied to `x` and `y` field to extract or convert to proper number:
 ```python
