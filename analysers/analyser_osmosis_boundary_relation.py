@@ -1,26 +1,27 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2013-2015                                 ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2013-2015                                 #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
+
 from .Analyser_Osmosis import Analyser_Osmosis
 
 sql00 = """
@@ -111,45 +112,106 @@ GROUP BY
     relations.tags
 """
 
+
 class Analyser_Osmosis_Boundary_Relation(Analyser_Osmosis):
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
-        self.admin_level = self.config.options and self.config.options.get("boundary_detail_level", 8) or 8
-        self.municipality_ref = self.config.options and self.config.options.get("municipality_ref")
+        self.admin_level = (
+            self.config.options
+            and self.config.options.get("boundary_detail_level", 8)
+            or 8
+        )
+        self.municipality_ref = self.config.options and self.config.options.get(
+            "municipality_ref"
+        )
         if self.municipality_ref and not isinstance(self.municipality_ref, list):
             self.municipality_ref = [self.municipality_ref]
 
-        self.classs_change[1] = self.def_class(item = 7120, level = 2, tags = ['boundary', 'fix:chair'],
-            title = T_('Missing `admin_centre` role'))
-        self.classs_change[2] = self.def_class(item = 7120, level = 1, tags = ['boundary', 'name', 'fix:chair'],
-            title = T_('Missing `name`'))
+        self.classs_change[1] = self.def_class(
+            item=7120,
+            level=2,
+            tags=["boundary", "fix:chair"],
+            title=T_("Missing `admin_centre` role"),
+        )
+        self.classs_change[2] = self.def_class(
+            item=7120,
+            level=1,
+            tags=["boundary", "name", "fix:chair"],
+            title=T_("Missing `name`"),
+        )
         if self.municipality_ref:
-            self.classs_change[3] = self.def_class(item = 7120, level = 2, tags = ['boundary', 'ref', 'fix:chair'],
-                title = T_('Missing municipality ref tag'))
-        self.classs_change[4] = self.def_class(item = 7120, level = 2, tags = ['boundary', 'wikipedia', 'fix:chair'],
-            title = T_('Missing wikipedia tag'))
-        self.classs_change[5] = self.def_class(item = 7120, level = 3, tags = ['boundary', 'fix:chair'],
-            title = T_('Different population tag between relation and admin_centre'),
-            detail = T_(
-'''The admin_centre `population` is greater than the relation
-`population`.'''))
-        self.classs_change[6] = self.def_class(item = 7120, level = 2, tags = ['boundary', 'fix:chair'],
-            title = T_('Invalid role'),
-            detail = T_(
-'''See [possible
+            self.classs_change[3] = self.def_class(
+                item=7120,
+                level=2,
+                tags=["boundary", "ref", "fix:chair"],
+                title=T_("Missing municipality ref tag"),
+            )
+        self.classs_change[4] = self.def_class(
+            item=7120,
+            level=2,
+            tags=["boundary", "wikipedia", "fix:chair"],
+            title=T_("Missing wikipedia tag"),
+        )
+        self.classs_change[5] = self.def_class(
+            item=7120,
+            level=3,
+            tags=["boundary", "fix:chair"],
+            title=T_("Different population tag between relation and admin_centre"),
+            detail=T_(
+                """The admin_centre `population` is greater than the relation
+`population`."""
+            ),
+        )
+        self.classs_change[6] = self.def_class(
+            item=7120,
+            level=2,
+            tags=["boundary", "fix:chair"],
+            title=T_("Invalid role"),
+            detail=T_(
+                """See [possible
 roles](https://wiki.openstreetmap.org/wiki/Relation:boundary) on boundary
-relations.'''))
+relations."""
+            ),
+        )
 
-        self.callback10 = lambda res: {"class":1, "data":[self.relation_full, self.positionAsText]}
-        self.callback20 = lambda res: {"class":2, "data":[self.relation_full, self.positionAsText], "fix":{"name": res[2]} if res[2] else None}
+        self.callback10 = lambda res: {
+            "class": 1,
+            "data": [self.relation_full, self.positionAsText],
+        }
+        self.callback20 = lambda res: {
+            "class": 2,
+            "data": [self.relation_full, self.positionAsText],
+            "fix": {"name": res[2]} if res[2] else None,
+        }
         if self.municipality_ref:
-            self.callback30 = lambda res: {"class":3, "data":[self.relation_full, self.positionAsText], "text":T_("Missing municipality ref tag {0}", ", ".join(self.municipality_ref)),
-                "fix":{self.municipality_ref: res[2]} if res[2] else None}
-        self.callback40 = lambda res: {"class":4, "data":[self.relation_full, self.positionAsText], "fix":{"wikipedia": res[2]} if res[2] else None}
-        self.callback50 = lambda res: {"class":5, "data":[self.relation_full, self.positionAsText],
-            "text": T_("Population on admin_centre role ({0}) greater than population on the relation ({1})", res[2], res[3]) }
-        self.callback60 = lambda res: {"class":6, "data":[self.relation_full, self.positionAsText], "text":{"en": res[2]}}
+            self.callback30 = lambda res: {
+                "class": 3,
+                "data": [self.relation_full, self.positionAsText],
+                "text": T_(
+                    "Missing municipality ref tag {0}", ", ".join(self.municipality_ref)
+                ),
+                "fix": {self.municipality_ref: res[2]} if res[2] else None,
+            }
+        self.callback40 = lambda res: {
+            "class": 4,
+            "data": [self.relation_full, self.positionAsText],
+            "fix": {"wikipedia": res[2]} if res[2] else None,
+        }
+        self.callback50 = lambda res: {
+            "class": 5,
+            "data": [self.relation_full, self.positionAsText],
+            "text": T_(
+                "Population on admin_centre role ({0}) greater than population on the relation ({1})",
+                res[2],
+                res[3],
+            ),
+        }
+        self.callback60 = lambda res: {
+            "class": 6,
+            "data": [self.relation_full, self.positionAsText],
+            "text": {"en": res[2]},
+        }
 
     def municipality_col(self, tags):
         if isinstance(tags, list):
@@ -166,28 +228,97 @@ relations.'''))
     def analyser_osmosis_full(self):
         self.run(sql00.format("", "", self.admin_level))
         self.run(sql10.format("", ""), self.callback10)
-        self.run(sql20.format("", "", self.municipality_col("name"), self.municipality_not("name")), self.callback20)
+        self.run(
+            sql20.format(
+                "", "", self.municipality_col("name"), self.municipality_not("name")
+            ),
+            self.callback20,
+        )
         if self.municipality_ref:
-            self.run(sql20.format("", "", self.municipality_col(self.municipality_ref), self.municipality_not(self.municipality_ref)), self.callback30)
-        self.run(sql20.format("", "", self.municipality_col("wikipedia"), self.municipality_not("wikipedia")), self.callback40)
+            self.run(
+                sql20.format(
+                    "",
+                    "",
+                    self.municipality_col(self.municipality_ref),
+                    self.municipality_not(self.municipality_ref),
+                ),
+                self.callback30,
+            )
+        self.run(
+            sql20.format(
+                "",
+                "",
+                self.municipality_col("wikipedia"),
+                self.municipality_not("wikipedia"),
+            ),
+            self.callback40,
+        )
         self.run(sql50.format("", ""), self.callback50)
         self.run(sql60.format(""), self.callback60)
 
     def analyser_osmosis_diff(self):
         self.run(sql00.format("touched_", "", self.admin_level))
         self.run(sql10.format("touched_", ""), self.callback10)
-        self.run(sql20.format("touched_", "", self.municipality_col("name"), self.municipality_not("name")), self.callback20)
+        self.run(
+            sql20.format(
+                "touched_",
+                "",
+                self.municipality_col("name"),
+                self.municipality_not("name"),
+            ),
+            self.callback20,
+        )
         if self.municipality_ref:
-            self.run(sql20.format("touched_", "", self.municipality_col(self.municipality_ref), self.municipality_not(self.municipality_ref)), self.callback30)
-        self.run(sql20.format("touched_", "", self.municipality_col("wikipedia"), self.municipality_not("wikipedia")), self.callback40)
+            self.run(
+                sql20.format(
+                    "touched_",
+                    "",
+                    self.municipality_col(self.municipality_ref),
+                    self.municipality_not(self.municipality_ref),
+                ),
+                self.callback30,
+            )
+        self.run(
+            sql20.format(
+                "touched_",
+                "",
+                self.municipality_col("wikipedia"),
+                self.municipality_not("wikipedia"),
+            ),
+            self.callback40,
+        )
         self.run(sql50.format("touched_", ""), self.callback50)
 
         self.run(sql00.format("not_touched_", "touched_", self.admin_level))
         self.run(sql10.format("not_touched_", "touched_"), self.callback10)
-        self.run(sql20.format("not_touched_", "touched_", self.municipality_col("name"), self.municipality_not("name")), self.callback20)
+        self.run(
+            sql20.format(
+                "not_touched_",
+                "touched_",
+                self.municipality_col("name"),
+                self.municipality_not("name"),
+            ),
+            self.callback20,
+        )
         if self.municipality_ref:
-            self.run(sql20.format("not_touched_", "touched_", self.municipality_col(self.municipality_ref), self.municipality_not(self.municipality_ref)), self.callback30)
-        self.run(sql20.format("not_touched_", "touched_", self.municipality_col("wikipedia"), self.municipality_not("wikipedia")), self.callback40)
+            self.run(
+                sql20.format(
+                    "not_touched_",
+                    "touched_",
+                    self.municipality_col(self.municipality_ref),
+                    self.municipality_not(self.municipality_ref),
+                ),
+                self.callback30,
+            )
+        self.run(
+            sql20.format(
+                "not_touched_",
+                "touched_",
+                self.municipality_col("wikipedia"),
+                self.municipality_not("wikipedia"),
+            ),
+            self.callback40,
+        )
         self.run(sql50.format("not_touched_", "touched_"), self.callback50)
 
         self.run(sql60.format("touched_"), self.callback60)

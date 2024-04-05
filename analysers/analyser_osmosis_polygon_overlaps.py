@@ -1,26 +1,27 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2014                                      ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2014                                      #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
+
 from .Analyser_Osmosis import Analyser_Osmosis
 
 sql00 = """
@@ -72,25 +73,36 @@ WHERE
     )
 """
 
+
 class Analyser_Osmosis_Polygon_Overlaps(Analyser_Osmosis):
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
-        self.tags = ( (1, "waterway"),
-                      (2, "natural"),
-                      (3, "landuse"),
-                    )
+        self.tags = (
+            (1, "waterway"),
+            (2, "natural"),
+            (3, "landuse"),
+        )
 
         for t in self.tags:
-            self.classs[t[0]] = self.def_class(item = 1150, level = 3, tags = ['landuse', 'geom', 'fix:imagery'],
-                title = T_('Area intersection `{0}`', t[1]),
-                detail = T_(
-'''Same surfaces type overlapped (`waterway`, `natural` or
-`landuse`.)'''),
-                fix = T_(
-'''Separate the surface or merge, pay attention on other tags'''))
+            self.classs[t[0]] = self.def_class(
+                item=1150,
+                level=3,
+                tags=["landuse", "geom", "fix:imagery"],
+                title=T_("Area intersection `{0}`", t[1]),
+                detail=T_(
+                    """Same surfaces type overlapped (`waterway`, `natural` or
+`landuse`.)"""
+                ),
+                fix=T_(
+                    """Separate the surface or merge, pay attention on other tags"""
+                ),
+            )
 
-        self.callback10 = lambda res: {"class":res[3], "data":[self.way_full, self.way_full, self.positionAsText]}
+        self.callback10 = lambda res: {
+            "class": res[3],
+            "data": [self.way_full, self.way_full, self.positionAsText],
+        }
 
     def analyser_osmosis_common(self):
         self.run(sql00)

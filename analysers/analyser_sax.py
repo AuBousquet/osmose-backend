@@ -1,42 +1,46 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Etienne Chové <chove@crans.org> 2009                       ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Etienne Chové <chove@crans.org> 2009                       #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
+
+import importlib
+import os
+import sys
+
+import modules.config
+from modules import OsmoseLog, OsmReader, SourceVersion
 
 from .Analyser import Analyser
-
-import sys
-import os
-import importlib
-import modules.config
-from modules import OsmoseLog
-from modules import OsmReader
-from modules import SourceVersion
 
 
 class Analyser_Sax(Analyser):
 
-    def __init__(self, config, logger = OsmoseLog.logger()):
+    def __init__(self, config, logger=OsmoseLog.logger()):
         Analyser.__init__(self, config, logger)
         if self.config.plugins:
-            plugins = map(lambda plugin: self._load_plugin(plugin) if isinstance(plugin, str) else plugin, self.config.plugins)
+            plugins = map(
+                lambda plugin: (
+                    self._load_plugin(plugin) if isinstance(plugin, str) else plugin
+                ),
+                self.config.plugins,
+            )
         else:
             plugins = self._load_all_plugins()
         self._init_plugins(plugins)
@@ -45,12 +49,14 @@ class Analyser_Sax(Analyser):
         Analyser.__enter__(self)
         # open database connections
         self._load_reader()
-        self.parser = OsmReader.open(self.config.src, self.logger.sub(), getattr(self.config, 'src_state', None))
+        self.parser = OsmReader.open(
+            self.config.src, self.logger.sub(), getattr(self.config, "src_state", None)
+        )
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         # close database connections
-        self._log(u"Closing reader and parser")
+        self._log("Closing reader and parser")
         del self.parser
         del self._reader
         Analyser.__exit__(self, exc_type, exc_value, traceback)
@@ -59,7 +65,12 @@ class Analyser_Sax(Analyser):
         return self.parser.timestamp()
 
     def analyser_version(self):
-        return SourceVersion.version(*([self.__class__] + list(map(lambda p: p.__class__, self.plugins.values()))))
+        return SourceVersion.version(
+            *(
+                [self.__class__]
+                + list(map(lambda p: p.__class__, self.plugins.values()))
+            )
+        )
 
     def analyser(self):
         self.logger.log("run sax all")
@@ -84,22 +95,22 @@ class Analyser_Sax(Analyser):
 
             if timestamp:
                 filtered_nodes = set(self.parser.filtered_nodes())
-                for id in self.already_issued_objects['N']:
+                for id in self.already_issued_objects["N"]:
                     if id not in filtered_nodes:
-                        self.error_file.delete('node', id)
+                        self.error_file.delete("node", id)
                 filtered_ways = set(self.parser.filtered_ways())
-                for id in self.already_issued_objects['W']:
+                for id in self.already_issued_objects["W"]:
                     if id not in filtered_ways:
-                        self.error_file.delete('way', id)
+                        self.error_file.delete("way", id)
                 filtered_relations = set(self.parser.filtered_relations())
-                for id in self.already_issued_objects['R']:
+                for id in self.already_issued_objects["R"]:
                     if id not in filtered_relations:
-                        self.error_file.delete('relation', id)
+                        self.error_file.delete("relation", id)
         finally:
             self._close_output()
 
     ################################################################################
-    #### Useful functions
+    # Useful functions
 
     def ToolsGetFilePath(self, filename):
         return os.path.join(modules.config.dir_osmose, filename)
@@ -115,8 +126,10 @@ class Analyser_Sax(Analyser):
         d = []
         for x in f.readlines():
             x = x.strip()
-            if not x: continue
-            if x[0] == "#": continue
+            if not x:
+                continue
+            if x[0] == "#":
+                continue
             d.append(x)
         f.close()
         return d
@@ -133,7 +146,7 @@ class Analyser_Sax(Analyser):
         return d
 
     ################################################################################
-    #### Reader
+    # Reader
 
     def NodeGet(self, NodeId):
         return self._reader.NodeGet(NodeId)
@@ -148,14 +161,14 @@ class Analyser_Sax(Analyser):
         return self._reader.UserGet(UserId)
 
     def ExtendData(self, data):
-        if "uid" in data and not "user" in data:
+        if "uid" in data and "user" not in data:
             user = self.UserGet(data["uid"])
             if user:
                 data["user"] = user
         return data
 
     ################################################################################
-    #### Logs
+    # Logs
 
     def _log(self, txt):
         self.logger.log(txt)
@@ -167,12 +180,12 @@ class Analyser_Sax(Analyser):
         self.logger.err(txt)
 
     ################################################################################
-    #### Node parsing
+    # Node parsing
 
     def NodeCreate(self, data):
         # Initialisation
-        err  = []
-        tags = data[u"tag"]
+        err = []
+        tags = data["tag"]
 
         if tags == {}:
             return
@@ -192,7 +205,7 @@ class Analyser_Sax(Analyser):
 
         # Write the issues
         if err:
-            if not "uid" in data and not "user" in data:
+            if "uid" not in data and "user" not in data:
                 data = self.NodeGet(data["id"]) or data
             data = self.ExtendData(data)
             for e in err:
@@ -201,7 +214,7 @@ class Analyser_Sax(Analyser):
                     subclass = e.get("subclass", 0)
                     text = e.get("text", {})
                     fix = e.get("fix")
-                    allow_fix_override = e.get('allow_fix_override')
+                    allow_fix_override = e.get("allow_fix_override")
 
                     self.error_file.error(
                         classs,
@@ -211,7 +224,8 @@ class Analyser_Sax(Analyser):
                         ["node"],
                         fix,
                         {"position": [data], "node": [data]},
-                        allow_override = allow_fix_override)
+                        allow_override=allow_fix_override,
+                    )
                 except:
                     self._err("Error on error {0} from {1}".format(str(e), str(err)))
                     raise
@@ -224,20 +238,22 @@ class Analyser_Sax(Analyser):
         self.error_file.delete("node", data["id"])
 
     ################################################################################
-    #### Way parsing
+    # Way parsing
 
     def WayCreate(self, data):
         # Initialisation
-        err  = []
-        tags = data[u"tag"]
-        nds  = data[u"nd"]
+        err = []
+        tags = data["tag"]
+        nds = data["nd"]
 
         # Run jobs
         for meth in self.pluginsWayMethodes:
             try:
                 res = meth(data, tags, nds)
             except:
-                self._err("Fail on {0} with {1}, {2}, {3}".format(meth, data, tags, nds))
+                self._err(
+                    "Fail on {0} with {1}, {2}, {3}".format(meth, data, tags, nds)
+                )
                 raise
 
             if res:
@@ -248,14 +264,14 @@ class Analyser_Sax(Analyser):
 
         # Write the issues
         if err:
-            if not "uid" in data and not "user" in data:
+            if "uid" not in data and "user" not in data:
                 tmp_data = self.WayGet(data["id"]) or data
                 if tmp_data:
                     # way from reader can be None if there is only one node on it
                     data = tmp_data
-            node = self.NodeGet(nds[len(nds)//2])
+            node = self.NodeGet(nds[len(nds) // 2])
             if not node:
-                node = {u"lat":0, u"lon":0}
+                node = {"lat": 0, "lon": 0}
             data = self.ExtendData(data)
             for e in err:
                 try:
@@ -263,7 +279,7 @@ class Analyser_Sax(Analyser):
                     subclass = e.get("subclass", 0)
                     text = e.get("text", {})
                     fix = e.get("fix")
-                    allow_fix_override = e.get('allow_fix_override')
+                    allow_fix_override = e.get("allow_fix_override")
 
                     self.error_file.error(
                         classs,
@@ -273,7 +289,8 @@ class Analyser_Sax(Analyser):
                         ["way"],
                         fix,
                         {"position": [node], "way": [data]},
-                        allow_override = allow_fix_override)
+                        allow_override=allow_fix_override,
+                    )
                 except:
                     self._err("Error on error {0} from {1}".format(str(e), str(err)))
                     raise
@@ -286,45 +303,49 @@ class Analyser_Sax(Analyser):
         self.error_file.delete("way", data["id"])
 
     ################################################################################
-    #### Relation parsing
+    # Relation parsing
 
-    def locateRelation(self, data, recur_control = []):
+    def locateRelation(self, data, recur_control=[]):
         node = None
-        for memb in data[u"member"]:
-            if memb[u"type"] == u"node":
-                node = self.NodeGet(memb[u"ref"])
-            elif memb[u"type"] == "way":
-                way = self.WayGet(memb[u"ref"])
+        for memb in data["member"]:
+            if memb["type"] == "node":
+                node = self.NodeGet(memb["ref"])
+            elif memb["type"] == "way":
+                way = self.WayGet(memb["ref"])
                 if way:
-                    node = self.NodeGet(way[u"nd"][0])
+                    node = self.NodeGet(way["nd"][0])
             if node:
                 break
         if not node:
-            for memb in data[u"member"]:
-                if memb[u"type"] == u"relation":
-                    ref = memb[u"ref"]
+            for memb in data["member"]:
+                if memb["type"] == "relation":
+                    ref = memb["ref"]
                     if ref == data["id"] or ref in recur_control:
                         # don't reread the same relation
                         continue
-                    rel = self.RelationGet(memb[u"ref"])
+                    rel = self.RelationGet(memb["ref"])
                     if rel:
-                        node = self.locateRelation(rel, recur_control=recur_control+[data["id"]])
+                        node = self.locateRelation(
+                            rel, recur_control=recur_control + [data["id"]]
+                        )
                 if node:
                     break
         return node
 
     def RelationCreate(self, data):
         # Initialisation
-        err  = []
-        tags = data[u"tag"]
-        members = data[u"member"]
+        err = []
+        tags = data["tag"]
+        members = data["member"]
 
         # Run jobs
         for meth in self.pluginsRelationMethodes:
             try:
                 res = meth(data, tags, members)
             except:
-                self._err("Fail on {0} with {1}, {2}, {3}".format(meth, data, tags, members))
+                self._err(
+                    "Fail on {0} with {1}, {2}, {3}".format(meth, data, tags, members)
+                )
                 raise
             if res:
                 if isinstance(res, dict):
@@ -333,12 +354,12 @@ class Analyser_Sax(Analyser):
                     err += res
 
         # Write the issues
-        if err and data[u"member"]:
-            if not "uid" in data and not "user" in data:
+        if err and data["member"]:
+            if "uid" not in data and "user" not in data:
                 data = self.RelationGet(data["id"]) or data
             node = self.locateRelation(data)
             if not node:
-                node = {u"lat":0, u"lon":0}
+                node = {"lat": 0, "lon": 0}
             data = self.ExtendData(data)
             for e in err:
                 try:
@@ -346,7 +367,7 @@ class Analyser_Sax(Analyser):
                     subclass = e.get("subclass", 0)
                     text = e.get("text", {})
                     fix = e.get("fix")
-                    allow_fix_override = e.get('allow_fix_override')
+                    allow_fix_override = e.get("allow_fix_override")
 
                     self.error_file.error(
                         classs,
@@ -356,7 +377,8 @@ class Analyser_Sax(Analyser):
                         ["relation"],
                         fix,
                         {"position": [node], "relation": [data]},
-                        allow_override = allow_fix_override)
+                        allow_override=allow_fix_override,
+                    )
                 except:
                     self._err("Error on error {0} from {1}".format(str(e), str(err)))
                     raise
@@ -371,12 +393,13 @@ class Analyser_Sax(Analyser):
     ################################################################################
 
     def _load_reader(self):
-        if hasattr(self.config, 'osmosis_manager') and self.config.osmosis_manager:
+        if hasattr(self.config, "osmosis_manager") and self.config.osmosis_manager:
             self._reader = self.config.osmosis_manager.osmosis()
             return
 
         try:
             from modules import OsmBin
+
             self._reader = OsmBin.OsmBin("/data/work/osmbin/data")
             return
         except IOError:
@@ -388,22 +411,22 @@ class Analyser_Sax(Analyser):
         else:
             # from modules import OsmSaxAlea
             # self._reader = OsmSaxAlea.OsmSaxReader(self.config.src, self.config.src_state)
-            raise RuntimeError('No OSM reader available')
+            raise RuntimeError("No OSM reader available")
 
     ################################################################################
 
     def _load_plugin(self, plugin):
-        module = importlib.import_module('plugins.' + plugin)
-        if getattr(module, 'P_' + plugin, None):
+        module = importlib.import_module("plugins." + plugin)
+        if getattr(module, "P_" + plugin, None):
             pass
         else:
             return getattr(module, plugin)
 
     def _load_all_plugins(self):
-        self._log(u"Loading plugins")
+        self._log("Loading plugins")
 
         available_plugins = []
-        for plugin in sorted(self.ToolsListDir(u"plugins")):
+        for plugin in sorted(self.ToolsListDir("plugins")):
             if not plugin.endswith(".py") or plugin in ("__init__.py", "Plugin.py"):
                 continue
             pluginName = plugin[:-3]
@@ -412,7 +435,6 @@ class Analyser_Sax(Analyser):
                 available_plugins.append(clazz)
 
         return available_plugins
-
 
     def _init_plugins(self, available_plugin_classes):
         self._Err = {}
@@ -429,22 +451,38 @@ class Analyser_Sax(Analyser):
 
         for pluginClazz in available_plugin_classes:
             if "only_for" in dir(pluginClazz):
-                if not any(map(lambda of: any(map(lambda co: co.startswith(of), conf_limit)), pluginClazz.only_for)):
-                    self._sublog(u"skip "+pluginClazz.__name__)
+                if not any(
+                    map(
+                        lambda of: any(map(lambda co: co.startswith(of), conf_limit)),
+                        pluginClazz.only_for,
+                    )
+                ):
+                    self._sublog("skip " + pluginClazz.__name__)
                     continue
 
             if "not_for" in dir(pluginClazz):
-                if any(map(lambda of: any(map(lambda co: co.startswith(of), conf_limit)), pluginClazz.not_for)):
-                    self._sublog(u"skip "+pluginClazz.__name__)
+                if any(
+                    map(
+                        lambda of: any(map(lambda co: co.startswith(of), conf_limit)),
+                        pluginClazz.not_for,
+                    )
+                ):
+                    self._sublog("skip " + pluginClazz.__name__)
                     continue
 
             # Plugin Initialisation
             pluginInstance = pluginClazz(self)
             if pluginInstance.init(self.logger.sub().sub()) is False:
-                self._sublog(u"self-disabled "+pluginClazz.__name__)
+                self._sublog("self-disabled " + pluginClazz.__name__)
                 continue
             else:
-                self._sublog(u"init "+pluginClazz.__name__+" ("+", ".join(pluginInstance.availableMethodes())+")")
+                self._sublog(
+                    "init "
+                    + pluginClazz.__name__
+                    + " ("
+                    + ", ".join(pluginInstance.availableMethodes())
+                    + ")"
+                )
 
                 pluginAvailableMethodes = pluginInstance.availableMethodes()
                 self.plugins[pluginClazz.__name__] = pluginInstance
@@ -458,68 +496,78 @@ class Analyser_Sax(Analyser):
                     self.pluginsRelationMethodes.append(pluginInstance.relation)
 
                 # Liste generated issues
-                for (cl, v) in self.plugins[pluginClazz.__name__].errors.items():
+                for cl, v in self.plugins[pluginClazz.__name__].errors.items():
                     if cl in self._Err:
-                        raise Exception("class {0} already present as item {1}".format(cl, self._Err[cl]['item']))
+                        raise Exception(
+                            "class {0} already present as item {1}".format(
+                                cl, self._Err[cl]["item"]
+                            )
+                        )
                     self._Err[cl] = v
 
     ################################################################################
 
     def _load_output(self, change):
-        self.error_file.analyser(self.timestamp(), self.analyser_version(), change=change)
+        self.error_file.analyser(
+            self.timestamp(), self.analyser_version(), change=change
+        )
 
         # Create classes in issues file
-        for (cl, item) in sorted(self._Err.items()):
+        for cl, item in sorted(self._Err.items()):
             self.error_file.classs(
-                id = cl,
-                item = item['item'],
-                level = item['level'],
-                tags = item.get('tags', item.get('tag')),
-                title = item.get('title', item.get('desc')),
-                detail = item.get('detail'),
-                fix = item.get('fix'),
-                trap = item.get('trap'),
-                example = item.get('example'),
-                source = item.get('source'),
-                resource = item.get('resource'),
+                id=cl,
+                item=item["item"],
+                level=item["level"],
+                tags=item.get("tags", item.get("tag")),
+                title=item.get("title", item.get("desc")),
+                detail=item.get("detail"),
+                fix=item.get("fix"),
+                trap=item.get("trap"),
+                example=item.get("example"),
+                source=item.get("source"),
+                resource=item.get("resource"),
             )
 
     ################################################################################
 
     def _run_analyse(self):
-        self._log(u"Analysing file "+self.config.src)
+        self._log("Analysing file " + self.config.src)
         self.parser.CopyTo(self)
-        self._log(u"Analyse finished")
+        self._log("Analyse finished")
 
     ################################################################################
 
     def _close_output(self):
         self.error_file.analyser_end()
 
+
+import datetime
+
+import dateutil
+
+from modules import IssuesFileOsmose
+
 ################################################################################
 from .Analyser import TestAnalyser
-from modules import IssuesFileOsmose
-import datetime
-import dateutil
+
 
 class TestAnalyserOsmosis(TestAnalyser):
 
     class MockupReader(object):
         def NodeGet(self, id):
-            return { "id": id, "lat": 0, "lon": 0, "tag": {} }
+            return {"id": id, "lat": 0, "lon": 0, "tag": {}}
 
         def WayGet(self, id, dump_sub_elements=False):
-            return { "id": id, "nd": [0], "tag": {} }
+            return {"id": id, "nd": [0], "tag": {}}
 
         def RelationGet(self, id, dump_sub_elements=False):
-            return { "id": id, "member": [{"type": "node", "ref": 0}], "tag": {} }
+            return {"id": id, "member": [{"type": "node", "ref": 0}], "tag": {}}
 
         def UserGet(self, id):
             return None
 
         def timestamp(self):
             return datetime.datetime.now()
-
 
     def setUp(self):
 
@@ -529,13 +577,16 @@ class TestAnalyserOsmosis(TestAnalyser):
             src_state = "tests/saint_barthelemy.state.txt"
             error_file = None
             reader = TestAnalyserOsmosis.MockupReader()
-            source_url = 'http://example.com'
+            source_url = "http://example.com"
             plugins = []
+
         self.config = config()
 
         # create directory for results
         import os
+
         from modules import config
+
         self.dirname = config.dir_tmp + "/tests/"
         try:
             os.makedirs(self.dirname)
@@ -563,7 +614,10 @@ class TestAnalyserOsmosis(TestAnalyser):
         self.config.error_file = IssuesFileOsmose.IssuesFileOsmose(self.xml_res_file)
         self.config.options = {"project": "openstreetmap"}
         with Analyser_Sax(self.config) as analyser_obj:
-            analyser_obj.analyser_resume(dateutil.parser.parse("2000-01-01T01:01:01Z").replace(tzinfo=None), {'N': set(), 'W': set(), 'R': set()})
+            analyser_obj.analyser_resume(
+                dateutil.parser.parse("2000-01-01T01:01:01Z").replace(tzinfo=None),
+                {"N": set(), "W": set(), "R": set()},
+            )
 
         self.compare_results("tests/results/sax.test_resume_full.xml")
 
@@ -575,7 +629,10 @@ class TestAnalyserOsmosis(TestAnalyser):
         self.config.error_file = IssuesFileOsmose.IssuesFileOsmose(self.xml_res_file)
         self.config.options = {"project": "openstreetmap"}
         with Analyser_Sax(self.config) as analyser_obj:
-            analyser_obj.analyser_resume(dateutil.parser.parse("2012-07-18T11:04:56Z").replace(tzinfo=None), {'N': set([1]), 'W': set([24552698]), 'R': set()})
+            analyser_obj.analyser_resume(
+                dateutil.parser.parse("2012-07-18T11:04:56Z").replace(tzinfo=None),
+                {"N": set([1]), "W": set([24552698]), "R": set()},
+            )
 
         self.compare_results("tests/results/sax.test_resume.xml")
 
@@ -588,7 +645,10 @@ class TestAnalyserOsmosis(TestAnalyser):
         self.config.error_file = IssuesFileOsmose.IssuesFileOsmose(self.xml_res_file)
         self.config.options = {"project": "openstreetmap"}
         with Analyser_Sax(self.config) as analyser_obj:
-            analyser_obj.analyser_resume(dateutil.parser.parse("2030-01-01T01:01:01Z").replace(tzinfo=None), {'N': set([1]), 'W': set([1000,1001]), 'R': set()})
+            analyser_obj.analyser_resume(
+                dateutil.parser.parse("2030-01-01T01:01:01Z").replace(tzinfo=None),
+                {"N": set([1]), "W": set([1000, 1001]), "R": set()},
+            )
 
         self.compare_results("tests/results/sax.test_resume_empty.xml")
 

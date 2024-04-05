@@ -1,43 +1,58 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Éric Gillet 2021                                           ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Éric Gillet 2021                                           #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
-from .Analyser_Merge import Analyser_Merge_Point, SourceOpenDataSoft, SHP, LoadGeomCentroid, Conflate, Select, Mapping
+
+from .Analyser_Merge import (
+    SHP,
+    Analyser_Merge_Point,
+    Conflate,
+    LoadGeomCentroid,
+    Mapping,
+    Select,
+    SourceOpenDataSoft,
+)
 
 
 class Analyser_Merge_Bicycle_Parking_FR_Bordeaux_Metropole(Analyser_Merge_Point):
     def __init__(self, config, logger=None):
         Analyser_Merge_Point.__init__(self, config, logger)
         self.def_class_missing_official(
-            item=8150, id=50, level=3, tags=['merge', 'public equipment', 'bicycle', 'fix:picture', 'fix:survey'],
-            title=T_('Bordeaux Metropole bicycle parking not integrated'))
+            item=8150,
+            id=50,
+            level=3,
+            tags=["merge", "public equipment", "bicycle", "fix:picture", "fix:survey"],
+            title=T_("Bordeaux Metropole bicycle parking not integrated"),
+        )
         self.init(
             "https://opendata.bordeaux-metropole.fr/explore/dataset/st_arceau_p",
             "Mobiliers urbains : Stationnement deux-roues",
-            SHP(SourceOpenDataSoft(
-                attribution="Bordeaux Métropole",
-                url="https://opendata.bordeaux-metropole.fr/explore/dataset/st_arceau_p",
-                format="shp"),
-                zip='st_arceau_p.shp'
+            SHP(
+                SourceOpenDataSoft(
+                    attribution="Bordeaux Métropole",
+                    url="https://opendata.bordeaux-metropole.fr/explore/dataset/st_arceau_p",
+                    format="shp",
+                ),
+                zip="st_arceau_p.shp",
             ),
             LoadGeomCentroid(
                 select={
@@ -46,18 +61,24 @@ class Analyser_Merge_Bicycle_Parking_FR_Bordeaux_Metropole(Analyser_Merge_Point)
             ),
             Conflate(
                 select=Select(
-                    types=["nodes", "ways"],
-                    tags={"amenity": "bicycle_parking"}),
+                    types=["nodes", "ways"], tags={"amenity": "bicycle_parking"}
+                ),
                 conflationDistance=20,
                 mapping=Mapping(
                     static1={"amenity": "bicycle_parking"},
                     static2={"source": self.source},
                     mapping1={
-                        "capacity": lambda res: None if res["nombre"] in (None, "0") else str(int(res["nombre"])*2),
-                        "cargo_bike": lambda res: "yes" if res["typologie"] == "ARCEAU_VELO_CARGO" else None,
-                    }
-                )
-            )
+                        "capacity": lambda res: (
+                            None
+                            if res["nombre"] in (None, "0")
+                            else str(int(res["nombre"]) * 2)
+                        ),
+                        "cargo_bike": lambda res: (
+                            "yes" if res["typologie"] == "ARCEAU_VELO_CARGO" else None
+                        ),
+                    },
+                ),
+            ),
         )
 
 
@@ -65,16 +86,28 @@ class Analyser_Merge_Motorcycle_Parking_FR_Bordeaux_Metropole(Analyser_Merge_Poi
     def __init__(self, config, logger=None):
         Analyser_Merge_Point.__init__(self, config, logger)
         self.def_class_missing_official(
-            item=8150, id=60, level=3, tags=['merge', 'public equipment', 'motorcycle', 'fix:picture', 'fix:survey'],
-            title=T_('Bordeaux Metropole motorcycle parking not integrated'))
+            item=8150,
+            id=60,
+            level=3,
+            tags=[
+                "merge",
+                "public equipment",
+                "motorcycle",
+                "fix:picture",
+                "fix:survey",
+            ],
+            title=T_("Bordeaux Metropole motorcycle parking not integrated"),
+        )
         self.init(
             "https://opendata.bordeaux-metropole.fr/explore/dataset/st_arceau_p",
             "Mobiliers urbains : Stationnement deux-roues",
-            SHP(SourceOpenDataSoft(
-                attribution="Bordeaux Métropole",
-                url="https://opendata.bordeaux-metropole.fr/explore/dataset/st_arceau_p",
-                format="shp"),
-                zip='st_arceau_p.shp'
+            SHP(
+                SourceOpenDataSoft(
+                    attribution="Bordeaux Métropole",
+                    url="https://opendata.bordeaux-metropole.fr/explore/dataset/st_arceau_p",
+                    format="shp",
+                ),
+                zip="st_arceau_p.shp",
             ),
             LoadGeomCentroid(
                 select={
@@ -83,15 +116,19 @@ class Analyser_Merge_Motorcycle_Parking_FR_Bordeaux_Metropole(Analyser_Merge_Poi
             ),
             Conflate(
                 select=Select(
-                    types=["nodes", "ways"],
-                    tags={"amenity": "motorcycle_parking"}),
+                    types=["nodes", "ways"], tags={"amenity": "motorcycle_parking"}
+                ),
                 conflationDistance=20,
                 mapping=Mapping(
                     static1={"amenity": "motorcycle_parking"},
                     static2={"source": self.source},
                     mapping1={
-                        "capacity": lambda res: None if res["nombre"] in (None, "0") else str(int(res["nombre"])*2),
-                    }
-                )
-            )
+                        "capacity": lambda res: (
+                            None
+                            if res["nombre"] in (None, "0")
+                            else str(int(res["nombre"]) * 2)
+                        ),
+                    },
+                ),
+            ),
         )

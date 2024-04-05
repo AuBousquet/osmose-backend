@@ -1,28 +1,28 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2018                                      ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2018                                      #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
-from .Analyser_Osmosis import Analyser_Osmosis
 
+from .Analyser_Osmosis import Analyser_Osmosis
 
 sql10 = """
 CREATE TEMP TABLE starts AS
@@ -118,28 +118,41 @@ WHERE
   islands.linestring IS NULL
 """
 
+
 class Analyser_Osmosis_Highway_Floating_Islands(Analyser_Osmosis):
 
-    requires_tables_common = ['highways']
+    requires_tables_common = ["highways"]
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
-        self.classs[4] = self.def_class(item = 1210, level = 1, tags = ['highway'],
-            title = T_('Small highway group apart from the main network or with insufficient access upstream'),
-            detail = T_(
-'''The end of the way is not connected to another way.'''),
-            fix = T_(
-'''The way or the group of the ways must be connected to an entry point:
+        self.classs[4] = self.def_class(
+            item=1210,
+            level=1,
+            tags=["highway"],
+            title=T_(
+                "Small highway group apart from the main network or with insufficient access upstream"
+            ),
+            detail=T_("""The end of the way is not connected to another way."""),
+            fix=T_(
+                """The way or the group of the ways must be connected to an entry point:
 * road: `route=ferry`, `man_made=pier`, `aeroway=taxiway|runway|apron`, `railway=platform` or `highway=motorway|motorway_link|trunk|trunk_link|primary|primary_link`,
-* bicycle: `railway=platform`, `public_transport=platform` or `highway=pedestrian`.'''))
-        self.callback10 = lambda res: {"class":4, "subclass":1, "data":[self.way_full, self.positionAsText]}
+* bicycle: `railway=platform`, `public_transport=platform` or `highway=pedestrian`."""
+            ),
+        )
+        self.callback10 = lambda res: {
+            "class": 4,
+            "subclass": 1,
+            "data": [self.way_full, self.positionAsText],
+        }
 
     def analyser_osmosis_common(self):
-        boundary_relation = self.config.polygon_id # Either a number, None or (number, number, ...)
+        boundary_relation = (
+            self.config.polygon_id
+        )  # Either a number, None or (number, number, ...)
         if isinstance(boundary_relation, int):
-          boundary_relation = "({0})".format(boundary_relation)
+            boundary_relation = "({0})".format(boundary_relation)
         elif not boundary_relation:
-          boundary_relation = "(0)"
+            boundary_relation = "(0)"
 
         self.run(sql10.format(boundary_ids=boundary_relation))
         self.run(sql11)

@@ -1,38 +1,62 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Adrien PAVIE 2019                                          ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Adrien PAVIE 2019                                          #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
-from .Analyser_Merge import Analyser_Merge_Point, SourceDataGouv, CSV, Load_XY, Conflate, Select, Mapping
+
+from .Analyser_Merge import (
+    CSV,
+    Analyser_Merge_Point,
+    Conflate,
+    Load_XY,
+    Mapping,
+    Select,
+    SourceDataGouv,
+)
 
 
 class Analyser_Merge_Carpool_FR(Analyser_Merge_Point):
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Merge_Point.__init__(self, config, logger)
-        self.def_class_missing_official(item = 8130, id = 41, level = 3, tags = ['merge', 'parking', 'carpool', 'fix:imagery', 'fix:survey'],
-            title = T_('Carpool parking not integrated'))
-        self.def_class_possible_merge(item = 8131, id = 43, level = 3, tags = ['merge', 'parking', 'carpool', 'fix:imagery', 'fix:survey'],
-            title = T_('Carpool parking integration suggestion'))
-        self.def_class_update_official(item = 8132, id = 44, level = 3, tags = ['merge', 'parking', 'carpool', 'fix:imagery', 'fix:survey'],
-            title = T_('Carpool parking update'))
+        self.def_class_missing_official(
+            item=8130,
+            id=41,
+            level=3,
+            tags=["merge", "parking", "carpool", "fix:imagery", "fix:survey"],
+            title=T_("Carpool parking not integrated"),
+        )
+        self.def_class_possible_merge(
+            item=8131,
+            id=43,
+            level=3,
+            tags=["merge", "parking", "carpool", "fix:imagery", "fix:survey"],
+            title=T_("Carpool parking integration suggestion"),
+        )
+        self.def_class_update_official(
+            item=8132,
+            id=44,
+            level=3,
+            tags=["merge", "parking", "carpool", "fix:imagery", "fix:survey"],
+            title=T_("Carpool parking update"),
+        )
 
         self.init(
             "https://www.data.gouv.fr/fr/datasets/base-nationale-consolidee-des-lieux-de-covoiturage",
@@ -42,23 +66,38 @@ class Analyser_Merge_Carpool_FR(Analyser_Merge_Point):
                     attribution="Transport.data.gouv.fr",
                     encoding="utf-8-sig",
                     dataset="5d6eaffc8b4c417cdc452ac3",
-                    resource="46362a9d-053e-4ba0-be58-bca4417a2de8")),
-            Load_XY("Xlong", "Ylat",
-                select = {
-                    "ouvert": "true"}),
+                    resource="46362a9d-053e-4ba0-be58-bca4417a2de8",
+                )
+            ),
+            Load_XY("Xlong", "Ylat", select={"ouvert": "true"}),
             Conflate(
-                select = Select(
-                    types = ["nodes", "ways"],
-                    tags = [{"amenity": "parking", "carpool": "yes"}, {"amenity":"car_pooling"}, {"amenity":"parking", "carpool":"designated"}]),
-                osmRef = "ref:FR:BNCLC",
-                conflationDistance = 300,
-                mapping = Mapping(
-                    static1 = {"amenity": "parking", "carpool": "designated"},
-                    static2 = {"source": self.source},
-                    mapping1 = {
+                select=Select(
+                    types=["nodes", "ways"],
+                    tags=[
+                        {"amenity": "parking", "carpool": "yes"},
+                        {"amenity": "car_pooling"},
+                        {"amenity": "parking", "carpool": "designated"},
+                    ],
+                ),
+                osmRef="ref:FR:BNCLC",
+                conflationDistance=300,
+                mapping=Mapping(
+                    static1={"amenity": "parking", "carpool": "designated"},
+                    static2={"source": self.source},
+                    mapping1={
                         "ref:FR:BNCLC": "id_lieu",
                         "name": "nom_lieu",
                         "capacity": "nbre_pl",
                         "capacity:disabled": "nbre_pmr",
-                        "lit": lambda res: "yes" if res["lumiere"] == "true" else ("no" if res["lumiere"] == "false" else None)},
-                    text = lambda tags, fields: T_("Carpool parking {0}", fields["nom_lieu"]) )))
+                        "lit": lambda res: (
+                            "yes"
+                            if res["lumiere"] == "true"
+                            else ("no" if res["lumiere"] == "false" else None)
+                        ),
+                    },
+                    text=lambda tags, fields: T_(
+                        "Carpool parking {0}", fields["nom_lieu"]
+                    ),
+                ),
+            ),
+        )

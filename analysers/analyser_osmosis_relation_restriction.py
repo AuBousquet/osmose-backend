@@ -1,26 +1,27 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2013                                      ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2013                                      #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
+
 from .Analyser_Osmosis import Analyser_Osmosis
 
 sql00 = """
@@ -355,40 +356,85 @@ ORDER BY
     type
 """
 
+
 class Analyser_Osmosis_Relation_Restriction(Analyser_Osmosis):
 
-    requires_tables_full = ['highways']
-    requires_tables_diff = ['highways']
+    requires_tables_full = ["highways"]
+    requires_tables_diff = ["highways"]
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
-        self.classs_change[1] = self.def_class(item = 3180, level = 2, tags = ['relation', 'restriction', 'fix:survey'],
-            title = T_('Restriction relation, wrong number of members'),
-            detail = T_(
-'''Some required members are missing, e.g. there is a `from` and `via`
-member, but it is missing a member with the `to` role.'''))
-        self.classs_change[2] = self.def_class(item = 3180, level = 2, tags = ['relation', 'restriction', 'fix:chair'],
-            title = T_('Restriction relation, bad member type'))
-        self.classs_change[3] = self.def_class(item = 3180, level = 2, tags = ['relation', 'restriction', 'fix:chair'],
-            title = T_('Unconnected restriction relation ways'),
-            fix = T_(
-'''The ways in the restriction must be continuous.'''))
-        self.classs_change[4] = self.def_class(item = 3180, level = 2, tags = ['relation', 'restriction', 'fix:survey'],
-            title = T_('Restriction relation, bad oneway direction on "from" or "to" member'),
-            detail = T_(
-'''Impossible to reach the restriction by respecting the oneway.'''))
-        self.classs_change[5] = self.def_class(item = 3180, level = 2, tags = ['relation', 'restriction', 'fix:survey'],
-            title = T_('Restriction doesn\'t match topology'),
-            detail = T_(
-'''The shape of the paths described by the way does not correspond to the
-restriction.'''))
+        self.classs_change[1] = self.def_class(
+            item=3180,
+            level=2,
+            tags=["relation", "restriction", "fix:survey"],
+            title=T_("Restriction relation, wrong number of members"),
+            detail=T_(
+                """Some required members are missing, e.g. there is a `from` and `via`
+member, but it is missing a member with the `to` role."""
+            ),
+        )
+        self.classs_change[2] = self.def_class(
+            item=3180,
+            level=2,
+            tags=["relation", "restriction", "fix:chair"],
+            title=T_("Restriction relation, bad member type"),
+        )
+        self.classs_change[3] = self.def_class(
+            item=3180,
+            level=2,
+            tags=["relation", "restriction", "fix:chair"],
+            title=T_("Unconnected restriction relation ways"),
+            fix=T_("""The ways in the restriction must be continuous."""),
+        )
+        self.classs_change[4] = self.def_class(
+            item=3180,
+            level=2,
+            tags=["relation", "restriction", "fix:survey"],
+            title=T_(
+                'Restriction relation, bad oneway direction on "from" or "to" member'
+            ),
+            detail=T_(
+                """Impossible to reach the restriction by respecting the oneway."""
+            ),
+        )
+        self.classs_change[5] = self.def_class(
+            item=3180,
+            level=2,
+            tags=["relation", "restriction", "fix:survey"],
+            title=T_("Restriction doesn't match topology"),
+            detail=T_(
+                """The shape of the paths described by the way does not correspond to the
+restriction."""
+            ),
+        )
 
-        self.callback10 = lambda res: {"class":1, "data":[self.relation_full, self.positionAsText] }
-        self.callback20 = lambda res: {"class":2, "data":[self.relation_full, self.way_full, self.positionAsText] }
-        self.callback30 = lambda res: {"class":3, "data":[self.relation_full, self.positionAsText] }
-        self.callback40 = lambda res: {"class":4, "subclass": 0, "data":[self.relation_full, self.way_full, self.positionAsText] }
-        self.callback41 = lambda res: {"class":4, "subclass": 1, "data":[self.relation_full, self.way_full, self.positionAsText] }
-        self.callback50 = lambda res: {"class":5, "data":[self.relation_full, self.positionAsText] }
+        self.callback10 = lambda res: {
+            "class": 1,
+            "data": [self.relation_full, self.positionAsText],
+        }
+        self.callback20 = lambda res: {
+            "class": 2,
+            "data": [self.relation_full, self.way_full, self.positionAsText],
+        }
+        self.callback30 = lambda res: {
+            "class": 3,
+            "data": [self.relation_full, self.positionAsText],
+        }
+        self.callback40 = lambda res: {
+            "class": 4,
+            "subclass": 0,
+            "data": [self.relation_full, self.way_full, self.positionAsText],
+        }
+        self.callback41 = lambda res: {
+            "class": 4,
+            "subclass": 1,
+            "data": [self.relation_full, self.way_full, self.positionAsText],
+        }
+        self.callback50 = lambda res: {
+            "class": 5,
+            "data": [self.relation_full, self.positionAsText],
+        }
 
     def analyser_osmosis_full(self):
         self.run(sql00.format(""))

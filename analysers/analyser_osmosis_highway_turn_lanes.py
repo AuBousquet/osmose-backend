@@ -1,26 +1,27 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2016                                      ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2016                                      #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
+
 from .Analyser_Osmosis import Analyser_Osmosis
 
 sql10 = """
@@ -131,19 +132,38 @@ FROM
     (NOT nodes.tags?'highway' OR nodes.tags->'highway' != 'traffic_signals')
 """
 
+
 class Analyser_Osmosis_Highway_Turn_Lanes(Analyser_Osmosis):
 
-    requires_tables_common = ['highways']
+    requires_tables_common = ["highways"]
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
-        self.classs[1] = self.def_class(item = 3160, level = 2, tags = ['highway', 'fix:chair'],
-            title = T_('Bad lanes number or `turn:lanes` before and after this node'))
+        self.classs[1] = self.def_class(
+            item=3160,
+            level=2,
+            tags=["highway", "fix:chair"],
+            title=T_("Bad lanes number or `turn:lanes` before and after this node"),
+        )
 
     def analyser_osmosis_common(self):
         self.run(sql10)
         self.run(sql11)
         self.run(sql12)
         self.run(sql13)
-        self.run(sql14, lambda res: {"class":1, "data":[self.node, self.positionAsText],
-            "text": T_("lanes in {0}(-{1}+{2}), lanes out {3}(-{4}+{5})", res[2], res[3] or 0, res[4] or 0, res[5], res[6] or 0, res[7] or 0) })
+        self.run(
+            sql14,
+            lambda res: {
+                "class": 1,
+                "data": [self.node, self.positionAsText],
+                "text": T_(
+                    "lanes in {0}(-{1}+{2}), lanes out {3}(-{4}+{5})",
+                    res[2],
+                    res[3] or 0,
+                    res[4] or 0,
+                    res[5],
+                    res[6] or 0,
+                    res[7] or 0,
+                ),
+            },
+        )

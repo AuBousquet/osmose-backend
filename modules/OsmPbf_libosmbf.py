@@ -1,32 +1,36 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 ###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2019                                      ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
+#                                                                       ##
+# Copyrights Frédéric Rodrigo 2019                                      ##
+#                                                                       ##
+# This program is free software: you can redistribute it and/or modify  ##
+# it under the terms of the GNU General Public License as published by  ##
+# the Free Software Foundation, either version 3 of the License, or     ##
+# (at your option) any later version.                                   ##
+#                                                                       ##
+# This program is distributed in the hope that it will be useful,       ##
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
+# GNU General Public License for more details.                          ##
+#                                                                       ##
+# You should have received a copy of the GNU General Public License     ##
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
+#                                                                       ##
 ###########################################################################
+
+import subprocess
 
 import dateutil.parser
+
 from . import config
 from .osm_pbf_parser import osm_pbf_parser
-from .OsmState import OsmState
-import subprocess
 from .OsmReader import OsmReader, dummylog
-try: # osmium still optional for now
-    import osmium # type: ignore
+from .OsmState import OsmState
+
+try:  # osmium still optional for now
+    import osmium  # type: ignore
+
     have_osmium = True
 except:
     have_osmium = False
@@ -37,7 +41,7 @@ class OsmPbfReader(OsmReader, osm_pbf_parser.Visitor):
     def log(self, txt):
         self._logger.log(txt)
 
-    def __init__(self, pbf_file, logger = dummylog(), state_file = None):
+    def __init__(self, pbf_file, logger=dummylog(), state_file=None):
         osm_pbf_parser.Visitor.__init__(self)
         self._pbf_file = pbf_file
         self._state_file = state_file
@@ -45,13 +49,17 @@ class OsmPbfReader(OsmReader, osm_pbf_parser.Visitor):
         self._got_error = False
 
     def set_filter_since_timestamp(self, since_timestamp):
-        self.set_since_timestamp(int(since_timestamp.timestamp()) if since_timestamp else 0)
+        self.set_since_timestamp(
+            int(since_timestamp.timestamp()) if since_timestamp else 0
+        )
 
     def timestamp(self):
         if have_osmium:
             try:
                 osmobject = osmium.io.Reader(self._pbf_file)
-                return dateutil.parser.isoparse(osmobject.header().get('osmosis_replication_timestamp')).replace(tzinfo=None)
+                return dateutil.parser.isoparse(
+                    osmobject.header().get("osmosis_replication_timestamp")
+                ).replace(tzinfo=None)
             except:
                 pass
 
@@ -62,7 +70,9 @@ class OsmPbfReader(OsmReader, osm_pbf_parser.Visitor):
         else:
             try:
                 # Try to get timestamp from metadata
-                res = subprocess.check_output([config.bin_osmconvert, self._pbf_file, '--out-timestamp']).decode('utf-8')
+                res = subprocess.check_output(
+                    [config.bin_osmconvert, self._pbf_file, "--out-timestamp"]
+                ).decode("utf-8")
                 d = dateutil.parser.parse(res).replace(tzinfo=None)
                 if not d:
                     raise ValueError()
@@ -72,56 +82,60 @@ class OsmPbfReader(OsmReader, osm_pbf_parser.Visitor):
 
             try:
                 # Compute max timestamp from data
-                res = subprocess.check_output('{} {} --out-statistics | grep "timestamp max"'.format(config.bin_osmconvert, self._pbf_file), shell=True).decode('utf-8')
-                s = res.split(' ')[2]
+                res = subprocess.check_output(
+                    '{} {} --out-statistics | grep "timestamp max"'.format(
+                        config.bin_osmconvert, self._pbf_file
+                    ),
+                    shell=True,
+                ).decode("utf-8")
+                s = res.split(" ")[2]
                 return dateutil.parser.parse(s).replace(tzinfo=None)
 
             except:
                 return
 
-
     def CopyTo(self, output):
         self._output = output
         osm_pbf_parser.read_osm_pbf(self._pbf_file, self)
 
-
     def node(self, osmid, lon, lat, tags):
         data = {
-            'id': osmid,
-            'lon': lon,
-            'lat': lat,
-            'tag': tags,
-            #'version'
-            #'timestamp'
-            #'uid'
+            "id": osmid,
+            "lon": lon,
+            "lat": lat,
+            "tag": tags,
+            # 'version'
+            # 'timestamp'
+            # 'uid'
         }
         self._output.NodeCreate(data)
 
     def way(self, osmid, tags, refs):
         data = {
-            'id': osmid,
-            'tag': tags,
-            'nd': refs,
-            #'version'
-            #'timestamp'
-            #'uid'
+            "id": osmid,
+            "tag": tags,
+            "nd": refs,
+            # 'version'
+            # 'timestamp'
+            # 'uid'
         }
         self._output.WayCreate(data)
 
     def relation(self, osmid, tags, ref):
         data = {
-            'id': osmid,
-            'tag': tags,
-            #'version'
-            #'timestamp'
-            #'uid'
-            'member': ref,
+            "id": osmid,
+            "tag": tags,
+            # 'version'
+            # 'timestamp'
+            # 'uid'
+            "member": ref,
         }
         self._output.RelationCreate(data)
 
 
 ###########################################################################
 import unittest
+
 
 class MockCountObjects:
     def __init__(self):
@@ -138,15 +152,22 @@ class MockCountObjects:
     def RelationCreate(self, data):
         self.num_rels += 1
 
+
 class Test(unittest.TestCase):
     def test_copy_all(self):
-        i1 = OsmPbfReader("tests/saint_barthelemy.osm.pbf", state_file = "tests/saint_barthelemy.state.txt")
+        i1 = OsmPbfReader(
+            "tests/saint_barthelemy.osm.pbf",
+            state_file="tests/saint_barthelemy.state.txt",
+        )
         o1 = MockCountObjects()
         i1.CopyTo(o1)
         self.assertEqual(o1.num_nodes, 83)  # only nodes with tags are reported
         self.assertEqual(o1.num_ways, 625)
         self.assertEqual(o1.num_rels, 16)
-        self.assertEqual(i1.timestamp(), dateutil.parser.parse("2015-03-25T19:05:08Z").replace(tzinfo=None))
+        self.assertEqual(
+            i1.timestamp(),
+            dateutil.parser.parse("2015-03-25T19:05:08Z").replace(tzinfo=None),
+        )
 
     def test_copy_all_no_state_txt(self):
         i1 = OsmPbfReader("tests/saint_barthelemy.osm.pbf")
@@ -155,7 +176,10 @@ class Test(unittest.TestCase):
         self.assertEqual(o1.num_nodes, 83)  # only nodes with tags are reported
         self.assertEqual(o1.num_ways, 625)
         self.assertEqual(o1.num_rels, 16)
-        self.assertEqual(i1.timestamp(), dateutil.parser.parse("2014-01-15T19:05:08Z").replace(tzinfo=None))
+        self.assertEqual(
+            i1.timestamp(),
+            dateutil.parser.parse("2014-01-15T19:05:08Z").replace(tzinfo=None),
+        )
 
     def test_copy_all_pbf_timestamp(self):
         i1 = OsmPbfReader("tests/gibraltar.osm.pbf")
@@ -164,4 +188,7 @@ class Test(unittest.TestCase):
         self.assertEqual(o1.num_nodes, 850)  # only nodes with tags are reported
         self.assertEqual(o1.num_ways, 3833)
         self.assertEqual(o1.num_rels, 55)
-        self.assertEqual(i1.timestamp(), dateutil.parser.parse("2017-09-03T23:40:03Z").replace(tzinfo=None))
+        self.assertEqual(
+            i1.timestamp(),
+            dateutil.parser.parse("2017-09-03T23:40:03Z").replace(tzinfo=None),
+        )

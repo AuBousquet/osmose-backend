@@ -1,26 +1,27 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2011                                      ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2011                                      #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
+
 from .Analyser_Osmosis import Analyser_Osmosis
 
 sql40 = """
@@ -54,34 +55,64 @@ HAVING
    )
 """
 
+
 class Analyser_Osmosis_Highway_CulDeSac_Level(Analyser_Osmosis):
 
-    requires_tables_common = ['highway_ends']
+    requires_tables_common = ["highway_ends"]
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
         doc = dict(
-            detail = T_(
-'''A way connects directly to one with much
-lower classification.'''),
-            example = T_(
-'''![](https://wiki.openstreetmap.org/w/images/b/be/Osmose-eg-error-1090.png)
+            detail=T_(
+                """A way connects directly to one with much
+lower classification."""
+            ),
+            example=T_(
+                """![](https://wiki.openstreetmap.org/w/images/b/be/Osmose-eg-error-1090.png)
 
-Secondary connecting directly to a residential.'''))
+Secondary connecting directly to a residential."""
+            ),
+        )
 
-        self.classs[1] = self.def_class(item = 1090, level = 1, tags = ['highway', 'fix:chair'], **self.merge_docs(doc,
-            title = T_('Sudden highway type change (level {0})', 1),
-            detail = {'en':
-'''motorway, primary, trunk'''}))
-        self.classs[2] = self.def_class(item = 1090, level = 2, tags = ['highway', 'fix:chair'], **self.merge_docs(doc,
-            title = T_('Sudden highway type change (level {0})', 2),
-            detail = {'en':
-'''motorway_link, primary_link, trunk_link, secondary,
-secondary_link'''}))
-        self.classs[3] = self.def_class(item = 1090, level = 2, tags = ['highway', 'fix:chair'], **self.merge_docs(doc,
-            title = T_('Sudden highway type change (level {0})', 3),
-            detail = {'en':
-'''tertiary, tertiary_link'''}))
+        self.classs[1] = self.def_class(
+            item=1090,
+            level=1,
+            tags=["highway", "fix:chair"],
+            **self.merge_docs(
+                doc,
+                title=T_("Sudden highway type change (level {0})", 1),
+                detail={"en": """motorway, primary, trunk"""},
+            )
+        )
+        self.classs[2] = self.def_class(
+            item=1090,
+            level=2,
+            tags=["highway", "fix:chair"],
+            **self.merge_docs(
+                doc,
+                title=T_("Sudden highway type change (level {0})", 2),
+                detail={
+                    "en": """motorway_link, primary_link, trunk_link, secondary,
+secondary_link"""
+                },
+            )
+        )
+        self.classs[3] = self.def_class(
+            item=1090,
+            level=2,
+            tags=["highway", "fix:chair"],
+            **self.merge_docs(
+                doc,
+                title=T_("Sudden highway type change (level {0})", 3),
+                detail={"en": """tertiary, tertiary_link"""},
+            )
+        )
 
     def analyser_osmosis_common(self):
-        self.run(sql40, lambda res: {"class":res[3], "data":[self.way, self.node, self.positionAsText]} )
+        self.run(
+            sql40,
+            lambda res: {
+                "class": res[3],
+                "data": [self.way, self.node, self.positionAsText],
+            },
+        )

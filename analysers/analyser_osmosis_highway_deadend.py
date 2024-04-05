@@ -1,26 +1,27 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2012                                      ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2012                                      #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
+
 from .Analyser_Osmosis import Analyser_Osmosis
 
 sql10 = """
@@ -433,51 +434,89 @@ WHERE
 
 class Analyser_Osmosis_Highway_DeadEnd(Analyser_Osmosis):
 
-    requires_tables_common = ['highways', 'highway_ends']
-    requires_tables_full = ['highway_ends']
-    requires_tables_diff = ['touched_highway_ends']
+    requires_tables_common = ["highways", "highway_ends"]
+    requires_tables_full = ["highway_ends"]
+    requires_tables_diff = ["touched_highway_ends"]
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
-        if not "proj" in self.config.options:
+        if "proj" not in self.config.options:
             return
-        detail = T_(
-'''The end of the way is not connected to another way.''')
-        self.classs_change[1] = self.def_class(item = 1210, level = 1, tags = ['highway', 'cycleway', 'fix:chair'],
-            title = T_('Unconnected cycleway'),
-            detail = self.merge_doc(detail, T_(
-'''The end of a `highway=cycleway` must be connected to the rest of the
-road network to ensure continuity, especially for routes planner.''')),
-            fix = T_(
-'''Connect the `cycleway` to the road, even with a little virtual
-path.'''))
-        self.classs_change[2] = self.def_class(item = 1210, level = 1, tags = ['highway', 'fix:chair'],
-            title = T_('Unconnected highway'),
-            detail = self.merge_doc(detail, T_(
-'''Highway from `motorway` to `tertiary` are important ways. They should
-lead to somewhere and in particular to a network of minor roads.''')),
-            fix = T_(
-'''Review the classification of road or draw the local road network.'''))
-        self.classs[3] = self.def_class(item = 1210, level = 1, tags = ["highway", "fix:chair"],
-            title = T_('One way inaccessible or missing parking or parking entrance'))
-        self.classs[5] = self.def_class(item = 1210, level = 2, tags = ['highway', 'fix:chair'],
-            title = T_('Unconnected drive-through'),
-            detail = self.merge_doc(detail, T_(
-'''Drive-throughs are usually not dead-ended. Make sure the full drive-through path was drawn, including i.e. turning circles and covered areas.
-Ensure that `service=drive-through` is the correct tag.''')),
-            fix = T_(
-'''Review the type of the service road or draw the local road network.'''),
-            resource = 'https://wiki.openstreetmap.org/wiki/Tag:service%3Ddrive-through')
+        detail = T_("""The end of the way is not connected to another way.""")
+        self.classs_change[1] = self.def_class(
+            item=1210,
+            level=1,
+            tags=["highway", "cycleway", "fix:chair"],
+            title=T_("Unconnected cycleway"),
+            detail=self.merge_doc(
+                detail,
+                T_(
+                    """The end of a `highway=cycleway` must be connected to the rest of the
+road network to ensure continuity, especially for routes planner."""
+                ),
+            ),
+            fix=T_(
+                """Connect the `cycleway` to the road, even with a little virtual
+path."""
+            ),
+        )
+        self.classs_change[2] = self.def_class(
+            item=1210,
+            level=1,
+            tags=["highway", "fix:chair"],
+            title=T_("Unconnected highway"),
+            detail=self.merge_doc(
+                detail,
+                T_(
+                    """Highway from `motorway` to `tertiary` are important ways. They should
+lead to somewhere and in particular to a network of minor roads."""
+                ),
+            ),
+            fix=T_(
+                """Review the classification of road or draw the local road network."""
+            ),
+        )
+        self.classs[3] = self.def_class(
+            item=1210,
+            level=1,
+            tags=["highway", "fix:chair"],
+            title=T_("One way inaccessible or missing parking or parking entrance"),
+        )
+        self.classs[5] = self.def_class(
+            item=1210,
+            level=2,
+            tags=["highway", "fix:chair"],
+            title=T_("Unconnected drive-through"),
+            detail=self.merge_doc(
+                detail,
+                T_(
+                    """Drive-throughs are usually not dead-ended. Make sure the full drive-through path was drawn, including i.e. turning circles and covered areas.
+Ensure that `service=drive-through` is the correct tag."""
+                ),
+            ),
+            fix=T_(
+                """Review the type of the service road or draw the local road network."""
+            ),
+            resource="https://wiki.openstreetmap.org/wiki/Tag:service%3Ddrive-through",
+        )
 
-        self.callback21 = lambda res: {"class": 1, "data": [self.way_full, self.node_full, self.positionAsText]}
-        self.callback22 = lambda res: {"class": 2, "data": [self.way_full, self.node_full, self.positionAsText]}
+        self.callback21 = lambda res: {
+            "class": 1,
+            "data": [self.way_full, self.node_full, self.positionAsText],
+        }
+        self.callback22 = lambda res: {
+            "class": 2,
+            "data": [self.way_full, self.node_full, self.positionAsText],
+        }
 
     def analyser_osmosis_common(self):
-        boundary_relation = self.config.polygon_id # Either a number, None or (number, number, ...)
+        boundary_relation = (
+            self.config.polygon_id
+        )  # Either a number, None or (number, number, ...)
         if isinstance(boundary_relation, int):
-          boundary_relation = "({0})".format(boundary_relation)
+            boundary_relation = "({0})".format(boundary_relation)
         elif not boundary_relation:
-          boundary_relation = "(0)"
+            boundary_relation = "(0)"
 
         self.run(sql10)
         self.run(sql30)
@@ -493,14 +532,26 @@ Ensure that `service=drive-through` is the correct tag.''')),
         self.run(sql40)
         self.run(sql41)
         self.run(sql42)
-        self.run(sql43, lambda res: {"class":3, "data":[self.way_full, self.node_full, self.positionAsText]})
-        self.run(sql50, lambda res: {"class":5, "data":[self.way_full, self.node, self.positionAsText]})
+        self.run(
+            sql43,
+            lambda res: {
+                "class": 3,
+                "data": [self.way_full, self.node_full, self.positionAsText],
+            },
+        )
+        self.run(
+            sql50,
+            lambda res: {
+                "class": 5,
+                "data": [self.way_full, self.node, self.positionAsText],
+            },
+        )
 
     def analyser_osmosis_full(self):
         self.run(sql20)
         self.run(sql21)
         self.run(sql22)
-        self.run(sql23.format(''))
+        self.run(sql23.format(""))
         self.run(sql24, self.callback21)
         self.run(sql25, self.callback22)
 
@@ -508,7 +559,7 @@ Ensure that `service=drive-through` is the correct tag.''')),
         self.run(sql20)
         self.run(sql21)
         self.run(sql22)
-        self.run(sql23.format('touched_'))
+        self.run(sql23.format("touched_"))
         self.run(sql24, self.callback21)
         self.run(sql25, self.callback22)
 
@@ -517,14 +568,18 @@ Ensure that `service=drive-through` is the correct tag.''')),
 
 from .Analyser_Osmosis import TestAnalyserOsmosis
 
+
 class Test(TestAnalyserOsmosis):
     @classmethod
     def setup_class(cls):
         from modules import config
+
         TestAnalyserOsmosis.setup_class()
-        cls.analyser_conf = cls.load_osm("tests/osmosis_highway_deadend.osm",
-                                         config.dir_tmp + "/tests/osmosis_highway_deadend.test.xml",
-                                         {"proj": 2154}) # Random proj to satisfy highway table generation
+        cls.analyser_conf = cls.load_osm(
+            "tests/osmosis_highway_deadend.osm",
+            config.dir_tmp + "/tests/osmosis_highway_deadend.test.xml",
+            {"proj": 2154},
+        )  # Random proj to satisfy highway table generation
 
     def test_classes(self):
         with Analyser_Osmosis_Highway_DeadEnd(self.analyser_conf, self.logger) as a:
@@ -540,10 +595,16 @@ class Test(TestAnalyserOsmosis):
         self.check_err(cl="3", elems=[("node", "2"), ("way", "1000")])
         self.check_err(cl="3", elems=[("node", "9"), ("way", "1003")])
         self.check_err(cl="3", elems=[("node", "14"), ("way", "1005")])
-        self.check_err(cl="3", elems=[("node", "15"), ("way", "1006")]) # way 1006 or 1007 are both fine
+        self.check_err(
+            cl="3", elems=[("node", "15"), ("way", "1006")]
+        )  # way 1006 or 1007 are both fine
         self.check_err(cl="3", elems=[("node", "65"), ("way", "1028")])
-        self.check_err(cl="3", elems=[("node", "82"), ("way", "1036")]) # way 1036 or 1037 are both fine
-        self.check_err(cl="3", elems=[("node", "84"), ("way", "1038")]) # way 1038 or 1040 are both fine
+        self.check_err(
+            cl="3", elems=[("node", "82"), ("way", "1036")]
+        )  # way 1036 or 1037 are both fine
+        self.check_err(
+            cl="3", elems=[("node", "84"), ("way", "1038")]
+        )  # way 1038 or 1040 are both fine
         self.check_err(cl="3", elems=[("node", "90"), ("way", "1043")])
         self.check_err(cl="3", elems=[("node", "92"), ("way", "1045")])
         self.check_err(cl="3", elems=[("node", "97"), ("way", "1049")])
@@ -552,10 +613,18 @@ class Test(TestAnalyserOsmosis):
         self.check_err(cl="3", elems=[("node", "102"), ("way", "1052")])
         # Detections of deadend circular oneway highways. Note that some test cases have multiple valid 'solutions'
         # for dead-end oneway islands upon traversing, so results may change upon code update and still be valid
-        self.check_err(cl="3", elems=[("node", "4"), ("way", "1001")]) # way 1001 or 1002 are both fine
-        self.check_err(cl="3", elems=[("node", "21"), ("way", "1009")]) # way 1009 or 1034 are both fine
-        self.check_err(cl="3", elems=[("node", "108"), ("way", "1058")]) # way 1058 or 1059 are both fine
-        self.check_err(cl="3", elems=[("node", "109"), ("way", "1060")]) # way 1058 or 1060 are both fine
+        self.check_err(
+            cl="3", elems=[("node", "4"), ("way", "1001")]
+        )  # way 1001 or 1002 are both fine
+        self.check_err(
+            cl="3", elems=[("node", "21"), ("way", "1009")]
+        )  # way 1009 or 1034 are both fine
+        self.check_err(
+            cl="3", elems=[("node", "108"), ("way", "1058")]
+        )  # way 1058 or 1059 are both fine
+        self.check_err(
+            cl="3", elems=[("node", "109"), ("way", "1060")]
+        )  # way 1058 or 1060 are both fine
 
         self.check_err(cl="5", elems=[("node", "73"), ("way", "1031")])
 

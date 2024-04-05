@@ -1,27 +1,27 @@
 #! /usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 ###########################################################################
-##                                                                       ##
-## Copyrights Etienne Chové <chove@crans.org> 2010                       ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
+#                                                                       ##
+# Copyrights Etienne Chové <chove@crans.org> 2010                       ##
+#                                                                       ##
+# This program is free software: you can redistribute it and/or modify  ##
+# it under the terms of the GNU General Public License as published by  ##
+# the Free Software Foundation, either version 3 of the License, or     ##
+# (at your option) any later version.                                   ##
+#                                                                       ##
+# This program is distributed in the hope that it will be useful,       ##
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
+# GNU General Public License for more details.                          ##
+#                                                                       ##
+# You should have received a copy of the GNU General Public License     ##
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
+#                                                                       ##
 ###########################################################################
 
 ###########################################################################
-## OSM IMPORT                                                            ##
+# OSM IMPORT                                                            ##
 ###########################################################################
 # 1. mkdir /data/osmbin
 # 2. ./OsmBin.py --init /data/osmbin
@@ -30,7 +30,7 @@
 #    | ./OsmBin.py --import /data/osmbin -
 
 ###########################################################################
-## OSC UPDATE                                                            ##
+# OSC UPDATE                                                            ##
 ###########################################################################
 # for i in /data/updates
 # do
@@ -38,7 +38,7 @@
 # done
 
 ###########################################################################
-## PYTHON                                                                ##
+# PYTHON                                                                ##
 ###########################################################################
 # import OsmBin
 # bin = OsmBin("/data/osmbin", "r")
@@ -47,29 +47,36 @@
 # print bin.RelationGet(12)
 # print bin.RelationFullRecur(12)
 
-from modules.lockfile import lockfile
-from . import OsmReader
-import sys
 import os
+import sys
+
+from modules.lockfile import lockfile
+
+from . import OsmReader
 
 
 class MissingDataError(Exception):
     def __init__(self, value):
         self.value = value
+
     def __str__(self):
         return "MissingDataError(%s)" % str(self.value)
+
 
 class RelationLoopError(Exception):
     def __init__(self, value):
         self.value = value
+
     def __str__(self):
         return "RelationLoopError(%s)" % str(self.value)
 
-###########################################################################
-## Common functions
 
-_CstMax2 = 2**16-1
-_CstMax4 = 2**32-1
+###########################################################################
+# Common functions
+
+_CstMax2 = 2**16 - 1
+_CstMax4 = 2**32 - 1
+
 
 def _Bytes5ToInt(txt):
     if len(txt) != 5:
@@ -81,18 +88,20 @@ def _Bytes5ToInt(txt):
     i2 = txt[2]
     i3 = txt[3]
     i4 = txt[4]
-    return 4294967296*i0+16777216*i1+65536*i2+256*i3+i4
+    return 4294967296 * i0 + 16777216 * i1 + 65536 * i2 + 256 * i3 + i4
+
 
 def _IntToBytes5(num):
-    i0   = num//4294967296
-    num -= 4294967296*i0
-    i1   = num//16777216
-    num -= 16777216*i1
-    i2   = num//65536
-    num -= 65536*i2
-    i3   = num//256
-    i4   = num - 256*i3
+    i0 = num // 4294967296
+    num -= 4294967296 * i0
+    i1 = num // 16777216
+    num -= 16777216 * i1
+    i2 = num // 65536
+    num -= 65536 * i2
+    i3 = num // 256
+    i4 = num - 256 * i3
     return bytearray([i0, i1, i2, i3, i4])
+
 
 def _Bytes4ToInt(txt):
     # 0 to 4.294.967.295
@@ -101,50 +110,59 @@ def _Bytes4ToInt(txt):
     i1 = txt[1]
     i2 = txt[2]
     i3 = txt[3]
-    return 16777216*i0+65536*i1+256*i2+i3
+    return 16777216 * i0 + 65536 * i1 + 256 * i2 + i3
+
 
 def _IntToBytes4(num):
-    i0   = num//16777216
-    num -= 16777216*i0
-    i1   = num//65536
-    num -= 65536*i1
-    i2   = num//256
-    i3   = num - 256*i2
+    i0 = num // 16777216
+    num -= 16777216 * i0
+    i1 = num // 65536
+    num -= 65536 * i1
+    i2 = num // 256
+    i3 = num - 256 * i2
     return bytearray([i0, i1, i2, i3])
+
 
 def _Bytes2ToInt(txt):
     # 0 to 65535
     txt = bytearray(txt)
     i0 = txt[0]
     i1 = txt[1]
-    return 256*i0+i1
+    return 256 * i0 + i1
+
 
 def _IntToBytes2(num):
-    i0   = num//256
-    i1   = num - 256*i0
+    i0 = num // 256
+    i1 = num - 256 * i0
     return bytearray([i0, i1])
+
 
 def _Bytes1ToInt(txt):
     # 0 to 255
     txt = bytearray(txt)
     return txt[0]
 
+
 def _IntToBytes1(i0):
     return bytearray([i0])
 
+
 def _Bytes4ToCoord(num):
-    return float(_Bytes4ToInt(num)-1800000000)/10000000
+    return float(_Bytes4ToInt(num) - 1800000000) / 10000000
+
 
 def _CoordToBytes4(coord):
-    return _IntToBytes4(int((coord*10000000)+1800000000))
+    return _IntToBytes4(int((coord * 10000000) + 1800000000))
+
 
 ###########################################################################
-## InitFolder
+# InitFolder
+
 
 def InitFolder(folder):
 
     nb_node_max = 2**4
-    nb_way_max  = 2**4
+    nb_way_max = 2**4
 
     if not os.path.exists(folder):
         os.makedirs(folder)
@@ -154,7 +172,7 @@ def InitFolder(folder):
     groupe = 2**10
     k = _IntToBytes4(0) * 2 * groupe
     f = open(os.path.join(folder, "node.crd"), "wb")
-    for i in range(nb_node_max//groupe):
+    for _i in range(nb_node_max // groupe):
         f.write(k)
     f.close()
     del k
@@ -164,31 +182,41 @@ def InitFolder(folder):
     groupe = 1000
     k = _IntToBytes5(0) * groupe
     f = open(os.path.join(folder, "way.idx"), "wb")
-    for i in range(nb_way_max//groupe):
+    for _i in range(nb_way_max // groupe):
         f.write(k)
     f.close()
     del k
 
     # reset way.data
     print("Creating way.data")
-    open(os.path.join(folder, "way.data"), "wb").write(b"--") # for no data at location 0
+    open(os.path.join(folder, "way.data"), "wb").write(
+        b"--"
+    )  # for no data at location 0
 
     # reset way.free
     print("Creating way.free")
     open(os.path.join(folder, "way.free"), "wb")
 
+
 ###########################################################################
-## OsmBinWriter
+# OsmBinWriter
+
 
 class OsmBin:
 
-    def __init__(self, folder, mode = "r"):
-        self._mode           = mode
-        self._folder         = folder
-        self._reldir         = os.path.join(folder, "relation")
-        self._fNode_crd      = open(os.path.join(folder, "node.crd"), {"w":"rb+", "r":"rb"}[mode])
-        self._fWay_idx       = open(os.path.join(folder, "way.idx"),  {"w":"rb+", "r":"rb"}[mode])
-        self._fWay_data      = open(os.path.join(folder, "way.data"), {"w":"rb+", "r":"rb"}[mode])
+    def __init__(self, folder, mode="r"):
+        self._mode = mode
+        self._folder = folder
+        self._reldir = os.path.join(folder, "relation")
+        self._fNode_crd = open(
+            os.path.join(folder, "node.crd"), {"w": "rb+", "r": "rb"}[mode]
+        )
+        self._fWay_idx = open(
+            os.path.join(folder, "way.idx"), {"w": "rb+", "r": "rb"}[mode]
+        )
+        self._fWay_data = open(
+            os.path.join(folder, "way.data"), {"w": "rb+", "r": "rb"}[mode]
+        )
         self._fWay_data_size = os.stat(os.path.join(folder, "way.data")).st_size
         if self._mode == "w":
             lock_file = os.path.join(folder, "lock")
@@ -217,7 +245,7 @@ class OsmBin:
             line = f.readline()
             if not line:
                 break
-            line = line.strip().split(';')
+            line = line.strip().split(";")
             self._free[int(line[1])].append(int(line[0]))
 
     def _WriteFree(self):
@@ -225,7 +253,7 @@ class OsmBin:
             self._free
         except AttributeError:
             return
-        f = open(os.path.join(self._folder, "way.free"), 'w')
+        f = open(os.path.join(self._folder, "way.free"), "w")
         for nbn in self._free:
             for ptr in self._free[nbn]:
                 f.write("%d;%d\n" % (ptr, nbn))
@@ -238,12 +266,12 @@ class OsmBin:
         pass
 
     #######################################################################
-    ## node functions
+    # node functions
 
     def NodeGet(self, NodeId):
         data = {}
         data["id"] = NodeId
-        self._fNode_crd.seek(8*data[u"id"])
+        self._fNode_crd.seek(8 * data["id"])
         read = self._fNode_crd.read(8)
         if len(read) != 8:
             return None
@@ -253,34 +281,36 @@ class OsmBin:
         return data
 
     def NodeCreate(self, data):
-        LatBytes4 = _CoordToBytes4(data[u"lat"])
-        LonBytes4 = _CoordToBytes4(data[u"lon"])
-        self._fNode_crd.seek(8*data[u"id"])
-        self._fNode_crd.write(LatBytes4+LonBytes4)
+        LatBytes4 = _CoordToBytes4(data["lat"])
+        LonBytes4 = _CoordToBytes4(data["lon"])
+        self._fNode_crd.seek(8 * data["id"])
+        self._fNode_crd.write(LatBytes4 + LonBytes4)
 
     NodeUpdate = NodeCreate
 
     def NodeDelete(self, data):
         LatBytes4 = _IntToBytes4(0)
         LonBytes4 = _IntToBytes4(0)
-        self._fNode_crd.seek(8*data[u"id"])
-        self._fNode_crd.write(LatBytes4+LonBytes4)
+        self._fNode_crd.seek(8 * data["id"])
+        self._fNode_crd.write(LatBytes4 + LonBytes4)
 
     #######################################################################
-    ## way functions
+    # way functions
 
     def WayGet(self, WayId, dump_sub_elements=False):
-        self._fWay_idx.seek(5*WayId)
+        self._fWay_idx.seek(5 * WayId)
         AdrWay = _Bytes5ToInt(self._fWay_idx.read(5))
         if not AdrWay:
             return None
         self._fWay_data.seek(AdrWay)
-        nbn  = _Bytes2ToInt(self._fWay_data.read(2))
-        data = self._fWay_data.read(self.node_id_size*nbn)
+        nbn = _Bytes2ToInt(self._fWay_data.read(2))
+        data = self._fWay_data.read(self.node_id_size * nbn)
         nds = []
         for i in range(nbn):
-            nds.append(_Bytes5ToInt(data[self.node_id_size*i:self.node_id_size*(i+1)]))
-        return {"id": WayId, "nd": nds, "tag":{}}
+            nds.append(
+                _Bytes5ToInt(data[self.node_id_size * i : self.node_id_size * (i + 1)])
+            )
+        return {"id": WayId, "nd": nds, "tag": {}}
 
     def WayCreate(self, data):
         self.WayDelete(data)
@@ -290,14 +320,14 @@ class OsmBin:
             AdrWay = self._free[nbn].pop()
         else:
             AdrWay = self._fWay_data_size
-            self._fWay_data_size += 2 + self.node_id_size*nbn
+            self._fWay_data_size += 2 + self.node_id_size * nbn
         # File way.idx
-        self._fWay_idx.seek(5*data[u"id"])
+        self._fWay_idx.seek(5 * data["id"])
         self._fWay_idx.write(_IntToBytes5(AdrWay))
         # File way.dat
         self._fWay_data.seek(AdrWay)
-        c = _IntToBytes2(len(data[u"nd"]))
-        for NodeId in data[u"nd"]:
+        c = _IntToBytes2(len(data["nd"]))
+        for NodeId in data["nd"]:
             c += _IntToBytes5(NodeId)
         self._fWay_data.write(c)
 
@@ -305,7 +335,7 @@ class OsmBin:
 
     def WayDelete(self, data):
         # Seek to position in file containing address to node list
-        self._fWay_idx.seek(5*data[u"id"])
+        self._fWay_idx.seek(5 * data["id"])
         AdrWay = _Bytes5ToInt(self._fWay_idx.read(5))
         if not AdrWay:
             return
@@ -315,19 +345,22 @@ class OsmBin:
         try:
             self._free[nbn].append(AdrWay)
         except KeyError:
-            print("Cannot access free[%d] for way id=%d, idx=%d" % (nbn, data[u"id"], AdrWay))
+            print(
+                "Cannot access free[%d] for way id=%d, idx=%d"
+                % (nbn, data["id"], AdrWay)
+            )
             raise
         # Save deletion
-        self._fWay_idx.seek(5*data[u"id"])
+        self._fWay_idx.seek(5 * data["id"])
         self._fWay_idx.write(_IntToBytes5(0))
 
     #######################################################################
-    ## relation functions
+    # relation functions
 
     def RelationGet(self, RelationId, dump_sub_elements=False):
         RelationId = "%09d" % RelationId
-        RelFolder  = self._reldir + "/" + RelationId[0:3] + "/" + RelationId[3:6] + "/"
-        RelFile    = RelationId[6:9]
+        RelFolder = self._reldir + "/" + RelationId[0:3] + "/" + RelationId[3:6] + "/"
+        RelFile = RelationId[6:9]
         if os.path.exists(RelFolder + RelFile):
             return eval(open(RelFolder + RelFile).read())
         else:
@@ -335,8 +368,8 @@ class OsmBin:
 
     def RelationCreate(self, data):
         RelationId = "%09d" % data["id"]
-        RelFolder  = self._reldir + "/" + RelationId[0:3] + "/" + RelationId[3:6] + "/"
-        RelFile    = RelationId[6:9]
+        RelFolder = self._reldir + "/" + RelationId[0:3] + "/" + RelationId[3:6] + "/"
+        RelFile = RelationId[6:9]
         if not os.path.exists(RelFolder):
             os.makedirs(RelFolder)
         open(RelFolder + RelFile, "w").write(repr(data))
@@ -345,14 +378,21 @@ class OsmBin:
 
     def RelationDelete(self, data):
         RelationId = "%09d" % data["id"]
-        RelFolder  = self._reldir + "/" + RelationId[0:3] + "/" + RelationId[3:6] + "/"
-        RelFile    = RelationId[6:9]
+        RelFolder = self._reldir + "/" + RelationId[0:3] + "/" + RelationId[3:6] + "/"
+        RelFile = RelationId[6:9]
         try:
             os.remove(RelFolder + RelFile)
         except:
             pass
 
-    def RelationFullRecur(self, RelationId, WayNodes = True, RaiseOnLoop = True, RemoveSubarea = False, RecurControl = []):
+    def RelationFullRecur(
+        self,
+        RelationId,
+        WayNodes=True,
+        RaiseOnLoop=True,
+        RemoveSubarea=False,
+        RecurControl=[],
+    ):
         rel = self.RelationGet(RelationId)
         dta = [{"type": "relation", "data": rel}]
         for m in rel["member"]:
@@ -370,18 +410,25 @@ class OsmBin:
                 if m["ref"] == RelationId:
                     if not RaiseOnLoop:
                         continue
-                    raise RelationLoopError('self member '+str(RelationId))
+                    raise RelationLoopError("self member " + str(RelationId))
                 if m["ref"] in RecurControl:
                     if not RaiseOnLoop:
                         continue
-                    raise RelationLoopError('member loop '+str(RecurControl+[RelationId, m["ref"]]))
-                if RemoveSubarea and m["role"] in [u"subarea", u"region"]:
+                    raise RelationLoopError(
+                        "member loop " + str(RecurControl + [RelationId, m["ref"]])
+                    )
+                if RemoveSubarea and m["role"] in ["subarea", "region"]:
                     continue
-                dta += self.RelationFullRecur(m["ref"], WayNodes = WayNodes, RaiseOnLoop = RaiseOnLoop, RecurControl = RecurControl+[RelationId])
+                dta += self.RelationFullRecur(
+                    m["ref"],
+                    WayNodes=WayNodes,
+                    RaiseOnLoop=RaiseOnLoop,
+                    RecurControl=RecurControl + [RelationId],
+                )
         return dta
 
     #######################################################################
-    ## user functions
+    # user functions
 
     def UserGet(self, UserId):
         return None
@@ -389,7 +436,7 @@ class OsmBin:
     #######################################################################
 
     def CopyWayTo(self, output):
-        self._fWay_idx.seek(0,2)
+        self._fWay_idx.seek(0, 2)
         way_idx_size = self._fWay_idx.tell()
         for i in range(way_idx_size // 5):
             way = self.WayGet(i)
@@ -398,9 +445,11 @@ class OsmBin:
 
     def CopyRelationTo(self, output):
         for i in os.listdir(self._reldir):
-            for j in os.listdir(self._reldir+"/"+i):
-                for k in os.listdir(self._reldir+"/"+i+"/"+j):
-                    output.RelationCreate(eval(open(self._reldir+"/"+i+"/"+j+"/"+k).read()))
+            for j in os.listdir(self._reldir + "/" + i):
+                for k in os.listdir(self._reldir + "/" + i + "/" + j):
+                    output.RelationCreate(
+                        eval(open(self._reldir + "/" + i + "/" + j + "/" + k).read())
+                    )
 
     def Import(self, f):
         i = OsmReader.open(f)
@@ -408,6 +457,7 @@ class OsmBin:
 
     def Update(self, f):
         from . import OsmSax
+
         if f == "-":
             i = OsmSax.OscSaxReader(sys.stdin)
         else:
@@ -439,23 +489,27 @@ if __name__ == "__main__":
             print(i.RelationGet(int(sys.argv[4])))
         if sys.argv[3] == "relation_full":
             import pprint
+
             pprint.pprint(i.RelationFullRecur(int(sys.argv[4])))
 
     if sys.argv[1] == "--pyro":
         import Pyro.core
         import Pyro.naming
+
         class OsmBin2(Pyro.core.ObjBase, OsmBin):
             def __init__(self, folder):
                 Pyro.core.ObjBase.__init__(self)
                 OsmBin.__init__(self, folder)
+
         daemon = Pyro.core.Daemon()
-        #ns = Pyro.naming.NameServerLocator().getNS()
-        #daemon.useNameServer(ns)
+        # ns = Pyro.naming.NameServerLocator().getNS()
+        # daemon.useNameServer(ns)
         uri = daemon.connect(OsmBin2("/data/work/osmbin/data/"), "OsmBin")
         daemon.requestLoop()
 
 ###########################################################################
 import unittest
+
 
 class MockCountObjects:
     def __init__(self):
@@ -472,10 +526,13 @@ class MockCountObjects:
     def RelationCreate(self, data):
         self.num_rels += 1
 
+
 class Test(unittest.TestCase):
     def setUp(self):
         import shutil
+
         from modules import config
+
         self.test_dir = config.dir_tmp + "/tests/osmbin/"
         shutil.rmtree(self.test_dir, True)
         InitFolder(self.test_dir)
@@ -484,6 +541,7 @@ class Test(unittest.TestCase):
 
     def tearDown(self):
         import shutil
+
         del self.a
         shutil.rmtree(self.test_dir)
 
@@ -537,16 +595,33 @@ class Test(unittest.TestCase):
     def test_node(self):
         del self.a
         self.a = OsmBin(self.test_dir, "r")
-        self.check_node(self.a.NodeGet, 266053077, expected={"lat": 17.9031745, "lon": -62.8363074})
+        self.check_node(
+            self.a.NodeGet, 266053077, expected={"lat": 17.9031745, "lon": -62.8363074}
+        )
         self.check_node(self.a.NodeGet, 2619283351)
-        self.check_node(self.a.NodeGet, 2619283352, expected={"lat": 17.9005419, "lon": -62.8327042})
+        self.check_node(
+            self.a.NodeGet, 2619283352, expected={"lat": 17.9005419, "lon": -62.8327042}
+        )
         self.check_node(self.a.NodeGet, 1, False)
         self.check_node(self.a.NodeGet, 266053076, False)
         self.check_node(self.a.NodeGet, 2619283353, False)
 
     def test_way(self):
         self.check_way(self.a.WayGet, 24473155)
-        self.check_way(self.a.WayGet, 255316725, expected={"nd": [2610107905,2610107903,2610107901,2610107902,2610107904,2610107905]})
+        self.check_way(
+            self.a.WayGet,
+            255316725,
+            expected={
+                "nd": [
+                    2610107905,
+                    2610107903,
+                    2610107901,
+                    2610107902,
+                    2610107904,
+                    2610107905,
+                ]
+            },
+        )
         self.check_way(self.a.WayGet, 1, False)
         self.check_way(self.a.WayGet, 24473154, False)
         self.check_way(self.a.WayGet, 255316726, False)
@@ -555,34 +630,50 @@ class Test(unittest.TestCase):
         del self.a
         self.a = OsmBin(self.test_dir, "r")
         self.check_relation(self.a.RelationGet, 47796)
-        self.check_relation(self.a.RelationGet, 529891,
-                            expected={"member": [{'type': 'node', 'ref': 670634766,  'role': ''},
-                                                 {'type': 'node', 'ref': 670634768,  'role': ''}],
-                                      "tag": {"name": u"Saint-Barthélemy III",
-                                              "note": u"la Barriere des Quatre Vents",
-                                              "ref": u"9712303",
-                                              "site": u"geodesic",
-                                              "source": u"©IGN 2010 dans le cadre de la cartographie réglementaire",
-                                              "type": u"site",
-                                              "url": u"http://ancien-geodesie.ign.fr/fiche_geodesie_OM.asp?num_site=9712303&X=519509&Y=1980304"}
-                            })
-        self.check_relation(self.a.RelationGet, 2324452,
-                            expected={"member": [{'type': 'node', 'ref': 279149652,  'role': 'admin_centre'},
-                                                 {'type': 'way',  'ref': 174027472,  'role': 'outer'},
-                                                 {'type': 'way',  'ref': 53561037,  'role': 'outer'},
-                                                 {'type': 'way',  'ref': 53561045,  'role': 'outer'},
-                                                 {'type': 'way',  'ref': 53656098,  'role': 'outer'},
-                                                 {'type': 'way',  'ref': 174027473,  'role': 'outer'},
-                                                 {'type': 'way',  'ref': 174023902,  'role': 'outer'}],
-                                      "tag": {"admin_level": u"8",
-                                              "boundary": u"administrative",
-                                              "local_name": u"Statia",
-                                              "name": u"Sint Eustatius",
-                                              "name:el": u"Άγιος Ευστάθιος",
-                                              "name:fr": u"Saint-Eustache",
-                                              "name:nl": u"Sint Eustatius",
-                                              "type": u"boundary"}
-                            })
+        self.check_relation(
+            self.a.RelationGet,
+            529891,
+            expected={
+                "member": [
+                    {"type": "node", "ref": 670634766, "role": ""},
+                    {"type": "node", "ref": 670634768, "role": ""},
+                ],
+                "tag": {
+                    "name": "Saint-Barthélemy III",
+                    "note": "la Barriere des Quatre Vents",
+                    "ref": "9712303",
+                    "site": "geodesic",
+                    "source": "©IGN 2010 dans le cadre de la cartographie réglementaire",
+                    "type": "site",
+                    "url": "http://ancien-geodesie.ign.fr/fiche_geodesie_OM.asp?num_site=9712303&X=519509&Y=1980304",
+                },
+            },
+        )
+        self.check_relation(
+            self.a.RelationGet,
+            2324452,
+            expected={
+                "member": [
+                    {"type": "node", "ref": 279149652, "role": "admin_centre"},
+                    {"type": "way", "ref": 174027472, "role": "outer"},
+                    {"type": "way", "ref": 53561037, "role": "outer"},
+                    {"type": "way", "ref": 53561045, "role": "outer"},
+                    {"type": "way", "ref": 53656098, "role": "outer"},
+                    {"type": "way", "ref": 174027473, "role": "outer"},
+                    {"type": "way", "ref": 174023902, "role": "outer"},
+                ],
+                "tag": {
+                    "admin_level": "8",
+                    "boundary": "administrative",
+                    "local_name": "Statia",
+                    "name": "Sint Eustatius",
+                    "name:el": "Άγιος Ευστάθιος",
+                    "name:fr": "Saint-Eustache",
+                    "name:nl": "Sint Eustatius",
+                    "type": "boundary",
+                },
+            },
+        )
 
         self.check_relation(self.a.RelationGet, 2707693)
         self.check_relation(self.a.RelationGet, 1, False)
@@ -624,10 +715,14 @@ class Test(unittest.TestCase):
         self.a.Update("tests/saint_barthelemy.osc.gz")
         with self.assertRaises(RelationLoopError) as cm:
             self.a.RelationFullRecur(7801)
-        self.assertEqual(str(cm.exception), "RelationLoopError(member loop [7801, 7802, 7801])")
+        self.assertEqual(
+            str(cm.exception), "RelationLoopError(member loop [7801, 7802, 7801])"
+        )
 
     def test_update(self):
-        self.check_node(self.a.NodeGet, 2619283352, expected={"lat": 17.9005419, "lon": -62.8327042})
+        self.check_node(
+            self.a.NodeGet, 2619283352, expected={"lat": 17.9005419, "lon": -62.8327042}
+        )
         self.check_node(self.a.NodeGet, 1759873129)
         self.check_node(self.a.NodeGet, 1759883953)
         self.check_node(self.a.NodeGet, 1973325505)
@@ -643,7 +738,9 @@ class Test(unittest.TestCase):
         self.check_relation(self.a.RelationGet, 7801, False)
 
         self.a.Update("tests/saint_barthelemy.osc.gz")
-        self.check_node(self.a.NodeGet, 2619283352, expected={"lat": 17.9005419, "lon": -62.8327042})
+        self.check_node(
+            self.a.NodeGet, 2619283352, expected={"lat": 17.9005419, "lon": -62.8327042}
+        )
         self.check_node(self.a.NodeGet, 1759873129, False)
         self.check_node(self.a.NodeGet, 1759883953, False)
         self.check_node(self.a.NodeGet, 1973325505, False)
@@ -654,14 +751,24 @@ class Test(unittest.TestCase):
         self.check_relation(self.a.RelationGet, 1106302, False)
         self.check_node(self.a.NodeGet, 78, expected={"lat": 18.1, "lon": -63.1})
         self.check_node(self.a.NodeGet, 79, expected={"lat": 18.2, "lon": -63.2})
-        self.check_way(self.a.WayGet, 780, expected={"nd": [78,79]})
-        self.check_relation(self.a.RelationGet, 7800,
-                            expected={"member": [{'type': 'node', 'ref': 78,  'role': ''},
-                                                 {'type': 'node', 'ref': 79,  'role': ''},
-                                                 {'type': 'way',  'ref': 780, 'role': 'outer'}],
-                                      "tag": {"name": u"Saint-Barthélemy III"},
-                            })
-        self.check_relation(self.a.RelationGet, 7801,
-                            expected={"member": [{'type': 'relation', 'ref': 7802,  'role': ''}],
-                                      "tag": {},
-                            })
+        self.check_way(self.a.WayGet, 780, expected={"nd": [78, 79]})
+        self.check_relation(
+            self.a.RelationGet,
+            7800,
+            expected={
+                "member": [
+                    {"type": "node", "ref": 78, "role": ""},
+                    {"type": "node", "ref": 79, "role": ""},
+                    {"type": "way", "ref": 780, "role": "outer"},
+                ],
+                "tag": {"name": "Saint-Barthélemy III"},
+            },
+        )
+        self.check_relation(
+            self.a.RelationGet,
+            7801,
+            expected={
+                "member": [{"type": "relation", "ref": 7802, "role": ""}],
+                "tag": {},
+            },
+        )

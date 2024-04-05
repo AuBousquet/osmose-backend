@@ -1,26 +1,27 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-4
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2014                                      ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2014                                      #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
+
 from .Analyser_Osmosis import Analyser_Osmosis
 
 sql10 = """
@@ -79,18 +80,36 @@ HAVING
     COUNT(*) > 1
 """
 
+
 class Analyser_Osmosis_Highway_Noexit(Analyser_Osmosis):
 
-    requires_tables_full = ['highways']
+    requires_tables_full = ["highways"]
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
-        self.classs[1] = self.def_class(item = 3210, level = 2, tags = ['highway', 'tag', 'fix:chair'],
-            title = T_('Noexit on node with exit'))
-        self.classs[2] = self.def_class(item = 3210, level = 2, tags = ['highway', 'tag', 'fix:chair'],
-            title = T_('Noexit on way with multiple exits'))
-        self.callback10 = lambda res: {"class":1, "subclass":1 if res[2] else 2, "data":[self.node_full, self.positionAsText], "fix":{"-":["noexit"]}}
-        self.callback20 = lambda res: {"class":2, "data":[self.way_full, self.positionAsText], "fix":{"-":["noexit"]} }
+        self.classs[1] = self.def_class(
+            item=3210,
+            level=2,
+            tags=["highway", "tag", "fix:chair"],
+            title=T_("Noexit on node with exit"),
+        )
+        self.classs[2] = self.def_class(
+            item=3210,
+            level=2,
+            tags=["highway", "tag", "fix:chair"],
+            title=T_("Noexit on way with multiple exits"),
+        )
+        self.callback10 = lambda res: {
+            "class": 1,
+            "subclass": 1 if res[2] else 2,
+            "data": [self.node_full, self.positionAsText],
+            "fix": {"-": ["noexit"]},
+        }
+        self.callback20 = lambda res: {
+            "class": 2,
+            "data": [self.way_full, self.positionAsText],
+            "fix": {"-": ["noexit"]},
+        }
 
     def analyser_osmosis_common(self):
         self.run(sql10, self.callback10)
@@ -101,14 +120,18 @@ class Analyser_Osmosis_Highway_Noexit(Analyser_Osmosis):
 
 from .Analyser_Osmosis import TestAnalyserOsmosis
 
+
 class Test(TestAnalyserOsmosis):
     @classmethod
     def setup_class(cls):
         from modules import config
+
         TestAnalyserOsmosis.setup_class()
-        cls.analyser_conf = cls.load_osm("tests/osmosis_noexit.test.osm",
-                                         config.dir_tmp + "/tests/osmosis_noexit.test.xml",
-                                         {"proj": 2969})
+        cls.analyser_conf = cls.load_osm(
+            "tests/osmosis_noexit.test.osm",
+            config.dir_tmp + "/tests/osmosis_noexit.test.xml",
+            {"proj": 2969},
+        )
 
     def test(self):
         with Analyser_Osmosis_Highway_Noexit(self.analyser_conf, self.logger) as a:
@@ -117,7 +140,13 @@ class Test(TestAnalyserOsmosis):
         self.compare_results("tests/results/osmosis_noexit.test.xml")
 
         self.root_err = self.load_errors()
-        self.check_err(cl="1", lat="43.5738441546", lon="7.1352332297", elems=[("node", "140")])
-        self.check_err(cl="2", lat="43.58698923085", lon="7.13208912621", elems=[("way", "77")])
-        self.check_err(cl="2", lat="43.56376388279", lon="7.05560008059", elems=[("way", "329")])
+        self.check_err(
+            cl="1", lat="43.5738441546", lon="7.1352332297", elems=[("node", "140")]
+        )
+        self.check_err(
+            cl="2", lat="43.58698923085", lon="7.13208912621", elems=[("way", "77")]
+        )
+        self.check_err(
+            cl="2", lat="43.56376388279", lon="7.05560008059", elems=[("way", "329")]
+        )
         self.check_num_err(3)

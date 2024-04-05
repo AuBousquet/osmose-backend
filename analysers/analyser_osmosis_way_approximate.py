@@ -1,28 +1,28 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2012-2020                                 ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2012-2020                                 #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
-from .Analyser_Osmosis import Analyser_Osmosis
 
+from .Analyser_Osmosis import Analyser_Osmosis
 
 #   B   |f
 #    /----- C
@@ -151,42 +151,85 @@ sql10water2 = """
             water.linestring IS NULL AND
 """
 
+
 class Analyser_Osmosis_Way_Approximate(Analyser_Osmosis):
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
         highway_values = ("motorway", "trunk", "primary", "secondary")
-        if self.config.options and "osmosis_way_approximate" in self.config.options and self.config.options["osmosis_way_approximate"].get("highway"):
-            highway_values = self.config.options["osmosis_way_approximate"].get("highway")
-        self.tags = ( (10, "railway", ("rail",), '', ''),
-                      (20, "waterway", ("river",), sql10water1, sql10water2),
-                      (30, "highway", highway_values, '', ''),
-                    )
+        if (
+            self.config.options
+            and "osmosis_way_approximate" in self.config.options
+            and self.config.options["osmosis_way_approximate"].get("highway")
+        ):
+            highway_values = self.config.options["osmosis_way_approximate"].get(
+                "highway"
+            )
+        self.tags = (
+            (10, "railway", ("rail",), "", ""),
+            (20, "waterway", ("river",), sql10water1, sql10water2),
+            (30, "highway", highway_values, "", ""),
+        )
         for t in self.tags:
-            self.classs_change[t[0]] = self.def_class(item = 1190, level = 3, tags = ['geom', 'highway', 'railway', 'fix:imagery'],
-                title = T_('Approximate geometry of {0}', t[1]),
-                detail = T_(
-'''Geometry seems to be draw crudely, there is a discrepancy between the
-drawing and the real way especially in the curve.'''),
-                fix = T_(
-'''After checking orthophotos, add nodes or move existing nodes.'''),
-                trap = T_(
-'''On service ways, train stations and train workshops this could be a false positive.'''),
-                example = T_(
-'''![](https://wiki.openstreetmap.org/w/images/9/9d/Osmose-eg-error-1190.png)
+            self.classs_change[t[0]] = self.def_class(
+                item=1190,
+                level=3,
+                tags=["geom", "highway", "railway", "fix:imagery"],
+                title=T_("Approximate geometry of {0}", t[1]),
+                detail=T_(
+                    """Geometry seems to be draw crudely, there is a discrepancy between the
+drawing and the real way especially in the curve."""
+                ),
+                fix=T_(
+                    """After checking orthophotos, add nodes or move existing nodes."""
+                ),
+                trap=T_(
+                    """On service ways, train stations and train workshops this could be a false positive."""
+                ),
+                example=T_(
+                    """![](https://wiki.openstreetmap.org/w/images/9/9d/Osmose-eg-error-1190.png)
 
-`railway=rail` crudely drawn.'''))
+`railway=rail` crudely drawn."""
+                ),
+            )
 
-        self.callback10 = lambda res: {"class":res[4], "subclass":res[5], "data":[self.way_full, self.positionAsText], "text": T_("{0} deviation of {1}m", res[3], res[2])}
+        self.callback10 = lambda res: {
+            "class": res[4],
+            "subclass": res[5],
+            "data": [self.way_full, self.positionAsText],
+            "text": T_("{0} deviation of {1}m", res[3], res[2]),
+        }
 
     def analyser_osmosis_full(self):
         self.run(sql00)
         self.run(sql01)
         for t in self.tags:
-            self.run(sql10.format("", t[1], "', '".join(t[2]), t[0], self.config.options.get("proj"), t[3], t[4]), self.callback10)
+            self.run(
+                sql10.format(
+                    "",
+                    t[1],
+                    "', '".join(t[2]),
+                    t[0],
+                    self.config.options.get("proj"),
+                    t[3],
+                    t[4],
+                ),
+                self.callback10,
+            )
 
     def analyser_osmosis_diff(self):
         self.run(sql00)
         self.run(sql01)
         for t in self.tags:
-            self.run(sql10.format("touched_", t[1], "', '".join(t[2]), t[0], self.config.options.get("proj"), t[3], t[4]), self.callback10)
+            self.run(
+                sql10.format(
+                    "touched_",
+                    t[1],
+                    "', '".join(t[2]),
+                    t[0],
+                    self.config.options.get("proj"),
+                    t[3],
+                    t[4],
+                ),
+                self.callback10,
+            )

@@ -1,26 +1,27 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2019                                      ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2019                                      #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
+
 from .Analyser_Osmosis import Analyser_Osmosis
 
 sql00 = """
@@ -49,15 +50,25 @@ ORDER BY
   nodes.id
 """
 
+
 class Analyser_Osmosis_Relation_Enforcement(Analyser_Osmosis):
 
-    requires_tables_common = ['highways']
+    requires_tables_common = ["highways"]
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
-        self.classs[1] = self.def_class(item = 1280, level = 3, tags = ['highway', 'fix:chair'],
-            title = T_('Disconnected speed camera'),
-            fix = T_('Speed camera should be mapped as a node on the highway or use an `enforcement` relation.'))
+        self.classs[1] = self.def_class(
+            item=1280,
+            level=3,
+            tags=["highway", "fix:chair"],
+            title=T_("Disconnected speed camera"),
+            fix=T_(
+                "Speed camera should be mapped as a node on the highway or use an `enforcement` relation."
+            ),
+        )
 
     def analyser_osmosis_common(self):
-        self.run(sql00, lambda res: {"class":1, "data":[self.node_full, self.positionAsText]})
+        self.run(
+            sql00,
+            lambda res: {"class": 1, "data": [self.node_full, self.positionAsText]},
+        )

@@ -1,22 +1,22 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 ###########################################################################
-##                                                                       ##
-## Copyrights Jocelyn Jaubert 2012
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
+#                                                                       ##
+# Copyrights Jocelyn Jaubert 2012
+#                                                                       ##
+# This program is free software: you can redistribute it and/or modify  ##
+# it under the terms of the GNU General Public License as published by  ##
+# the Free Software Foundation, either version 3 of the License, or     ##
+# (at your option) any later version.                                   ##
+#                                                                       ##
+# This program is distributed in the hope that it will be useful,       ##
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
+# GNU General Public License for more details.                          ##
+#                                                                       ##
+# You should have received a copy of the GNU General Public License     ##
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
+#                                                                       ##
 ###########################################################################
 
 import os
@@ -32,8 +32,12 @@ dir_osmose = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 dir_work = "/data/work/%s" % (username)
 
 # frontend which will get results
-url_frontend_update = os.environ.get("URL_FRONTEND_UPDATE", u"https://osmose.openstreetmap.fr/control/send-update")
-url_frontend_opendata_update = u"https://opendata.osmose.openstreetmap.fr/control/send-update"
+url_frontend_update = os.environ.get(
+    "URL_FRONTEND_UPDATE", "https://osmose.openstreetmap.fr/control/send-update"
+)
+url_frontend_opendata_update = (
+    "https://opendata.osmose.openstreetmap.fr/control/send-update"
+)
 
 # where osmosis is located
 bin_osmosis = dir_osmose + "/osmosis/osmosis-0.48.3-36-gada1b6f5-SNAPSHOT/bin/osmosis"
@@ -44,7 +48,7 @@ bin_pyosmium_up_to_date = "pyosmium-up-to-date"
 # where osmconvert is located
 bin_osmconvert = "./osmconvert/osmconvert"
 
-### no need to modify following variables ###
+# no need to modify following variables ###
 
 dir_tmp = os.path.join(dir_work, "tmp")
 dir_cache = os.path.join(dir_work, "cache")

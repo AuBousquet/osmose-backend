@@ -1,47 +1,57 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2012-2020                                 ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2012-2020                                 #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
-from .Analyser_Merge import Analyser_Merge_Point, SourceOpenDataSoft, CSV, Load_XY, Conflate, Select, Mapping
+
+from .Analyser_Merge import (
+    CSV,
+    Analyser_Merge_Point,
+    Conflate,
+    Load_XY,
+    Mapping,
+    Select,
+    SourceOpenDataSoft,
+)
 
 # https://gitorious.org/osm-hacks/osm-hacks/trees/master/etablissements-scolaires
 
+
 class Analyser_Merge_School_FR(Analyser_Merge_Point):
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Merge_Point.__init__(self, config, logger)
 
-        if config.db_schema == 'france_guadeloupe':
+        if config.db_schema == "france_guadeloupe":
             classs = 10
             officialName = "Guadeloupe"
             self.is_in = lambda code_postal: code_postal[0:3] == "971"
-        elif config.db_schema == 'france_guyane':
+        elif config.db_schema == "france_guyane":
             classs = 20
             officialName = "Guyane"
             self.is_in = lambda code_postal: code_postal[0:3] == "973"
-        elif config.db_schema == 'france_reunion':
+        elif config.db_schema == "france_reunion":
             classs = 30
             officialName = "Réunion"
             self.is_in = lambda code_postal: code_postal[0:3] == "974"
-        elif config.db_schema == 'france_martinique':
+        elif config.db_schema == "france_martinique":
             classs = 40
             officialName = "Martinique"
             self.is_in = lambda code_postal: code_postal[0:3] == "972"
@@ -51,53 +61,175 @@ class Analyser_Merge_School_FR(Analyser_Merge_Point):
             self.is_in = lambda code_postal: code_postal[0:2] != "97"
 
         trap = T_(
-'''Check the location. Warning data from the Ministry may have several
-administrative schools for a single physical school.''')
-        self.def_class_missing_official(item = 8030, id = classs+1, level = 3, tags = ['merge', 'fix:survey', 'fix:picture'],
-            title = T_('School not integrated'),
-            trap = trap)
-        self.def_class_missing_osm(item = 7070, id = classs+2, level = 3, tags = ['merge', 'fix:chair'],
-            title = T_('School without tag \"ref:UAI\" or invalid'),
-            trap = trap)
-        self.def_class_possible_merge(item = 8031, id = classs+3, level = 3, tags = ['merge', 'fix:chair'],
-            title = T_('School, integration suggestion'),
-            trap = trap)
-        self.def_class_update_official(item = 8032, id = classs+4, level = 3, tags = ['merge', 'fix:chair'],
-            title = T_('School update'),
-            trap = trap)
+            """Check the location. Warning data from the Ministry may have several
+administrative schools for a single physical school."""
+        )
+        self.def_class_missing_official(
+            item=8030,
+            id=classs + 1,
+            level=3,
+            tags=["merge", "fix:survey", "fix:picture"],
+            title=T_("School not integrated"),
+            trap=trap,
+        )
+        self.def_class_missing_osm(
+            item=7070,
+            id=classs + 2,
+            level=3,
+            tags=["merge", "fix:chair"],
+            title=T_('School without tag "ref:UAI" or invalid'),
+            trap=trap,
+        )
+        self.def_class_possible_merge(
+            item=8031,
+            id=classs + 3,
+            level=3,
+            tags=["merge", "fix:chair"],
+            title=T_("School, integration suggestion"),
+            trap=trap,
+        )
+        self.def_class_update_official(
+            item=8032,
+            id=classs + 4,
+            level=3,
+            tags=["merge", "fix:chair"],
+            title=T_("School update"),
+            trap=trap,
+        )
 
         self.init(
             "https://data.education.gouv.fr/explore/dataset/fr-en-adresse-et-geolocalisation-etablissements-premier-et-second-degre",
-            "Adresse et géolocalisation des établissements d'enseignement du premier et second degrés - " + officialName,
-            CSV(SourceOpenDataSoft(
-                attribution="Ministère de l'Éducation nationale et de la Jeunesse",
-                url="https://data.education.gouv.fr/explore/dataset/fr-en-adresse-et-geolocalisation-etablissements-premier-et-second-degre",
-                filter=lambda t: t.replace("Ecole", "École").replace("ecole", "école").replace("Saint ", "Saint-").replace("Sainte ", "Sainte-").replace("élementaire", "élémentaire").replace("elementaire", "élémentaire").replace("Elémentaire", "Élémentaire").replace("elémentaire", "élémentaire").replace("College", "Collège"))),
-            Load_XY("Longitude", "Latitude",
-                select = {"Code état établissement": ["1", "3"]},
-                where = lambda res: res["Code postal"] and self.is_in(res["Code postal"])),
+            "Adresse et géolocalisation des établissements d'enseignement du premier et second degrés - "
+            + officialName,
+            CSV(
+                SourceOpenDataSoft(
+                    attribution="Ministère de l'Éducation nationale et de la Jeunesse",
+                    url="https://data.education.gouv.fr/explore/dataset/fr-en-adresse-et-geolocalisation-etablissements-premier-et-second-degre",
+                    filter=lambda t: t.replace("Ecole", "École")
+                    .replace("ecole", "école")
+                    .replace("Saint ", "Saint-")
+                    .replace("Sainte ", "Sainte-")
+                    .replace("élementaire", "élémentaire")
+                    .replace("elementaire", "élémentaire")
+                    .replace("Elémentaire", "Élémentaire")
+                    .replace("elémentaire", "élémentaire")
+                    .replace("College", "Collège"),
+                )
+            ),
+            Load_XY(
+                "Longitude",
+                "Latitude",
+                select={"Code état établissement": ["1", "3"]},
+                where=lambda res: res["Code postal"] and self.is_in(res["Code postal"]),
+            ),
             Conflate(
-                select = Select(
-                    types = ["nodes", "ways", "relations"],
-                    tags = {"amenity": "school"}),
-                osmRef = "ref:UAI",
-                conflationDistance = 50,
-                mapping = Mapping(
-                    static2 = {
-                        "source": self.source,
-                        "amenity": "school"},
-                    mapping1 = {
+                select=Select(
+                    types=["nodes", "ways", "relations"], tags={"amenity": "school"}
+                ),
+                osmRef="ref:UAI",
+                conflationDistance=50,
+                mapping=Mapping(
+                    static2={"source": self.source, "amenity": "school"},
+                    mapping1={
                         "ref:UAI": "Code établissement",
-                        "school:FR": lambda res: self.School_FR_nature_uai[res["Code nature"]],
-                        "operator:type": lambda res: "private" if res["Secteur Public/Privé"] == "Privé" else "public" if res["Secteur Public/Privé"] == "Public" else None},
-                    mapping2 = {"name": lambda res: res["Appellation officielle"].replace("ECOLE", "École").replace("ELEMENTAIRE", "élémentaire") if res["Appellation officielle"] not in [None, "A COMPLETER", "École primaire", "École Primaire", "ECOLE PRIMAIRE", "École PRIMAIRE", "ECOLE Primaire", "école primaire", "École primaire publique", "ECOLE PRIMAIRE PUBLIQUE", "École Primaire Publique", "École PRIMAIRE publique", "École primaire privée", "ECOLE PRIMAIRE PRIVÉE", "École primaire intercommunale", "École primaire Intercommunale", "École Primaire Intercommunale", "École élémentaire", "École Élémentaire", "ECOLE ELEMENTAIRE", "École ELEMENTAIRE", "École Elementaire", "école élémentaire", "École élémentaire publique", "École élémentaire Publique", "ECOLE ELEMENTAIRE PUBLIQUE", "École élémentaire privée", "École élémentaire intercommunale", "École élémentaire école publique", "École maternelle", "ECOLE MATERNELLE", "École Maternelle", "École MATERNELLE", "École Maternelle", "école maternelle", "École maternelle publique", "ECOLE MATERNELLE PUBLIQUE", "École Maternelle Publique", "École maternelle Publique", "école maternelle publique", "École maternelle intercommunale", "École maternelle Intercommunale", "Collège"] else None},
-                    text = self.text)))
+                        "school:FR": lambda res: self.School_FR_nature_uai[
+                            res["Code nature"]
+                        ],
+                        "operator:type": lambda res: (
+                            "private"
+                            if res["Secteur Public/Privé"] == "Privé"
+                            else (
+                                "public"
+                                if res["Secteur Public/Privé"] == "Public"
+                                else None
+                            )
+                        ),
+                    },
+                    mapping2={
+                        "name": lambda res: (
+                            res["Appellation officielle"]
+                            .replace("ECOLE", "École")
+                            .replace("ELEMENTAIRE", "élémentaire")
+                            if res["Appellation officielle"]
+                            not in [
+                                None,
+                                "A COMPLETER",
+                                "École primaire",
+                                "École Primaire",
+                                "ECOLE PRIMAIRE",
+                                "École PRIMAIRE",
+                                "ECOLE Primaire",
+                                "école primaire",
+                                "École primaire publique",
+                                "ECOLE PRIMAIRE PUBLIQUE",
+                                "École Primaire Publique",
+                                "École PRIMAIRE publique",
+                                "École primaire privée",
+                                "ECOLE PRIMAIRE PRIVÉE",
+                                "École primaire intercommunale",
+                                "École primaire Intercommunale",
+                                "École Primaire Intercommunale",
+                                "École élémentaire",
+                                "École Élémentaire",
+                                "ECOLE ELEMENTAIRE",
+                                "École ELEMENTAIRE",
+                                "École Elementaire",
+                                "école élémentaire",
+                                "École élémentaire publique",
+                                "École élémentaire Publique",
+                                "ECOLE ELEMENTAIRE PUBLIQUE",
+                                "École élémentaire privée",
+                                "École élémentaire intercommunale",
+                                "École élémentaire école publique",
+                                "École maternelle",
+                                "ECOLE MATERNELLE",
+                                "École Maternelle",
+                                "École MATERNELLE",
+                                "École Maternelle",
+                                "école maternelle",
+                                "École maternelle publique",
+                                "ECOLE MATERNELLE PUBLIQUE",
+                                "École Maternelle Publique",
+                                "École maternelle Publique",
+                                "école maternelle publique",
+                                "École maternelle intercommunale",
+                                "École maternelle Intercommunale",
+                                "Collège",
+                            ]
+                            else None
+                        )
+                    },
+                    text=self.text,
+                ),
+            ),
+        )
 
     def text(self, tags, fields):
-        lib = ', '.join(filter(lambda x: x and x != "None", [fields["Appellation officielle"], fields["Adresse"], fields["Lieu dit"], fields["Boite postale"], fields["Code postal"], fields["Localite d'acheminement"], fields["Commune"]]))
+        lib = ", ".join(
+            filter(
+                lambda x: x and x != "None",
+                [
+                    fields["Appellation officielle"],
+                    fields["Adresse"],
+                    fields["Lieu dit"],
+                    fields["Boite postale"],
+                    fields["Code postal"],
+                    fields["Localite d'acheminement"],
+                    fields["Commune"],
+                ],
+            )
+        )
         return {
-            "en": lib + " (positioned: {0}, matching: {1})".format(self.School_FR_loc[fields["Localisation"]]["en"], self.School_FR_app[fields["Qualité d'appariement"]]["en"]),
-            "fr": lib + " (position : {0}, appariement : {1})".format(self.School_FR_loc[fields["Localisation"]]["fr"], self.School_FR_app[fields["Qualité d'appariement"]]["fr"]),
+            "en": lib
+            + " (positioned: {0}, matching: {1})".format(
+                self.School_FR_loc[fields["Localisation"]]["en"],
+                self.School_FR_app[fields["Qualité d'appariement"]]["en"],
+            ),
+            "fr": lib
+            + " (position : {0}, appariement : {1})".format(
+                self.School_FR_loc[fields["Localisation"]]["fr"],
+                self.School_FR_app[fields["Qualité d'appariement"]]["fr"],
+            ),
         }
 
     School_FR_loc = {

@@ -1,29 +1,30 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 ###########################################################################
-##                                                                       ##
-## Copyrights Frederic Rodrigo 2012                                      ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
+#                                                                       ##
+# Copyrights Frederic Rodrigo 2012                                      ##
+#                                                                       ##
+# This program is free software: you can redistribute it and/or modify  ##
+# it under the terms of the GNU General Public License as published by  ##
+# the Free Software Foundation, either version 3 of the License, or     ##
+# (at your option) any later version.                                   ##
+#                                                                       ##
+# This program is distributed in the hope that it will be useful,       ##
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
+# GNU General Public License for more details.                          ##
+#                                                                       ##
+# You should have received a copy of the GNU General Public License     ##
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
+#                                                                       ##
 ###########################################################################
 
-from modules.OsmoseTranslation import T_
-from plugins.Plugin import Plugin
-from modules.downloader import update_cache
 import os
 import sqlite3
+
+from modules.downloader import update_cache
+from modules.OsmoseTranslation import T_
+from plugins.Plugin import Plugin
 
 sql01 = """
 CREATE TEMP TABLE temp.count AS
@@ -78,18 +79,27 @@ WHERE
 ;
 """
 
+
 class TagMissing_LookLike(Plugin):
 
     def init(self, logger):
         Plugin.init(self, logger)
-        self.errors[2070] = self.def_class(item = 2070, level = 2, tags = ['tag', 'fix:chair'],
-            title = T_('Missing tag by cooccurrence'))
+        self.errors[2070] = self.def_class(
+            item=2070,
+            level=2,
+            tags=["tag", "fix:chair"],
+            title=T_("Missing tag by cooccurrence"),
+        )
 
-        bdd = update_cache(u"http://taginfo.openstreetmap.org/download/taginfo-db.db.bz2", 30, bz2_decompress=True)
+        bdd = update_cache(
+            "http://taginfo.openstreetmap.org/download/taginfo-db.db.bz2",
+            30,
+            bz2_decompress=True,
+        )
 
         if not os.path.exists(bdd):
             self.info = {}
-            for type in ['nodes', 'ways', 'relations']:
+            for type in ["nodes", "ways", "relations"]:
                 self.info[type] = {}
             return
 
@@ -100,8 +110,8 @@ class TagMissing_LookLike(Plugin):
             cur = con.cursor()
             cur.execute(sql01)
             self.info = {}
-            for type in ['nodes', 'ways', 'relations']:
-                cur.execute(sql02 % {'type':'nodes'})
+            for type in ["nodes", "ways", "relations"]:
+                cur.execute(sql02 % {"type": "nodes"})
                 rows = cur.fetchall()
                 info = {}
                 for row in rows:
@@ -117,30 +127,45 @@ class TagMissing_LookLike(Plugin):
             if tag in self.info[type]:
                 for mwm in self.info[type][tag]:
                     if mwm[0] not in tags:
-                        arg = (mwm[0], round(mwm[3],2))
-                        ret.append((2070, int((1-mwm[3])*100), {"fr": u"Le tag \"%s\" semble manquant (proba=%s)" % arg, "en": u"Tag \"%s\" may be missing (proba=%s)" % arg}))
+                        arg = (mwm[0], round(mwm[3], 2))
+                        ret.append(
+                            (
+                                2070,
+                                int((1 - mwm[3]) * 100),
+                                {
+                                    "fr": 'Le tag "%s" semble manquant (proba=%s)'
+                                    % arg,
+                                    "en": 'Tag "%s" may be missing (proba=%s)' % arg,
+                                },
+                            )
+                        )
         return ret
 
     def node(self, data, tags):
-        return self.check('nodes', tags)
+        return self.check("nodes", tags)
 
     def way(self, data, tags, nds):
-        return self.check('ways', tags)
+        return self.check("ways", tags)
 
     def relation(self, data, tags, members):
-        return self.check('relations', tags)
+        return self.check("relations", tags)
 
 
 ###########################################################################
 from plugins.Plugin import TestPluginCommon
 
+
 class Test(TestPluginCommon):
     def test(self):
         a = TagMissing_LookLike(None)
         a.init(None)
-        self.check_err(a.node(None, {u"ref:INSEE":"33"}))
-        self.check_err(a.node(None, {u"ref:INSEE":"33", u"population":100}))
-        self.check_err(a.node(None, {u"ref:INSEE":"33", u"population":100, u"place":"Ici"}))
-        assert not a.node(None, {u"ref:INSEE":"33", u"population":100, u"place":"Ici", u"name": u"Toto"})
-        self.check_err(a.node(None, {u"place":"La-Haut-sur-la-Montagne"}))
-        assert not a.node(None, {u"place":"La-Haut-sur-la-Montagne", u"name":"Toto"})
+        self.check_err(a.node(None, {"ref:INSEE": "33"}))
+        self.check_err(a.node(None, {"ref:INSEE": "33", "population": 100}))
+        self.check_err(
+            a.node(None, {"ref:INSEE": "33", "population": 100, "place": "Ici"})
+        )
+        assert not a.node(
+            None, {"ref:INSEE": "33", "population": 100, "place": "Ici", "name": "Toto"}
+        )
+        self.check_err(a.node(None, {"place": "La-Haut-sur-la-Montagne"}))
+        assert not a.node(None, {"place": "La-Haut-sur-la-Montagne", "name": "Toto"})

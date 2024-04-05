@@ -1,26 +1,27 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2011                                      ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2011                                      #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
+
 from .Analyser_Osmosis import Analyser_Osmosis
 
 sql10 = """
@@ -75,27 +76,51 @@ WHERE
    NOT ST_IsValid(ST_MakePolygon(linestring))
 """
 
+
 class Analyser_Osmosis_Polygon(Analyser_Osmosis):
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
         doc = dict(
-            detail = T_(
-'''The polygon intersects itself. The marker points directly to the
-error area of the crossing.'''),
-            fix = T_(
-'''Find where the polygon intersects itself (i.e. it forms an '8') and
+            detail=T_(
+                """The polygon intersects itself. The marker points directly to the
+error area of the crossing."""
+            ),
+            fix=T_(
+                """Find where the polygon intersects itself (i.e. it forms an '8') and
 correct geometry for a single loop (a '0') or by removing nodes or
 changing the order of these nodes, by adding new nodes or by creating
-multiple polygons.'''),
-            trap = T_(
-'''Make sure the nodes to move do not belong to other way.'''),
-            example = T_(
-'''![](https://wiki.openstreetmap.org/w/images/9/9a/Osmose-eg-error-1040.png)'''))
-        self.classs_change[1] = self.def_class(item = 1040, level = 1, tags = ['geom', 'fix:chair'], title = T_('Invalid polygon'), **doc)
-        self.classs_change[2] = self.def_class(item = 1040, level = 1, tags = ['geom', 'fix:chair'], title = T_('Invalid multipolygon'), **doc)
-        self.callback10 = lambda res: {"class":1, "data":[self.way_full, self.positionAsText], "text": {"en": res[2]}}
-        self.callback20 = lambda res: {"class":2, "data":[self.relation, self.positionAsText], "text": {"en": res[2]}}
+multiple polygons."""
+            ),
+            trap=T_("""Make sure the nodes to move do not belong to other way."""),
+            example=T_(
+                """![](https://wiki.openstreetmap.org/w/images/9/9a/Osmose-eg-error-1040.png)"""
+            ),
+        )
+        self.classs_change[1] = self.def_class(
+            item=1040,
+            level=1,
+            tags=["geom", "fix:chair"],
+            title=T_("Invalid polygon"),
+            **doc
+        )
+        self.classs_change[2] = self.def_class(
+            item=1040,
+            level=1,
+            tags=["geom", "fix:chair"],
+            title=T_("Invalid multipolygon"),
+            **doc
+        )
+        self.callback10 = lambda res: {
+            "class": 1,
+            "data": [self.way_full, self.positionAsText],
+            "text": {"en": res[2]},
+        }
+        self.callback20 = lambda res: {
+            "class": 2,
+            "data": [self.relation, self.positionAsText],
+            "text": {"en": res[2]},
+        }
 
     def analyser_osmosis_full(self):
         self.run(sql10.format(""), self.callback10)

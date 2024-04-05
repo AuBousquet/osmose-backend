@@ -1,4 +1,4 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Original code from http://code.google.com/p/bpbio/source/browse/trunk/interval_tree/
 # Copyright bpederse, 2011, MIT License
 #
@@ -9,7 +9,7 @@ import operator
 
 
 class IntervalTree(object):
-    __slots__ = ('intervals', 'left', 'right', 'center')
+    __slots__ = ("intervals", "left", "right", "center")
 
     def __init__(self, intervals, depth=16, minbucket=64, _extent=None, maxbucket=512):
         """\
@@ -56,33 +56,36 @@ class IntervalTree(object):
         if _extent is None:
             # sorting the first time through allows it to get
             # better performance in searching later.
-            intervals.sort(key=operator.attrgetter('start'))
+            intervals.sort(key=operator.attrgetter("start"))
 
-        left, right = _extent or \
-               (intervals[0].start, max(i.stop for i in intervals))
-        #center = intervals[len(intervals)/ 2].stop
+        left, right = _extent or (intervals[0].start, max(i.stop for i in intervals))
+        # center = intervals[len(intervals)/ 2].stop
         center = (left + right) / 2.0
 
-
         self.intervals = []
-        lefts, rights  = [], []
-
+        lefts, rights = [], []
 
         for interval in intervals:
             if interval.stop < center:
                 lefts.append(interval)
             elif interval.start > center:
                 rights.append(interval)
-            else: # overlapping.
+            else:  # overlapping.
                 self.intervals.append(interval)
 
-        self.left = lefts and IntervalTree(lefts, depth, minbucket, (intervals[0].start,  center)) or None
-        self.right = rights and IntervalTree(rights, depth, minbucket, (center, right)) or None
+        self.left = (
+            lefts
+            and IntervalTree(lefts, depth, minbucket, (intervals[0].start, center))
+            or None
+        )
+        self.right = (
+            rights and IntervalTree(rights, depth, minbucket, (center, right)) or None
+        )
         self.center = center
-
 
     def find(self, start, stop):
         """find all elements between (or overlapping) start and stop"""
+
         def comp(i):
             if i.y1 <= i.y2:
                 return i.y2 >= start and i.y1 < stop
@@ -104,58 +107,68 @@ class IntervalTree(object):
 
     def __iter__(self):
         if self.left:
-            for l in self.left: yield l
+            for l in self.left:
+                yield l
 
-        for i in self.intervals: yield i
+        for i in self.intervals:
+            yield i
 
         if self.right:
-            for r in self.right: yield r
+            for r in self.right:
+                yield r
 
     # methods to allow un/pickling (by pzs):
     def __getstate__(self):
-        return { 'intervals': self.intervals,
-                    'left':   self.left,
-                    'right':  self.right,
-                    'center': getattr(self, 'center', None) }
+        return {
+            "intervals": self.intervals,
+            "left": self.left,
+            "right": self.right,
+            "center": getattr(self, "center", None),
+        }
 
     def __setstate__(self, state):
-        for key,value in state.items():
+        for key, value in state.items():
             setattr(self, key, value)
 
+
 class Interval(object):
-    __slots__ = ('start', 'stop')
+    __slots__ = ("start", "stop")
+
     def __init__(self, start, stop):
         self.start = start
-        self.stop  = stop
+        self.stop = stop
+
     def __repr__(self):
         return "Interval(%i, %i)" % (self.start, self.stop)
 
     def __getstate__(self):
-        return {'start': self.start,
-                'stop': self.stop }
+        return {"start": self.start, "stop": self.stop}
+
     def __setstate__(self, state):
         for k, v in state.items():
             setattr(self, k, v)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
 
     def brute_force_find(intervals, start, stop):
         return [i for i in intervals if i.stop >= start and i.start <= stop]
 
     import random
     import time
+
     def rand():
         s = random.randint(1, 2000000)
         return Interval(s, s + random.randint(200, 6000))
+
     intervals = [rand() for i in range(300000)]
     START, STOP = 390000, 400000
     intervals.append(Interval(0, 500000))
     tries = 100
 
-
     tree = IntervalTree(intervals)
     t = time.time()
-    for i in range(tries):
+    for _i in range(tries):
         res = tree.find(START, STOP)
     treetime = time.time() - t
     t = time.time()

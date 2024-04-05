@@ -1,22 +1,22 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 ###########################################################################
-##                                                                       ##
-## Copyrights Etienne Chové <chove@crans.org> 2009                       ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
+#                                                                       ##
+# Copyrights Etienne Chové <chove@crans.org> 2009                       ##
+#                                                                       ##
+# This program is free software: you can redistribute it and/or modify  ##
+# it under the terms of the GNU General Public License as published by  ##
+# the Free Software Foundation, either version 3 of the License, or     ##
+# (at your option) any later version.                                   ##
+#                                                                       ##
+# This program is distributed in the hope that it will be useful,       ##
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
+# GNU General Public License for more details.                          ##
+#                                                                       ##
+# You should have received a copy of the GNU General Public License     ##
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
+#                                                                       ##
 ###########################################################################
 
 from modules.OsmoseTranslation import T_
@@ -27,22 +27,30 @@ class TagRemove_OpenSeaMap(Plugin):
 
     def init(self, logger):
         Plugin.init(self, logger)
-        if self.father.config.options.get("project") != 'openstreetmap':
+        if self.father.config.options.get("project") != "openstreetmap":
             return False
-        self.errors[4060] = self.def_class(item = 4060, level = 2, tags = ['waterway', 'fix:imagery'],
-            title = T_('OpenSeaMap import, very approximative position.'),
-            detail = T_(
-'''Seamark was imported but needs manual review (`seamark:fixme=*`).'''),
-            fix = T_(
-'''Move the seamark to the correct position and remove the tag
-`seamark:fixme=*`.'''))
+        self.errors[4060] = self.def_class(
+            item=4060,
+            level=2,
+            tags=["waterway", "fix:imagery"],
+            title=T_("OpenSeaMap import, very approximative position."),
+            detail=T_(
+                """Seamark was imported but needs manual review (`seamark:fixme=*`)."""
+            ),
+            fix=T_(
+                """Move the seamark to the correct position and remove the tag
+`seamark:fixme=*`."""
+            ),
+        )
 
     def node(self, data, tags):
         if "seamark:fixme" in tags:
             return {"class": 4060}
 
+
 ###########################################################################
 from plugins.Plugin import TestPluginCommon
+
 
 class Test(TestPluginCommon):
     def test(self):

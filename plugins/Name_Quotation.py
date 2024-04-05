@@ -1,22 +1,22 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 ###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2018                                      ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
+#                                                                       ##
+# Copyrights Frédéric Rodrigo 2018                                      ##
+#                                                                       ##
+# This program is free software: you can redistribute it and/or modify  ##
+# it under the terms of the GNU General Public License as published by  ##
+# the Free Software Foundation, either version 3 of the License, or     ##
+# (at your option) any later version.                                   ##
+#                                                                       ##
+# This program is distributed in the hope that it will be useful,       ##
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
+# GNU General Public License for more details.                          ##
+#                                                                       ##
+# You should have received a copy of the GNU General Public License     ##
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
+#                                                                       ##
 ###########################################################################
 
 from modules.OsmoseTranslation import T_
@@ -27,21 +27,61 @@ class Name_Quotation(Plugin):
 
     def init(self, logger):
         Plugin.init(self, logger)
-        self.errors[50704] = self.def_class(item = 5070, level = 2, tags = ['name', 'fix:chair'],
-            title = T_('Unbalanced quotation mark or bracket in name'),
-            resource = 'https://en.wikipedia.org/wiki/Bracket#Encoding_in_digital_media')
+        self.errors[50704] = self.def_class(
+            item=5070,
+            level=2,
+            tags=["name", "fix:chair"],
+            title=T_("Unbalanced quotation mark or bracket in name"),
+            resource="https://en.wikipedia.org/wiki/Bracket#Encoding_in_digital_media",
+        )
 
         self.quotes = [
             # https://en.wikipedia.org/wiki/Quotation_mark#Unicode_code_point_table
-            u"«»", u"‹›", u"“”‟„", u"〝〞〟",
+            "«»",
+            "‹›",
+            "“”‟„",
+            "〝〞〟",
             # https://en.wikipedia.org/wiki/Bracket#Encoding_in_digital_media
-            u"()", u"[]", u"{}", u"«»", u"‹›", u"⌈⌉", u"⌊⌋", u"⌜⌝", u"⌞⌟", u"⁽⁾", u"₍₎", u"⸢⸣", u"⸤⸥", u"﴾﴿", u"⸜⸝", u"᚛᚜", u"༼༡༽", u"〔〕", u"〖〗", u"〘〙", u"〚〛", u"〝〞", u"〈〉", u"｢｣", u"〈〉", u"《》", u"「」", u"『』", u"【】", u"（）", u"［］", u"＜＞", u"｛｝", u"｟｠",
+            "()",
+            "[]",
+            "{}",
+            "«»",
+            "‹›",
+            "⌈⌉",
+            "⌊⌋",
+            "⌜⌝",
+            "⌞⌟",
+            "⁽⁾",
+            "₍₎",
+            "⸢⸣",
+            "⸤⸥",
+            "﴾﴿",
+            "⸜⸝",
+            "᚛᚜",
+            "༼༡༽",
+            "〔〕",
+            "〖〗",
+            "〘〙",
+            "〚〛",
+            "〝〞",
+            "〈〉",
+            "｢｣",
+            "〈〉",
+            "《》",
+            "「」",
+            "『』",
+            "【】",
+            "（）",
+            "［］",
+            "＜＞",
+            "｛｝",
+            "｟｠",
         ]
 
-        self.quotes_j = u"".join(self.quotes)
+        self.quotes_j = "".join(self.quotes)
 
     def node(self, data, tags):
-        if 'name' not in tags:
+        if "name" not in tags:
             return
 
         stack = []
@@ -53,10 +93,22 @@ class Name_Quotation(Plugin):
                 else:
                     p, group = stack.pop()
                     if c not in group:
-                        return [{"class": 50704, "subclass": 0, "text": T_("Unbalanced {0} with {1}", p, c)}]
+                        return [
+                            {
+                                "class": 50704,
+                                "subclass": 0,
+                                "text": T_("Unbalanced {0} with {1}", p, c),
+                            }
+                        ]
 
         if len(stack) > 0:
-            return [{"class": 50704, "subclass": 1, "text": T_("Unbalanced {0}", "".join(map(lambda q: q[0], stack)))}]
+            return [
+                {
+                    "class": 50704,
+                    "subclass": 1,
+                    "text": T_("Unbalanced {0}", "".join(map(lambda q: q[0], stack))),
+                }
+            ]
 
     def way(self, data, tags, nds):
         return self.node(data, tags)
@@ -67,6 +119,7 @@ class Name_Quotation(Plugin):
 
 ###########################################################################
 from plugins.Plugin import TestPluginCommon
+
 
 class Test(TestPluginCommon):
     def test(self):
@@ -82,4 +135,6 @@ class Test(TestPluginCommon):
         assert self.p.node(None, {"name": "{[}]"})
         assert not self.p.node(None, {"name": "קריית מוצקין (תפעולית)"})
         assert self.p.node(None, {"name": "קריית מוצקין (תפעולית"})
-        assert self.p.node(None, {"name": "120 - (ביס אסיף (התפתחות הילד "}) # Twice '(' but not writer in the same direction
+        assert self.p.node(
+            None, {"name": "120 - (ביס אסיף (התפתחות הילד "}
+        )  # Twice '(' but not writer in the same direction

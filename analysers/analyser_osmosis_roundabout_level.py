@@ -1,26 +1,27 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2012-2015                                 ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2012-2015                                 #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
+
 from .Analyser_Osmosis import Analyser_Osmosis
 
 sql10 = """
@@ -252,52 +253,71 @@ WHERE
     NOT is_area
 """
 
+
 class Analyser_Osmosis_Roundabout_Level(Analyser_Osmosis):
 
-    requires_tables_common = ['highways']
+    requires_tables_common = ["highways"]
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
-        self.classs[1] = self.def_class(item = 3010, level = 2, tags = ['highway', 'roundabout', 'fix:chair'],
-            title = T_('Wrong highway on roundabout'),
-            detail = T_(
-'''It must match the highest level of connected routes, except `motorway`
-and `trunk`.'''),
-            fix = T_(
-'''Adjust the tag `highway=*` of the roundabout.'''),
-            example = T_(
-'''![](https://wiki.openstreetmap.org/w/images/3/3a/Osmose-eg-error-3010.png)
+        self.classs[1] = self.def_class(
+            item=3010,
+            level=2,
+            tags=["highway", "roundabout", "fix:chair"],
+            title=T_("Wrong highway on roundabout"),
+            detail=T_(
+                """It must match the highest level of connected routes, except `motorway`
+and `trunk`."""
+            ),
+            fix=T_("""Adjust the tag `highway=*` of the roundabout."""),
+            example=T_(
+                """![](https://wiki.openstreetmap.org/w/images/3/3a/Osmose-eg-error-3010.png)
 
-Highway level should be `secondary`.'''))
-        self.classs[2] = self.def_class(item = 2030, level = 2, tags = ['highway', 'roundabout', 'fix:chair'],
-            title = T_('Missing oneway'),
-            detail = T_(
-'''Short ways are connected to roundabout and join together. It is often
+Highway level should be `secondary`."""
+            ),
+        )
+        self.classs[2] = self.def_class(
+            item=2030,
+            level=2,
+            tags=["highway", "roundabout", "fix:chair"],
+            title=T_("Missing oneway"),
+            detail=T_(
+                """Short ways are connected to roundabout and join together. It is often
 a sign of roundabout insertion way. These segments are often
-one-way.'''),
-            fix = T_(
-'''After verifying that it is an access road to the roundabout and they
-were well oriented, set the tag `oneway=yes` on the two segments.'''),
-            trap = T_(
-'''* If a way is prolonged after joining the second segment, cut the way
+one-way."""
+            ),
+            fix=T_(
+                """After verifying that it is an access road to the roundabout and they
+were well oriented, set the tag `oneway=yes` on the two segments."""
+            ),
+            trap=T_(
+                """* If a way is prolonged after joining the second segment, cut the way
 before putting the tag oneway.
 * Two roundabouts close to each other can be connected by a small lane in both
-directions.'''))
+directions."""
+            ),
+        )
 
-        self.classs[3] = self.def_class(item = 3010, level = 2, tags = ['highway', 'roundabout', 'fix:imagery'],
-            title = T_('Roundabout shortcut'),
-            detail = T_(
-'''Several roads connect to one node of the roundabout. In this case
+        self.classs[3] = self.def_class(
+            item=3010,
+            level=2,
+            tags=["highway", "roundabout", "fix:imagery"],
+            title=T_("Roundabout shortcut"),
+            detail=T_(
+                """Several roads connect to one node of the roundabout. In this case
 input and output flow of vehicles bypassing the priority rules of
-traffic.'''),
-            fix = T_(
-'''Separate the junction nodes into several separate ones .'''))
-        self.classs[4] = self.def_class(item = 3010, level = 2, tags = ['highway', 'roundabout', 'fix:chair'],
-            title = T_('Roundabout crossing'),
-            detail = T_(
-'''Way through the roundabout without stopping.'''),
-            fix = T_(
-'''Check if it is really a roundabout and cut the way.'''))
+traffic."""
+            ),
+            fix=T_("""Separate the junction nodes into several separate ones ."""),
+        )
+        self.classs[4] = self.def_class(
+            item=3010,
+            level=2,
+            tags=["highway", "roundabout", "fix:chair"],
+            title=T_("Roundabout crossing"),
+            detail=T_("""Way through the roundabout without stopping."""),
+            fix=T_("""Check if it is really a roundabout and cut the way."""),
+        )
 
     def analyser_osmosis_common(self):
         self.run(sql10)
@@ -309,10 +329,32 @@ traffic.'''),
         self.run(sql15i)
         self.run(sql16)
         self.run(sql16i)
-        self.run(sql17, lambda res: {"class":1, "subclass":res[2], "data":[self.way_full, self.positionAsText]} )
+        self.run(
+            sql17,
+            lambda res: {
+                "class": 1,
+                "subclass": res[2],
+                "data": [self.way_full, self.positionAsText],
+            },
+        )
         self.run(sql20)
         self.run(sql21)
-        self.run(sql22, lambda res: {"class":2, "data":[self.way_full, self.node, self.node_position]} )
+        self.run(
+            sql22,
+            lambda res: {
+                "class": 2,
+                "data": [self.way_full, self.node, self.node_position],
+            },
+        )
         self.run(sql30)
-        self.run(sql31, lambda res: {"class":3, "data":[self.way_full, self.positionAsText]} )
-        self.run(sql40, lambda res: {"class":4, "data":[self.way_full, self.way_full, self.positionAsText]} )
+        self.run(
+            sql31,
+            lambda res: {"class": 3, "data": [self.way_full, self.positionAsText]},
+        )
+        self.run(
+            sql40,
+            lambda res: {
+                "class": 4,
+                "data": [self.way_full, self.way_full, self.positionAsText],
+            },
+        )

@@ -1,26 +1,27 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2011-2014                                 ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2011-2014                                 #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
+
 from .Analyser_Osmosis import Analyser_Osmosis
 
 sql20 = """
@@ -120,39 +121,69 @@ WHERE
     (lc1.highway_link || '_link') != lc1.highway_conn
 """
 
+
 class Analyser_Osmosis_Highway_Link(Analyser_Osmosis):
 
-    requires_tables_common = ['highways', 'highway_ends']
-    requires_tables_full = ['highways']
-    requires_tables_diff = ['touched_highways']
+    requires_tables_common = ["highways", "highway_ends"]
+    requires_tables_full = ["highways"]
+    requires_tables_diff = ["touched_highways"]
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
-        self.classs[1] = self.def_class(item = 1110, level = 1, tags = ['highway', 'fix:chair'],
-            title = T_('Bad *_link highway'),
-            detail = T_(
-'''Check the consistency of highway type for
-`highway=trunk_link|primary_link|secondary_link`.'''),
-            fix = T_(
-'''Change classification of `*_link` to match the way which is
-connected.'''),
-            example = T_(
-'''![](https://wiki.openstreetmap.org/w/images/b/b5/Osmose-eg-error-1110.png)
+        self.classs[1] = self.def_class(
+            item=1110,
+            level=1,
+            tags=["highway", "fix:chair"],
+            title=T_("Bad *_link highway"),
+            detail=T_(
+                """Check the consistency of highway type for
+`highway=trunk_link|primary_link|secondary_link`."""
+            ),
+            fix=T_(
+                """Change classification of `*_link` to match the way which is
+connected."""
+            ),
+            example=T_(
+                """![](https://wiki.openstreetmap.org/w/images/b/b5/Osmose-eg-error-1110.png)
 
-`highway=trunk_link` linking `highway=primary`.'''))
-        self.classs_change[2] = self.def_class(item = 1110, level = 1, tags = ['highway', 'fix:imagery'],
-            title = T_('Highway too long for a *_link'),
-            fix = T_(
-'''Check if the highway is a `*_link`, else remove `*_link`. Be sure to check both ends of the way.'''))
-        self.classs[3] = self.def_class(item = 1110, level = 1, tags = ['highway', 'fix:chair'],
-            title = T_('Bad *_link highway'))
-        self.callback40 = lambda res: {"class":2, "data":[self.way_full, self.positionAsText]}
+`highway=trunk_link` linking `highway=primary`."""
+            ),
+        )
+        self.classs_change[2] = self.def_class(
+            item=1110,
+            level=1,
+            tags=["highway", "fix:imagery"],
+            title=T_("Highway too long for a *_link"),
+            fix=T_(
+                """Check if the highway is a `*_link`, else remove `*_link`. Be sure to check both ends of the way."""
+            ),
+        )
+        self.classs[3] = self.def_class(
+            item=1110,
+            level=1,
+            tags=["highway", "fix:chair"],
+            title=T_("Bad *_link highway"),
+        )
+        self.callback40 = lambda res: {
+            "class": 2,
+            "data": [self.way_full, self.positionAsText],
+        }
 
     def analyser_osmosis_common(self):
         self.run(sql20)
         self.run(sql21)
-        self.run(sql30, lambda res: {"class":1, "data":[self.way_full, self.positionAsText]} )
-        self.run(sql50, lambda res: {"class":3, "data":[self.way_full, self.positionAsText], "fix": {"~": {"highway": res[2]}} })
+        self.run(
+            sql30,
+            lambda res: {"class": 1, "data": [self.way_full, self.positionAsText]},
+        )
+        self.run(
+            sql50,
+            lambda res: {
+                "class": 3,
+                "data": [self.way_full, self.positionAsText],
+                "fix": {"~": {"highway": res[2]}},
+            },
+        )
 
     def analyser_osmosis_full(self):
         self.run(sql40.format(""), self.callback40)
@@ -161,25 +192,34 @@ connected.'''),
         self.run(sql40.format("touched_"), self.callback40)
 
 
-
 ###########################################################################
 
 from .Analyser_Osmosis import TestAnalyserOsmosis
+
 
 class Test(TestAnalyserOsmosis):
     @classmethod
     def setup_class(cls):
         from modules import config
+
         TestAnalyserOsmosis.setup_class()
-        cls.analyser_conf = cls.load_osm("tests/osmosis_highway_link.osm",
-                                         config.dir_tmp + "/tests/osmosis_highway_link.test.xml",
-                                         {"proj": 2154}) # Random proj to satisfy highway table generation
+        cls.analyser_conf = cls.load_osm(
+            "tests/osmosis_highway_link.osm",
+            config.dir_tmp + "/tests/osmosis_highway_link.test.xml",
+            {"proj": 2154},
+        )  # Random proj to satisfy highway table generation
 
     def test_classes(self):
         with Analyser_Osmosis_Highway_Link(self.analyser_conf, self.logger) as a:
             a.analyser()
 
         self.root_err = self.load_errors()
-        self.check_err(cl="3", elems=[("way", "105")], fixes=[{"~": {"highway": "residential"}}])
-        self.check_err(cl="3", elems=[("way", "109")], fixes=[{"~": {"highway": "primary_link"}}])
-        self.check_err(cl="3", elems=[("way", "117")], fixes=[{"~": {"highway": "secondary_link"}}])
+        self.check_err(
+            cl="3", elems=[("way", "105")], fixes=[{"~": {"highway": "residential"}}]
+        )
+        self.check_err(
+            cl="3", elems=[("way", "109")], fixes=[{"~": {"highway": "primary_link"}}]
+        )
+        self.check_err(
+            cl="3", elems=[("way", "117")], fixes=[{"~": {"highway": "secondary_link"}}]
+        )

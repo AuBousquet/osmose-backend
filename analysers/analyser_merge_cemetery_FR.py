@@ -1,53 +1,88 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2021                                      ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2021                                      #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
-from .Analyser_Merge import Analyser_Merge_Point, SourceIGN, GPKG, LoadGeomCentroid, Conflate, Select, Mapping
+
+from .Analyser_Merge import (
+    GPKG,
+    Analyser_Merge_Point,
+    Conflate,
+    LoadGeomCentroid,
+    Mapping,
+    Select,
+    SourceIGN,
+)
 
 
 class Analyser_Merge_Public_Cemetery_FR(Analyser_Merge_Point):
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Merge_Point.__init__(self, config, logger)
-        self.def_class_missing_official(item = 8480, id = 8, level = 1, tags = ['merge', 'public equipment', 'fix:imagery', 'fix:survey'],
-            title = T_('Cemetery not integrated'))
+        self.def_class_missing_official(
+            item=8480,
+            id=8,
+            level=1,
+            tags=["merge", "public equipment", "fix:imagery", "fix:survey"],
+            title=T_("Cemetery not integrated"),
+        )
 
         self.init(
             "https://ign.fr",
             "IGN-Cimetière",
-            GPKG(SourceIGN(dep_code = config.options.get('dep_code') or config.options.get('country').split('-')[1]),
-                layer = "cimetiere"),
-            LoadGeomCentroid(
-                select = {"etat_de_l_objet": "En service"}),
+            GPKG(
+                SourceIGN(
+                    dep_code=config.options.get("dep_code")
+                    or config.options.get("country").split("-")[1]
+                ),
+                layer="cimetiere",
+            ),
+            LoadGeomCentroid(select={"etat_de_l_objet": "En service"}),
             Conflate(
-                select = Select(
-                    types = ["nodes", "ways", "relations"],
-                    tags = [
-                        {"landuse": "cemetery"},
-                        {"amenity": "grave_yard"} ]),
-                conflationDistance = 200,
-                mapping = Mapping(
-                    static1 = {
-                        "landuse": "cemetery"},
-                    static2 = {"source": self.source},
-                    mapping2 = {
-                        "name": lambda fields: fields["toponyme"] if fields["statut_du_toponyme"] == "Validé" else None},
-                    text = lambda tags, fields: {'en': ', '.join(filter(lambda f: f not in (None, 'None'), [fields["nature"], fields["nature_detaillee"], fields["toponyme"]]))} )))
+                select=Select(
+                    types=["nodes", "ways", "relations"],
+                    tags=[{"landuse": "cemetery"}, {"amenity": "grave_yard"}],
+                ),
+                conflationDistance=200,
+                mapping=Mapping(
+                    static1={"landuse": "cemetery"},
+                    static2={"source": self.source},
+                    mapping2={
+                        "name": lambda fields: (
+                            fields["toponyme"]
+                            if fields["statut_du_toponyme"] == "Validé"
+                            else None
+                        )
+                    },
+                    text=lambda tags, fields: {
+                        "en": ", ".join(
+                            filter(
+                                lambda f: f not in (None, "None"),
+                                [
+                                    fields["nature"],
+                                    fields["nature_detaillee"],
+                                    fields["toponyme"],
+                                ],
+                            )
+                        )
+                    },
+                ),
+            ),
+        )

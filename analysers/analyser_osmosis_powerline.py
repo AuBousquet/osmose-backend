@@ -1,28 +1,29 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2011-2014                                 ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2011-2014                                 #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
-from .Analyser_Osmosis import Analyser_Osmosis
 from modules.Stablehash import stablehash64
+
+from .Analyser_Osmosis import Analyser_Osmosis
 
 # Lone power supports
 sql10 = """
@@ -344,72 +345,135 @@ ORDER BY
 
 class Analyser_Osmosis_Powerline(Analyser_Osmosis):
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
-        self.classs[1] = self.def_class(item = 7040, level = 3, tags = ['power', 'fix:imagery'],
-            title = T_('Lone power tower or pole'),
-            fix = T_(
-'''This tower should probably be connected to a power line.'''),
-            trap = T_(
-'''It's possible that disused power features could be disconnected from the network.
-In which case make use of the `disused:` [lifecycle prefix](https://wiki.openstreetmap.org/wiki/Lifecycle_prefix).'''))
-        self.classs[2] = self.def_class(item = 7040, level = 2, tags = ['power', 'fix:imagery'],
-            title = T_('Unfinished power major line'),
-            detail = T_(
-'''The line ends in a vacuum, and should be connected to another line or
+        self.classs[1] = self.def_class(
+            item=7040,
+            level=3,
+            tags=["power", "fix:imagery"],
+            title=T_("Lone power tower or pole"),
+            fix=T_("""This tower should probably be connected to a power line."""),
+            trap=T_(
+                """It's possible that disused power features could be disconnected from the network.
+In which case make use of the `disused:` [lifecycle prefix](https://wiki.openstreetmap.org/wiki/Lifecycle_prefix)."""
+            ),
+        )
+        self.classs[2] = self.def_class(
+            item=7040,
+            level=2,
+            tags=["power", "fix:imagery"],
+            title=T_("Unfinished power major line"),
+            detail=T_(
+                """The line ends in a vacuum, and should be connected to another line or
 a transformer (`power=transformer`), a generator (`power=generator`)
-or marked as transitioning into ground (`location:transition=yes`).'''),
-            trap = T_(
-'''It's possible that disused power features could be disconnected from the network.
-In which case make use of the `disused:` [lifecycle prefix](https://wiki.openstreetmap.org/wiki/Lifecycle_prefix).'''))
-        self.classs[6] = self.def_class(item = 7040, level = 3, tags = ['power', 'fix:imagery'],
-            title = T_('Unfinished power minor line'),
-            detail = T_(
-'''The line ends in a vacuum, and should be connected to another line or
+or marked as transitioning into ground (`location:transition=yes`)."""
+            ),
+            trap=T_(
+                """It's possible that disused power features could be disconnected from the network.
+In which case make use of the `disused:` [lifecycle prefix](https://wiki.openstreetmap.org/wiki/Lifecycle_prefix)."""
+            ),
+        )
+        self.classs[6] = self.def_class(
+            item=7040,
+            level=3,
+            tags=["power", "fix:imagery"],
+            title=T_("Unfinished power minor line"),
+            detail=T_(
+                """The line ends in a vacuum, and should be connected to another line or
 a transformer (`power=transformer`), a generator (`power=generator`)
-or marked as transitioning into ground (`location:transition=yes`).'''),
-            trap = T_(
-'''It's possible that disused power features could be disconnected from the network.
-In which case make use of the `disused:` [lifecycle prefix](https://wiki.openstreetmap.org/wiki/Lifecycle_prefix).'''))
-        self.classs[3] = self.def_class(item = 7040, level = 3, tags = ['power', 'fix:chair'],
-            title = T_('Connection between different voltages'),
-            detail = T_('Two power lines meet at this point, but have inconsistent voltages (`voltage=*`).'),
-            fix = T_(
-'''Check if the voltages are really different.
-Add a transformer using `power=transformer` (standalone transformers) or `power=pole + transformer=*` (pole mounted transformers).'''))
-        self.classs[4] = self.def_class(item = 7040, level = 3, tags = ['power', 'fix:imagery'],
-            title = T_('Non power node on power way'),
-            detail = T_(
-'''Power lines can only form a straight line between supports and therefore shouldn't
-have additional nodes that aren't tagged as a `power` feature.'''),
-            fix = T_(
-'''If this node is a tower or pole, use the tag `power=tower` or
-`power=pole`. Otherwise remove it.'''))
-        self.classs_change[5] = self.def_class(item = 7040, level = 3, tags = ['power', 'fix:imagery'],
-            title = T_('Missing power tower or pole'),
-            detail = T_(
-'''Based on the statistical frequency of the poles on this power line,
-there's likely an unmapped pole nearby.'''))
-        self.classs[7] = self.def_class(item = 7040, level = 3, tags = ['power', 'fix:chair'],
-            title = T_('Unmatched voltage of line on substation'))
+or marked as transitioning into ground (`location:transition=yes`)."""
+            ),
+            trap=T_(
+                """It's possible that disused power features could be disconnected from the network.
+In which case make use of the `disused:` [lifecycle prefix](https://wiki.openstreetmap.org/wiki/Lifecycle_prefix)."""
+            ),
+        )
+        self.classs[3] = self.def_class(
+            item=7040,
+            level=3,
+            tags=["power", "fix:chair"],
+            title=T_("Connection between different voltages"),
+            detail=T_(
+                "Two power lines meet at this point, but have inconsistent voltages (`voltage=*`)."
+            ),
+            fix=T_(
+                """Check if the voltages are really different.
+Add a transformer using `power=transformer` (standalone transformers) or `power=pole + transformer=*` (pole mounted transformers)."""
+            ),
+        )
+        self.classs[4] = self.def_class(
+            item=7040,
+            level=3,
+            tags=["power", "fix:imagery"],
+            title=T_("Non power node on power way"),
+            detail=T_(
+                """Power lines can only form a straight line between supports and therefore shouldn't
+have additional nodes that aren't tagged as a `power` feature."""
+            ),
+            fix=T_(
+                """If this node is a tower or pole, use the tag `power=tower` or
+`power=pole`. Otherwise remove it."""
+            ),
+        )
+        self.classs_change[5] = self.def_class(
+            item=7040,
+            level=3,
+            tags=["power", "fix:imagery"],
+            title=T_("Missing power tower or pole"),
+            detail=T_(
+                """Based on the statistical frequency of the poles on this power line,
+there's likely an unmapped pole nearby."""
+            ),
+        )
+        self.classs[7] = self.def_class(
+            item=7040,
+            level=3,
+            tags=["power", "fix:chair"],
+            title=T_("Unmatched voltage of line on substation"),
+        )
 
-        self.callback40 = lambda res: {"class":4, "data":[self.node_full, self.positionAsText], "fix":[{"+": {"power": "tower"}}, {"+": {"power": "pole"}}]}
-        self.callback50 = lambda res: {"class":5, "subclass": stablehash64(res[1]), "data":[self.way_full, self.positionAsText]}
+        self.callback40 = lambda res: {
+            "class": 4,
+            "data": [self.node_full, self.positionAsText],
+            "fix": [{"+": {"power": "tower"}}, {"+": {"power": "pole"}}],
+        }
+        self.callback50 = lambda res: {
+            "class": 5,
+            "subclass": stablehash64(res[1]),
+            "data": [self.way_full, self.positionAsText],
+        }
 
     def analyser_osmosis_common(self):
-        self.run(sql10, lambda res: {"class":1, "data":[self.node_full, self.positionAsText]} )
+        self.run(
+            sql10,
+            lambda res: {"class": 1, "data": [self.node_full, self.positionAsText]},
+        )
         self.run(sql20)
         self.run(sql21)
         self.run(sql22)
         self.run(sql23)
         self.run(sql24)
         self.run(sql25)
-        self.run(sql26, lambda res: {"class":6 if res[2] == 'minor_line' else 2, "data":[self.node_full, self.positionAsText]} )
+        self.run(
+            sql26,
+            lambda res: {
+                "class": 6 if res[2] == "minor_line" else 2,
+                "data": [self.node_full, self.positionAsText],
+            },
+        )
         self.run(sql30)
         self.run(sql31)
-        self.run(sql32, lambda res: {"class":3, "data":[self.node, self.positionAsText]} )
+        self.run(
+            sql32, lambda res: {"class": 3, "data": [self.node, self.positionAsText]}
+        )
         self.run(sql40, self.callback40)
-        self.run(sql60, lambda res: {"class":7, "data":[self.way_full, self.any_full, self.positionAsText]} )
+        self.run(
+            sql60,
+            lambda res: {
+                "class": 7,
+                "data": [self.way_full, self.any_full, self.positionAsText],
+            },
+        )
 
     def analyser_osmosis_full(self):
         self.run(sql50.format(""))
@@ -426,13 +490,17 @@ there's likely an unmapped pole nearby.'''))
 
 from .Analyser_Osmosis import TestAnalyserOsmosis
 
+
 class Test(TestAnalyserOsmosis):
     @classmethod
     def setup_class(cls):
         from modules import config
+
         TestAnalyserOsmosis.setup_class()
-        cls.analyser_conf = cls.load_osm("tests/osmosis_powerline_voltage.test.osm",
-                                         config.dir_tmp + "/tests/osmosis_powerline_voltage.test.xml")
+        cls.analyser_conf = cls.load_osm(
+            "tests/osmosis_powerline_voltage.test.osm",
+            config.dir_tmp + "/tests/osmosis_powerline_voltage.test.xml",
+        )
 
     def test_class3(self):
         with Analyser_Osmosis_Powerline(self.analyser_conf, self.logger) as a:

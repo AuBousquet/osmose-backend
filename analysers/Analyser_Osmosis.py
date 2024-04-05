@@ -1,33 +1,35 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frederic Rodrigo 2011                                      ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
-
-from .Analyser import Analyser
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2011                                      #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 import os
-import psycopg2
-import psycopg2.extensions
 import re
-from modules import DictCursorUnicode
 from collections import defaultdict
 from inspect import getframeinfo, stack
+
+import psycopg2
+import psycopg2.extensions
+
+from modules import DictCursorUnicode
+
+from .Analyser import Analyser
 
 
 class Analyser_Osmosis(Analyser):
@@ -237,13 +239,17 @@ CREATE INDEX idx_buildings_polygon_proj ON {0}.buildings USING gist(polygon_proj
 ANALYZE {0}.buildings;
 """
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser.__init__(self, config, logger)
         self.classs = {}
         self.classs_change = {}
         self.explain_sql = False
-        self.typeMapping = {'N': self.node_full, 'W': self.way_full, 'R': self.relation_full}
-        self.typeMapping_id_only = {'N': self.node, 'W': self.way, 'R': self.relation}
+        self.typeMapping = {
+            "N": self.node_full,
+            "W": self.way_full,
+            "R": self.relation_full,
+        }
+        self.typeMapping_id_only = {"N": self.node, "W": self.way, "R": self.relation}
         self.resume_from_timestamp = None
         self.already_issued_objects = None
 
@@ -257,7 +263,9 @@ ANALYZE {0}.buildings;
         # open database connections + output file
         self.apiconn = self.config.osmosis_manager.osmosis()
         self.gisconn = self.apiconn.conn()
-        self.giscurs = self.gisconn.cursor(cursor_factory=DictCursorUnicode.DictCursorUnicode63)
+        self.giscurs = self.gisconn.cursor(
+            cursor_factory=DictCursorUnicode.DictCursorUnicode63
+        )
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -265,19 +273,19 @@ ANALYZE {0}.buildings;
         self.config.osmosis_manager.osmosis_close()
         Analyser.__exit__(self, exc_type, exc_value, traceback)
 
-
     def timestamp(self):
         return self.apiconn.timestamp()
-
 
     def analyser(self):
         self.init_analyser()
         if self.classs != {} or self.classs_change != {}:
-            self.logger.log(u"run osmosis all analyser {0}".format(self.__class__.__name__))
+            self.logger.log(
+                "run osmosis all analyser {0}".format(self.__class__.__name__)
+            )
             self.error_file.analyser(self.timestamp(), self.analyser_version())
-            if hasattr(self, 'requires_tables_common'):
+            if hasattr(self, "requires_tables_common"):
                 self.requires_tables_build(self.requires_tables_common)
-            if hasattr(self, 'requires_tables_full'):
+            if hasattr(self, "requires_tables_full"):
                 self.requires_tables_build(self.requires_tables_full)
             self.dump_class(self.classs)
             self.dump_class(self.classs_change)
@@ -287,20 +295,20 @@ ANALYZE {0}.buildings;
             finally:
                 self.error_file.analyser_end()
 
-
     def analyser_deferred_clean(self):
-        if hasattr(self, 'requires_tables_common'):
+        if hasattr(self, "requires_tables_common"):
             self.requires_tables_clean(self.requires_tables_common)
-        if hasattr(self, 'requires_tables_full'):
+        if hasattr(self, "requires_tables_full"):
             self.requires_tables_clean(self.requires_tables_full)
-
 
     def analyser_change(self):
         self.init_analyser()
         if self.classs != {}:
-            self.logger.log(u"run osmosis base analyser {0}".format(self.__class__.__name__))
+            self.logger.log(
+                "run osmosis base analyser {0}".format(self.__class__.__name__)
+            )
             self.error_file.analyser(self.timestamp(), self.analyser_version())
-            if hasattr(self, 'requires_tables_common'):
+            if hasattr(self, "requires_tables_common"):
                 self.requires_tables_build(self.requires_tables_common)
             self.dump_class(self.classs)
             try:
@@ -308,10 +316,14 @@ ANALYZE {0}.buildings;
             finally:
                 self.error_file.analyser_end()
         if self.classs_change != {}:
-            self.logger.log(u"run osmosis change analyser {0}".format(self.__class__.__name__))
-            self.error_file.analyser(self.timestamp(), self.analyser_version(), change=True)
+            self.logger.log(
+                "run osmosis change analyser {0}".format(self.__class__.__name__)
+            )
+            self.error_file.analyser(
+                self.timestamp(), self.analyser_version(), change=True
+            )
             try:
-                if hasattr(self, 'requires_tables_diff'):
+                if hasattr(self, "requires_tables_diff"):
                     self.requires_tables_build(self.requires_tables_diff)
                 self.dump_class(self.classs_change)
                 self.dump_delete()
@@ -319,15 +331,13 @@ ANALYZE {0}.buildings;
             finally:
                 self.error_file.analyser_end()
 
-
     def analyser_change_deferred_clean(self):
         if self.classs != {}:
-            if hasattr(self, 'requires_tables_common'):
+            if hasattr(self, "requires_tables_common"):
                 self.requires_tables_clean(self.requires_tables_common)
         if self.classs_change != {}:
-            if hasattr(self, 'requires_tables_diff'):
+            if hasattr(self, "requires_tables_diff"):
                 self.requires_tables_clean(self.requires_tables_diff)
-
 
     def analyser_resume(self, timestamp, already_issued_objects):
         if not self.resume_from_timestamp or self.resume_from_timestamp != timestamp:
@@ -336,95 +346,133 @@ ANALYZE {0}.buildings;
             self.already_issued_objects = already_issued_objects
         self.analyser_change()
 
-
     def analyser_resume_deferred_clean(self):
         self.analyser_change_deferred_clean()
 
-
     def requires_tables_build(self, tables):
         for table in tables:
-            self.giscurs.execute("SELECT 1 FROM pg_tables WHERE schemaname = '{0}' AND tablename = '{1}'".format(self.config.db_schema.split(',')[0], table))
+            self.giscurs.execute(
+                "SELECT 1 FROM pg_tables WHERE schemaname = '{0}' AND tablename = '{1}'".format(
+                    self.config.db_schema.split(",")[0], table
+                )
+            )
             if not self.giscurs.fetchone():
-                self.logger.log(u"requires table {0}".format(table))
-                if table == 'highways':
-                    self.giscurs.execute(self.sql_create_highways.format(self.config.db_schema.split(',')[0], self.config.options.get("proj")))
-                elif table == 'touched_highways':
+                self.logger.log("requires table {0}".format(table))
+                if table == "highways":
+                    self.giscurs.execute(
+                        self.sql_create_highways.format(
+                            self.config.db_schema.split(",")[0],
+                            self.config.options.get("proj"),
+                        )
+                    )
+                elif table == "touched_highways":
                     self.requires_tables_build(["highways"])
-                    self.create_view_touched('highways', 'W')
-                elif table == 'not_touched_highways':
+                    self.create_view_touched("highways", "W")
+                elif table == "not_touched_highways":
                     self.requires_tables_build(["highways"])
-                    self.create_view_not_touched('highways', 'W')
-                elif table == 'highway_ends':
+                    self.create_view_not_touched("highways", "W")
+                elif table == "highway_ends":
                     self.requires_tables_build(["highways"])
-                    self.giscurs.execute(self.sql_create_highway_ends.format(self.config.db_schema.split(',')[0]))
-                elif table == 'touched_highway_ends':
+                    self.giscurs.execute(
+                        self.sql_create_highway_ends.format(
+                            self.config.db_schema.split(",")[0]
+                        )
+                    )
+                elif table == "touched_highway_ends":
                     self.requires_tables_build(["highway_ends"])
-                    self.create_view_touched('highway_ends', 'W')
-                elif table == 'multipolygons':
-                    self.giscurs.execute(self.sql_create_multipolygons.format(self.config.db_schema.split(',')[0], self.config.options.get("proj")))
-                elif table == 'touched_multipolygons':
-                    self.requires_tables_build(['multipolygons'])
-                    self.create_view_touched('multipolygons', 'R')
-                elif table == 'buildings':
-                    self.giscurs.execute(self.sql_create_buildings.format(self.config.db_schema.split(',')[0], self.config.options.get("proj")))
-                elif table == 'touched_buildings':
+                    self.create_view_touched("highway_ends", "W")
+                elif table == "multipolygons":
+                    self.giscurs.execute(
+                        self.sql_create_multipolygons.format(
+                            self.config.db_schema.split(",")[0],
+                            self.config.options.get("proj"),
+                        )
+                    )
+                elif table == "touched_multipolygons":
+                    self.requires_tables_build(["multipolygons"])
+                    self.create_view_touched("multipolygons", "R")
+                elif table == "buildings":
+                    self.giscurs.execute(
+                        self.sql_create_buildings.format(
+                            self.config.db_schema.split(",")[0],
+                            self.config.options.get("proj"),
+                        )
+                    )
+                elif table == "touched_buildings":
                     self.requires_tables_build(["buildings"])
-                    self.create_view_touched('buildings', 'W')
-                elif table == 'not_touched_buildings':
+                    self.create_view_touched("buildings", "W")
+                elif table == "not_touched_buildings":
                     self.requires_tables_build(["buildings"])
-                    self.create_view_not_touched('buildings', 'W')
+                    self.create_view_not_touched("buildings", "W")
                 else:
-                    raise Exception('Unknown table name {0}'.format(table))
-                self.giscurs.execute('COMMIT')
-                self.giscurs.execute('BEGIN')
-
+                    raise Exception("Unknown table name {0}".format(table))
+                self.giscurs.execute("COMMIT")
+                self.giscurs.execute("BEGIN")
 
     def requires_tables_clean(self, tables):
         for table in tables:
-            self.logger.log(u"requires table clean {0}".format(table))
-            self.giscurs.execute('DROP TABLE IF EXISTS {0}.{1} CASCADE'.format(self.config.db_schema.split(',')[0], table))
-            self.giscurs.execute('COMMIT')
-            self.giscurs.execute('BEGIN')
+            self.logger.log("requires table clean {0}".format(table))
+            self.giscurs.execute(
+                "DROP TABLE IF EXISTS {0}.{1} CASCADE".format(
+                    self.config.db_schema.split(",")[0], table
+                )
+            )
+            self.giscurs.execute("COMMIT")
+            self.giscurs.execute("BEGIN")
 
     def db_setup_resume_from_timestamp(self, timestamp):
         self.giscurs.execute("SELECT tstamp_action FROM metainfo")
         tstamp_action = self.giscurs.fetchone()[0]
         if tstamp_action != timestamp:
             self.logger.log("osmosis resume post scripts")
-            osmosis_resume_post_scripts = [ # Scripts to run each time the database is updated
-                "/osmosis/ActionFromTimestamp.sql",
-                "/osmosis/CreateTouched.sql",
-            ]
-            for script in osmosis_resume_post_scripts: # self.config.analyser_conf.osmosis_resume_post_scripts:
-                self.giscurs.execute(open('./' + script, 'r').read().replace(':timestamp', str(timestamp)))
-            self.giscurs.execute('COMMIT')
-            self.giscurs.execute('BEGIN')
+            osmosis_resume_post_scripts = (
+                [  # Scripts to run each time the database is updated
+                    "/osmosis/ActionFromTimestamp.sql",
+                    "/osmosis/CreateTouched.sql",
+                ]
+            )
+            for (
+                script
+            ) in (
+                osmosis_resume_post_scripts
+            ):  # self.config.analyser_conf.osmosis_resume_post_scripts:
+                self.giscurs.execute(
+                    open("./" + script, "r")
+                    .read()
+                    .replace(":timestamp", str(timestamp))
+                )
+            self.giscurs.execute("COMMIT")
+            self.giscurs.execute("BEGIN")
 
     def init_analyser(self):
         if len(set(self.classs.keys()) & set(self.classs_change.keys())) > 0:
-            self.logger.log(u"Warning: duplicate class in {0}".format(self.__class__.__name__))
+            self.logger.log(
+                "Warning: duplicate class in {0}".format(self.__class__.__name__)
+            )
 
         self.giscurs.execute("SET LOCAL statement_timeout = '12h';")
-        self.giscurs.execute("SET search_path TO {0},public;".format(self.config.db_schema_path or self.config.db_schema))
-
+        self.giscurs.execute(
+            "SET search_path TO {0},public;".format(
+                self.config.db_schema_path or self.config.db_schema
+            )
+        )
 
     def dump_class(self, classs):
         for id_ in classs:
             data = classs[id_]
             self.error_file.classs(
-                id = id_,
-                item = data['item'],
-                level = data['level'],
-                tags = data.get('tags'),
-                title = data.get('title'),
-                detail = data.get('detail'),
-                fix = data.get('fix'),
-                trap = data.get('trap'),
-                example = data.get('example'),
-                source = data.get('source'),
-                resource = data.get('resource'),
+                id=id_,
+                item=data["item"],
+                level=data["level"],
+                tags=data.get("tags"),
+                title=data.get("title"),
+                detail=data.get("detail"),
+                fix=data.get("fix"),
+                trap=data.get("trap"),
+                example=data.get("example"),
+                source=data.get("source"),
+                resource=data.get("resource"),
             )
-
 
     def analyser_osmosis_common(self):
         """
@@ -446,11 +494,10 @@ ANALYZE {0}.buildings;
         """
         pass
 
-
     def dump_delete(self):
         if self.already_issued_objects:
             # Resume
-            types = {'N': 'node', 'W': 'way', 'R': 'relation'}
+            types = {"N": "node", "W": "way", "R": "relation"}
             for t, ids in self.already_issued_objects.items():
                 if ids:
                     sql = """
@@ -465,7 +512,7 @@ FROM (VALUES ({0})) AS v(id)
     LEFT JOIN {1}s AS l USING(id)
 WHERE l.id IS NULL
 """
-                    sql = sql.format('),('.join(map(str, ids)), types[t])
+                    sql = sql.format("),(".join(map(str, ids)), types[t])
                     self.giscurs.execute(sql)
                     for res in self.giscurs.fetchall():
                         self.error_file.delete(types[t], res[0])
@@ -482,8 +529,7 @@ SELECT id FROM touched_{1}s
                 for res in self.giscurs.fetchall():
                     self.error_file.delete(t, res[0])
 
-
-    def create_view_touched(self, table, type, id = 'id'):
+    def create_view_touched(self, table, type, id="id"):
         """
         @param type in 'N', 'W', 'R'
         """
@@ -499,7 +545,7 @@ FROM
 """
         self.giscurs.execute(sql.format(table, type, id))
 
-    def create_view_not_touched(self, table, type, id = 'id'):
+    def create_view_not_touched(self, table, type, id="id"):
         """
         @param type in 'N', 'W', 'R'
         """
@@ -517,10 +563,18 @@ WHERE
 """
         self.giscurs.execute(sql.format(table, type, id))
 
-    def run00(self, sql, callback = None):
+    def run00(self, sql, callback=None):
         if self.explain_sql:
             self.logger.log(sql.strip())
-        if self.explain_sql and (sql.strip().startswith("SELECT") or sql.strip().startswith("CREATE UNLOGGED TABLE")) and not ';' in sql[:-1] and " AS " in sql:
+        if (
+            self.explain_sql
+            and (
+                sql.strip().startswith("SELECT")
+                or sql.strip().startswith("CREATE UNLOGGED TABLE")
+            )
+            and ";" not in sql[:-1]
+            and " AS " in sql
+        ):
             sql_explain = "EXPLAIN " + sql.split(";")[0]
             self.giscurs.execute(sql_explain)
             for res in self.giscurs.fetchall():
@@ -546,12 +600,14 @@ WHERE
                         self.logger.err("ret={0}".format(ret))
                         raise
 
-    def run0(self, sql, callback = None):
+    def run0(self, sql, callback=None):
         caller = getframeinfo(stack()[1][0])
-        self.logger.log("{0}:{1} sql".format(os.path.basename(caller.filename), caller.lineno))
+        self.logger.log(
+            "{0}:{1} sql".format(os.path.basename(caller.filename), caller.lineno)
+        )
         self.run00(sql, callback)
 
-    def run(self, sql, callback = None):
+    def run(self, sql, callback=None):
         def callback_package(res):
             ret = callback(res)
             if ret and ret.__class__ == dict:
@@ -560,7 +616,7 @@ WHERE
                 if "data" in ret:
                     self.geom = defaultdict(list)
                     ret["fixType"] = []
-                    for (i, d) in enumerate(ret["data"]):
+                    for i, d in enumerate(ret["data"]):
                         if d is not None:
                             d(res[i])
                             ret["fixType"].append(self._typeFromCallback(d, res[i]))
@@ -573,14 +629,21 @@ WHERE
                     res,
                     ret.get("fixType"),
                     ret.get("fix"),
-                    self.geom)
+                    self.geom,
+                )
 
         caller = getframeinfo(stack()[1][0])
         if callback:
-            self.logger.log("{0}:{1} xml generation".format(os.path.basename(caller.filename), caller.lineno))
+            self.logger.log(
+                "{0}:{1} xml generation".format(
+                    os.path.basename(caller.filename), caller.lineno
+                )
+            )
             self.run00(sql, callback_package)
         else:
-            self.logger.log("{0}:{1} sql".format(os.path.basename(caller.filename), caller.lineno))
+            self.logger.log(
+                "{0}:{1} sql".format(os.path.basename(caller.filename), caller.lineno)
+            )
             self.run00(sql)
 
     def _typeFromCallback(self, fn, input=None):
@@ -596,7 +659,7 @@ WHERE
             return self._typeFromCallback(self.typeMapping_id_only[input[0]])
 
     def node(self, res):
-        self.geom["node"].append({"id":res, "tag":{}})
+        self.geom["node"].append({"id": res, "tag": {}})
 
     def node_full(self, res):
         self.geom["node"].append(self.apiconn.NodeGet(res))
@@ -604,19 +667,21 @@ WHERE
     def node_position(self, res):
         node = self.apiconn.NodeGet(res)
         if node:
-            self.geom["position"].append({'lat': str(node['lat']), 'lon': str(node['lon'])})
+            self.geom["position"].append(
+                {"lat": str(node["lat"]), "lon": str(node["lon"])}
+            )
 
     def node_new(self, res):
         pass
 
     def way(self, res):
-        self.geom["way"].append({"id":res, "nd":[], "tag":{}})
+        self.geom["way"].append({"id": res, "nd": [], "tag": {}})
 
     def way_full(self, res):
         self.geom["way"].append(self.apiconn.WayGet(res))
 
     def relation(self, res):
-        self.geom["relation"].append({"id":res, "member":[], "tag":{}})
+        self.geom["relation"].append({"id": res, "member": [], "tag": {}})
 
     def relation_full(self, res):
         self.geom["relation"].append(self.apiconn.RelationGet(res))
@@ -641,7 +706,7 @@ WHERE
         pts = []
         for r in self.re_points.findall(text):
             lon, lat = r[1:-1].split(" ")
-            pts.append({"lat":lat, "lon":lon})
+            pts.append({"lat": lat, "lon": lon})
         return pts
 
     def positionAsText(self, res):
@@ -651,6 +716,7 @@ WHERE
         for loc in self.get_points(res):
             self.geom["position"].append(loc)
 
+
 #    def positionWay(self, res):
 #        self.geom["position"].append()
 
@@ -658,9 +724,10 @@ WHERE
 #        self.geom["position"].append()
 
 
+from modules import IssuesFileOsmose
+
 ###########################################################################
 from .Analyser import TestAnalyser
-from modules import IssuesFileOsmose
 
 
 class TestAnalyserOsmosis(TestAnalyser):
@@ -671,20 +738,34 @@ class TestAnalyserOsmosis(TestAnalyser):
     @classmethod
     def load_osm(cls, osm_file, dst, analyser_options=None, skip_db=False):
         import modules.OsmOsisManager
+
         (conf, analyser_conf) = cls.init_config(osm_file, dst, analyser_options)
+
         class c_options:
             import_tool = "osmosis"
+
         options = c_options()
 
         if not skip_db:
             import pytest
-            osmosis_manager = modules.OsmOsisManager.OsmOsisManager(conf, conf.db_host, conf.db_user, conf.db_password, conf.db_base, conf.db_schema or conf.country, conf.db_persistent, cls.logger)
+
+            osmosis_manager = modules.OsmOsisManager.OsmOsisManager(
+                conf,
+                conf.db_host,
+                conf.db_user,
+                conf.db_password,
+                conf.db_base,
+                conf.db_schema or conf.country,
+                conf.db_persistent,
+                cls.logger,
+            )
             if not osmosis_manager.check_database():
                 pytest.skip("database not present")
             osmosis_manager.init_database(conf, options)
 
         # create directory for results
         import os
+
         for i in ["normal", "diff_empty", "diff_full"]:
             dirname = os.path.join(os.path.dirname(dst), i)
             try:
@@ -707,32 +788,59 @@ class TestAnalyserOsmosis(TestAnalyser):
     def clean(cls):
         # clean database
         import modules.OsmOsisManager
-        osmosis_manager = modules.OsmOsisManager.OsmOsisManager(cls.conf, cls.conf.db_host, cls.conf.db_user, cls.conf.db_password, cls.conf.db_base, cls.conf.db_schema or cls.conf.country, cls.conf.db_persistent, cls.logger)
+
+        osmosis_manager = modules.OsmOsisManager.OsmOsisManager(
+            cls.conf,
+            cls.conf.db_host,
+            cls.conf.db_user,
+            cls.conf.db_password,
+            cls.conf.db_base,
+            cls.conf.db_schema or cls.conf.country,
+            cls.conf.db_persistent,
+            cls.logger,
+        )
         osmosis_manager.clean_database(cls.conf, False)
 
         # clean results file
         import os
+
         try:
             os.remove(cls.xml_res_file)
         except OSError:
             pass
 
+
 class Test(TestAnalyserOsmosis):
     from modules import config
+
     default_xml_res_path = config.dir_tmp + "/tests/osmosis/"
 
     @classmethod
     def setup_class(cls):
         TestAnalyserOsmosis.setup_class()
-        cls.analyser_conf = cls.load_osm("tests/osmosis.test.osm",
-                                         cls.default_xml_res_path + "osmosis.test.xml",
-                                         {"test": True,
-                                          "addr:city-admin_level": "8,9",
-                                          "driving_side": "left",
-                                          "proj": 2969})
+        cls.analyser_conf = cls.load_osm(
+            "tests/osmosis.test.osm",
+            cls.default_xml_res_path + "osmosis.test.xml",
+            {
+                "test": True,
+                "addr:city-admin_level": "8,9",
+                "driving_side": "left",
+                "proj": 2969,
+            },
+        )
 
         import modules.OsmOsisManager
-        cls.conf.osmosis_manager = modules.OsmOsisManager.OsmOsisManager(cls.conf, cls.conf.db_host, cls.conf.db_user, cls.conf.db_password, cls.conf.db_base, cls.conf.db_schema or cls.conf.country, cls.conf.db_persistent, cls.logger)
+
+        cls.conf.osmosis_manager = modules.OsmOsisManager.OsmOsisManager(
+            cls.conf,
+            cls.conf.db_host,
+            cls.conf.db_user,
+            cls.conf.db_password,
+            cls.conf.db_base,
+            cls.conf.db_schema or cls.conf.country,
+            cls.conf.db_persistent,
+            cls.logger,
+        )
 
     def test(self):
         # run all available osmosis analysers, for basic SQL check
@@ -745,11 +853,18 @@ class Test(TestAnalyserOsmosis):
                 continue
             analyser = importlib.import_module("analysers." + fn[:-3], package=".")
             for name, obj in inspect.getmembers(analyser):
-                if (inspect.isclass(obj) and obj.__module__ == ("analysers." + fn[:-3]) and
-                    (name.startswith("Analyser") or name.startswith("analyser"))):
+                if (
+                    inspect.isclass(obj)
+                    and obj.__module__ == ("analysers." + fn[:-3])
+                    and (name.startswith("Analyser") or name.startswith("analyser"))
+                ):
 
-                    self.xml_res_file = self.default_xml_res_path + "normal/{0}.xml".format(name)
-                    self.analyser_conf.error_file = IssuesFileOsmose.IssuesFileOsmose(self.xml_res_file)
+                    self.xml_res_file = (
+                        self.default_xml_res_path + "normal/{0}.xml".format(name)
+                    )
+                    self.analyser_conf.error_file = IssuesFileOsmose.IssuesFileOsmose(
+                        self.xml_res_file
+                    )
 
                     with obj(self.analyser_conf, self.logger) as analyser_obj:
                         analyser_obj.analyser()
@@ -778,11 +893,18 @@ class Test(TestAnalyserOsmosis):
                 continue
             analyser = importlib.import_module("analysers." + fn[:-3], package=".")
             for name, obj in inspect.getmembers(analyser):
-                if (inspect.isclass(obj) and obj.__module__ == ("analysers." + fn[:-3]) and
-                    (name.startswith("Analyser") or name.startswith("analyser"))):
+                if (
+                    inspect.isclass(obj)
+                    and obj.__module__ == ("analysers." + fn[:-3])
+                    and (name.startswith("Analyser") or name.startswith("analyser"))
+                ):
 
-                    self.xml_res_file = self.default_xml_res_path + "diff_empty/{0}.xml".format(name)
-                    self.analyser_conf.error_file = IssuesFileOsmose.IssuesFileOsmose(self.xml_res_file)
+                    self.xml_res_file = (
+                        self.default_xml_res_path + "diff_empty/{0}.xml".format(name)
+                    )
+                    self.analyser_conf.error_file = IssuesFileOsmose.IssuesFileOsmose(
+                        self.xml_res_file
+                    )
 
                     with obj(self.analyser_conf, self.logger) as analyser_obj:
                         analyser_obj.analyser_change()
@@ -801,10 +923,12 @@ class Test(TestAnalyserOsmosis):
         for script in self.conf.osmosis_change_init_post_scripts:
             self.conf.osmosis_manager.psql_f(script)
 
-        self.conf.osmosis_manager.psql_c("TRUNCATE TABLE actions;"
-                                         "INSERT INTO actions (SELECT 'R', 'C', id FROM relations);"
-                                         "INSERT INTO actions (SELECT 'W', 'C', id FROM ways);"
-                                         "INSERT INTO actions (SELECT 'N', 'C', id FROM nodes);")
+        self.conf.osmosis_manager.psql_c(
+            "TRUNCATE TABLE actions;"
+            "INSERT INTO actions (SELECT 'R', 'C', id FROM relations);"
+            "INSERT INTO actions (SELECT 'W', 'C', id FROM ways);"
+            "INSERT INTO actions (SELECT 'N', 'C', id FROM nodes);"
+        )
 
         for script in self.conf.osmosis_change_post_scripts:
             self.conf.osmosis_manager.psql_f(script)
@@ -814,11 +938,18 @@ class Test(TestAnalyserOsmosis):
                 continue
             analyser = importlib.import_module("analysers." + fn[:-3], package=".")
             for name, obj in inspect.getmembers(analyser):
-                if (inspect.isclass(obj) and obj.__module__ == ("analysers." + fn[:-3]) and
-                    (name.startswith("Analyser") or name.startswith("analyser"))):
+                if (
+                    inspect.isclass(obj)
+                    and obj.__module__ == ("analysers." + fn[:-3])
+                    and (name.startswith("Analyser") or name.startswith("analyser"))
+                ):
 
-                    self.xml_res_file = self.default_xml_res_path + "diff_full/{0}.xml".format(name)
-                    self.analyser_conf.error_file = IssuesFileOsmose.IssuesFileOsmose(self.xml_res_file)
+                    self.xml_res_file = (
+                        self.default_xml_res_path + "diff_full/{0}.xml".format(name)
+                    )
+                    self.analyser_conf.error_file = IssuesFileOsmose.IssuesFileOsmose(
+                        self.xml_res_file
+                    )
 
                     with obj(self.analyser_conf, self.logger) as analyser_obj:
                         analyser_obj.analyser_change()
@@ -838,13 +969,20 @@ class Test(TestAnalyserOsmosis):
                 continue
             analyser = importlib.import_module("analysers." + fn[:-3], package=".")
             for name, obj in inspect.getmembers(analyser):
-                if (inspect.isclass(obj) and obj.__module__ == ("analysers." + fn[:-3]) and
-                    (name.startswith("Analyser") or name.startswith("analyser"))):
+                if (
+                    inspect.isclass(obj)
+                    and obj.__module__ == ("analysers." + fn[:-3])
+                    and (name.startswith("Analyser") or name.startswith("analyser"))
+                ):
 
-                    normal_xml = (self.default_xml_res_path +
-                                "normal/{0}.xml".format(name))
-                    change_xml = (self.default_xml_res_path +
-                                "diff_full/{0}.xml".format(name))
+                    normal_xml = self.default_xml_res_path + "normal/{0}.xml".format(
+                        name
+                    )
+                    change_xml = self.default_xml_res_path + "diff_full/{0}.xml".format(
+                        name
+                    )
 
                     print(normal_xml, change_xml)
-                    self.compare_results(normal_xml, change_xml, convert_checked_to_normal=True)
+                    self.compare_results(
+                        normal_xml, change_xml, convert_checked_to_normal=True
+                    )

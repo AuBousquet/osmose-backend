@@ -1,26 +1,27 @@
 #!/usr/bin/env python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-##                                                                       ##
-## Copyrights Frédéric Rodrigo 2017                                      ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
-###########################################################################
+#########################################################################
+#                                                                       #
+# Copyrights Frédéric Rodrigo 2017                                      #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#                                                                       #
+#########################################################################
 
 from modules.OsmoseTranslation import T_
+
 from .Analyser_Osmosis import Analyser_Osmosis
 
 sql10 = """
@@ -73,53 +74,100 @@ GROUP BY
   linestring
 """
 
+
 class Analyser_Osmosis_Relation_Route_Access(Analyser_Osmosis):
 
-    def __init__(self, config, logger = None):
+    def __init__(self, config, logger=None):
         Analyser_Osmosis.__init__(self, config, logger)
         self.map = {
-            'bicycle': {
-                'class': 1,
-                'access_tag': 'bicycle',
-                'no_access': "'no', 'false', 'private', 'discouraged'",
-                'highway_overide': "'footway', 'pedestrian', 'trunk', 'motorway', 'trunk_link', 'motorway_link'",
-                'highway_overide_access': "'yes', 'permissive', 'true', 'designated', 'shoulder', 'dismount'",
-                'dedicated': 'cycleway',
+            "bicycle": {
+                "class": 1,
+                "access_tag": "bicycle",
+                "no_access": "'no', 'false', 'private', 'discouraged'",
+                "highway_overide": "'footway', 'pedestrian', 'trunk', 'motorway', 'trunk_link', 'motorway_link'",
+                "highway_overide_access": "'yes', 'permissive', 'true', 'designated', 'shoulder', 'dismount'",
+                "dedicated": "cycleway",
             },
-            'foot': {
-                'class': 2,
-                'access_tag': 'foot',
-                'no_access': "'no', 'false', 'private', 'discouraged'",
-                'highway_overide': "'trunk', 'motorway', 'trunk_link', 'motorway_link'", # 'cycleway' default for foot depends on country
-                'highway_overide_access': "'yes', 'permissive', 'true', 'designated'",
-                'dedicated': 'sidewalk',
+            "foot": {
+                "class": 2,
+                "access_tag": "foot",
+                "no_access": "'no', 'false', 'private', 'discouraged'",
+                "highway_overide": "'trunk', 'motorway', 'trunk_link', 'motorway_link'",  # 'cycleway' default for foot depends on country
+                "highway_overide_access": "'yes', 'permissive', 'true', 'designated'",
+                "dedicated": "sidewalk",
             },
-            'hiking': { # Same as foot
-                'class': 3,
-                'access_tag': 'foot',
-                'no_access': "'no', 'false', 'private', 'discouraged'",
-                'highway_overide': "'trunk', 'motorway', 'trunk_link', 'motorway_link'", # 'cycleway' default for foot depends on country
-                'highway_overide_access': "'yes', 'permissive', 'true', 'designated'",
-                'dedicated': 'sidewalk',
+            "hiking": {  # Same as foot
+                "class": 3,
+                "access_tag": "foot",
+                "no_access": "'no', 'false', 'private', 'discouraged'",
+                "highway_overide": "'trunk', 'motorway', 'trunk_link', 'motorway_link'",  # 'cycleway' default for foot depends on country
+                "highway_overide_access": "'yes', 'permissive', 'true', 'designated'",
+                "dedicated": "sidewalk",
             },
         }
         for route_type, access in self.map.items():
-            self.classs_change[access['class']] = self.def_class(item = 3240, level = 2, tags = ['relation', 'routing'],
-                title = T_('Way access mismatch relation route={0}', route_type),
-                fix = T_('''Check if the route should indeed use this highway.
+            self.classs_change[access["class"]] = self.def_class(
+                item=3240,
+                level=2,
+                tags=["relation", "routing"],
+                title=T_("Way access mismatch relation route={0}", route_type),
+                fix=T_(
+                    """Check if the route should indeed use this highway.
 If not, move the route so that it follows the designated paths.
 This could require shifting the route to separately drawn parallel highways.
 
-If you are sure that the route should follow this way, consider adding `{0}=yes`.''', access['access_tag']))
+If you are sure that the route should follow this way, consider adding `{0}=yes`.""",
+                    access["access_tag"],
+                ),
+            )
 
     def callback10(self, clazz):
-        return lambda res: {'class':clazz, 'data':[self.way_full, self.relation_full, self.positionAsText] }
+        return lambda res: {
+            "class": clazz,
+            "data": [self.way_full, self.relation_full, self.positionAsText],
+        }
 
     def analyser_osmosis_full(self):
         for route_type, access in self.map.items():
-            self.run(sql10.format('', '', route_type, access['access_tag'], access['no_access'], access['highway_overide'], access['highway_overide_access'], access['dedicated']), self.callback10(access['class']))
+            self.run(
+                sql10.format(
+                    "",
+                    "",
+                    route_type,
+                    access["access_tag"],
+                    access["no_access"],
+                    access["highway_overide"],
+                    access["highway_overide_access"],
+                    access["dedicated"],
+                ),
+                self.callback10(access["class"]),
+            )
 
     def analyser_osmosis_diff(self):
         for route_type, access in self.map.items():
-            self.run(sql10.format('', 'touched_', route_type, access['access_tag'], access['no_access'], access['highway_overide'], access['highway_overide_access'], access['dedicated']), self.callback10(access['class']))
-            self.run(sql10.format('touched_', 'not_touched_', route_type, access['access_tag'], access['no_access'], access['highway_overide'], access['highway_overide_access'], access['dedicated']), self.callback10(access['class']))
+            self.run(
+                sql10.format(
+                    "",
+                    "touched_",
+                    route_type,
+                    access["access_tag"],
+                    access["no_access"],
+                    access["highway_overide"],
+                    access["highway_overide_access"],
+                    access["dedicated"],
+                ),
+                self.callback10(access["class"]),
+            )
+            self.run(
+                sql10.format(
+                    "touched_",
+                    "not_touched_",
+                    route_type,
+                    access["access_tag"],
+                    access["no_access"],
+                    access["highway_overide"],
+                    access["highway_overide_access"],
+                    access["dedicated"],
+                ),
+                self.callback10(access["class"]),
+            )

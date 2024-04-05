@@ -1,33 +1,34 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 ###########################################################################
-##                                                                       ##
-## Copyrights Francois Gouget fgouget free.fr 2017                       ##
-##                                                                       ##
-## This program is free software: you can redistribute it and/or modify  ##
-## it under the terms of the GNU General Public License as published by  ##
-## the Free Software Foundation, either version 3 of the License, or     ##
-## (at your option) any later version.                                   ##
-##                                                                       ##
-## This program is distributed in the hope that it will be useful,       ##
-## but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
-## GNU General Public License for more details.                          ##
-##                                                                       ##
-## You should have received a copy of the GNU General Public License     ##
-## along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
-##                                                                       ##
+#                                                                       ##
+# Copyrights Francois Gouget fgouget free.fr 2017                       ##
+#                                                                       ##
+# This program is free software: you can redistribute it and/or modify  ##
+# it under the terms of the GNU General Public License as published by  ##
+# the Free Software Foundation, either version 3 of the License, or     ##
+# (at your option) any later version.                                   ##
+#                                                                       ##
+# This program is distributed in the hope that it will be useful,       ##
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        ##
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ##
+# GNU General Public License for more details.                          ##
+#                                                                       ##
+# You should have received a copy of the GNU General Public License     ##
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. ##
+#                                                                       ##
 ###########################################################################
+
+import re
 
 from modules.OsmoseTranslation import T_
-from plugins.Plugin import Plugin
 from modules.Stablehash import stablehash64
-import re
+from plugins.Plugin import Plugin
 
 
 class Phone(Plugin):
 
-    PHONE_TAGS = set((u"contact:fax", u"contact:phone", u"fax", u"phone"))
+    PHONE_TAGS = set(("contact:fax", "contact:phone", "fax", "phone"))
 
     def init(self, logger):
         Plugin.init(self, logger)
@@ -41,45 +42,87 @@ class Phone(Plugin):
         if self.size_short and not isinstance(self.size_short, list):
             self.size_short = [self.size_short]
         self.format = self.father.config.options.get("phone_format")
-        self.international_prefix = self.father.config.options.get("phone_international")
+        self.international_prefix = self.father.config.options.get(
+            "phone_international"
+        )
         self.local_prefix = self.father.config.options.get("phone_local_prefix")
-        self.values_separators = self.father.config.options.get("phone_values_separators", [' / ', ' - ', ','])
+        self.values_separators = self.father.config.options.get(
+            "phone_values_separators", [" / ", " - ", ","]
+        )
         self.suffix_separators = self.father.config.options.get("suffix_separators")
 
         if self.format:
-            self.errors[30920] = self.def_class(item = 3092, level = 2, tags = ['value', 'fix:chair'],
-                title = T_('Phone number does not match the expected format'))
+            self.errors[30920] = self.def_class(
+                item=3092,
+                level=2,
+                tags=["value", "fix:chair"],
+                title=T_("Phone number does not match the expected format"),
+            )
         if self.local_prefix:
-            self.errors[30921] = self.def_class(item = 3092, level = 2, tags = ['value', 'fix:chair'],
-                title = T_('Extra "{0}" after international code', self.local_prefix))
+            self.errors[30921] = self.def_class(
+                item=3092,
+                level=2,
+                tags=["value", "fix:chair"],
+                title=T_('Extra "{0}" after international code', self.local_prefix),
+            )
         if self.size_short:
-            self.errors[30922] = self.def_class(item = 3092, level = 2, tags = ['value', 'fix:chair'],
-                title = T_('Local short code can not be internationalized'))
-        self.errors[30923] = self.def_class(item = 3092, level = 3, tags = ['value', 'fix:chair'],
-            title = T_('Missing international prefix'))
-        self.errors[30924] = self.def_class(item = 3092, level = 3, tags = ['value', 'fix:chair'],
-            title = T_('Bad international prefix'))
-        self.errors[30925] = self.def_class(item = 3092, level = 3, tags = ['value', 'fix:chair'],
-            title = T_('Prohibited char in phone number'))
-        self.errors[30926] = self.def_class(item = 3092, level = 3, tags = ['value', 'fix:chair'],
-            title = T_('Bad separator for multiple values'))
+            self.errors[30922] = self.def_class(
+                item=3092,
+                level=2,
+                tags=["value", "fix:chair"],
+                title=T_("Local short code can not be internationalized"),
+            )
+        self.errors[30923] = self.def_class(
+            item=3092,
+            level=3,
+            tags=["value", "fix:chair"],
+            title=T_("Missing international prefix"),
+        )
+        self.errors[30924] = self.def_class(
+            item=3092,
+            level=3,
+            tags=["value", "fix:chair"],
+            title=T_("Bad international prefix"),
+        )
+        self.errors[30925] = self.def_class(
+            item=3092,
+            level=3,
+            tags=["value", "fix:chair"],
+            title=T_("Prohibited char in phone number"),
+        )
+        self.errors[30926] = self.def_class(
+            item=3092,
+            level=3,
+            tags=["value", "fix:chair"],
+            title=T_("Bad separator for multiple values"),
+        )
 
         country = self.father.config.options.get("country")
 
         if self.code and self.local_prefix:
             # Regular numbers must not have a local_prefix (aka "0") after +[code]
-            self.InternationalAndLocalPrefix = re.compile(r"^[+]{0}[- ./]*{1}((?:[- ./]*[0-9])+)$".format(self.code, self.local_prefix))
+            self.InternationalAndLocalPrefix = re.compile(
+                r"^[+]{0}[- ./]*{1}((?:[- ./]*[0-9])+)$".format(
+                    self.code, self.local_prefix
+                )
+            )
         else:
             self.InternationalAndLocalPrefix = None
 
         if self.size_short:
             # Short numbers cannot be internationalized
-            self.BadShort = re.compile(r"^[+]{0}[- ./]*([0-9]{{{1},{2}}})$".format(self.code, min(self.size_short), max(self.size_short)))
+            self.BadShort = re.compile(
+                r"^[+]{0}[- ./]*([0-9]{{{1},{2}}})$".format(
+                    self.code, min(self.size_short), max(self.size_short)
+                )
+            )
         else:
             self.BadShort = None
 
         if self.international_prefix:
-            self.InternationalPrefix = re.compile(r"^{0}(.*)".format(self.international_prefix))
+            self.InternationalPrefix = re.compile(
+                r"^{0}(.*)".format(self.international_prefix)
+            )
         else:
             self.InternationalPrefix = None
 
@@ -88,17 +131,37 @@ class Phone(Plugin):
                 # Local numbers to internationalize. Note that in addition to
                 # short numbers this also skips special numbers starting with 08
                 # or 09 since these may or may not be callable from abroad.
-                self.MissingInternationalPrefix = re.compile(r"^{0}[- ./]*([1-7](:?[- ./]*[0-9]){{{1},{2}}})$".format(self.local_prefix, min(self.size) - 1, max(self.size) - 1))
+                self.MissingInternationalPrefix = re.compile(
+                    r"^{0}[- ./]*([1-7](:?[- ./]*[0-9]){{{1},{2}}})$".format(
+                        self.local_prefix, min(self.size) - 1, max(self.size) - 1
+                    )
+                )
             elif self.size:
-                self.MissingInternationalPrefix = re.compile(r"^{0}[- ./]*((:?[0-9][- ./]*){{{1},{2}}}[0-9])$".format(self.local_prefix, min(self.size) - len(self.local_prefix) - 1, max(self.size) - len(self.local_prefix) - 1))
+                self.MissingInternationalPrefix = re.compile(
+                    r"^{0}[- ./]*((:?[0-9][- ./]*){{{1},{2}}}[0-9])$".format(
+                        self.local_prefix,
+                        min(self.size) - len(self.local_prefix) - 1,
+                        max(self.size) - len(self.local_prefix) - 1,
+                    )
+                )
             else:
-                self.MissingInternationalPrefix = re.compile(r"^{0}[- ./]*((:?[0-9][- ./]*)+[0-9])$".format(self.local_prefix))
+                self.MissingInternationalPrefix = re.compile(
+                    r"^{0}[- ./]*((:?[0-9][- ./]*)+[0-9])$".format(self.local_prefix)
+                )
         else:
             if country and country.startswith("IT"):
                 # Only non toll-free numbers are callable from abroad.
-                self.MissingInternationalPrefix = re.compile(r"^([03](:?[0-9][- ./]*){{{0},{1}}})$".format(min(self.size) - 1, max(self.size) - 1))
+                self.MissingInternationalPrefix = re.compile(
+                    r"^([03](:?[0-9][- ./]*){{{0},{1}}})$".format(
+                        min(self.size) - 1, max(self.size) - 1
+                    )
+                )
             else:
-                self.MissingInternationalPrefix = re.compile(r"^((:?[0-9][- ./]*){{{0},{1}}}[0-9])$".format(min(self.size) - 1, max(self.size) - 1))
+                self.MissingInternationalPrefix = re.compile(
+                    r"^((:?[0-9][- ./]*){{{0},{1}}}[0-9])$".format(
+                        min(self.size) - 1, max(self.size) - 1
+                    )
+                )
 
         if self.format:
             self.Format = re.compile(self.format % self.code)
@@ -111,7 +174,7 @@ class Phone(Plugin):
             if tag not in tags:
                 continue
             phone = tags[tag]
-            if u';' in phone:
+            if ";" in phone:
                 continue  # Ignore multiple phone numbers
 
             if self.suffix_separators is not None:
@@ -121,49 +184,104 @@ class Phone(Plugin):
                 p = phone
                 for sep in self.values_separators:
                     if sep in phone:
-                        phone = phone.replace(sep, '; ')
+                        phone = phone.replace(sep, "; ")
                 if p != phone:
-                    phone = phone.replace('  ', ' ')
-                    err.append({"class": 30926, "subclass": stablehash64(tag), "text": T_("Concerns tag: `{0}`", '='.join([tag, phone])), "fix": {tag: phone.replace(' / ', '; ').replace(' - ', '; ').replace(',', ';')}})
+                    phone = phone.replace("  ", " ")
+                    err.append(
+                        {
+                            "class": 30926,
+                            "subclass": stablehash64(tag),
+                            "text": T_("Concerns tag: `{0}`", "=".join([tag, phone])),
+                            "fix": {
+                                tag: phone.replace(" / ", "; ")
+                                .replace(" - ", "; ")
+                                .replace(",", ";")
+                            },
+                        }
+                    )
                     continue
 
             phone_test = phone
-            for c in '+0123456789 -./()':
-                phone_test = phone_test.replace(c, '')
+            for c in "+0123456789 -./()":
+                phone_test = phone_test.replace(c, "")
             if len(phone_test) > 0:
-                err.append({"class": 30925, "subclass": stablehash64(tag), "text": T_("Not allowed char \"{0}\" in phone number tag \"{1}\"", phone_test, tag)})
+                err.append(
+                    {
+                        "class": 30925,
+                        "subclass": stablehash64(tag),
+                        "text": T_(
+                            'Not allowed char "{0}" in phone number tag "{1}"',
+                            phone_test,
+                            tag,
+                        ),
+                    }
+                )
                 continue
 
             # Before local prefix
             if self.InternationalPrefix:
                 r = self.InternationalPrefix.match(phone)
                 if r:
-                    err.append({"class": 30924, "subclass": stablehash64(tag), "text": T_("Concerns tag: `{0}`", '='.join([tag, phone])), "fix": {tag: "+" + r.group(1)}})
+                    err.append(
+                        {
+                            "class": 30924,
+                            "subclass": stablehash64(tag),
+                            "text": T_("Concerns tag: `{0}`", "=".join([tag, phone])),
+                            "fix": {tag: "+" + r.group(1)},
+                        }
+                    )
                     continue
 
             if self.InternationalAndLocalPrefix:
                 r = self.InternationalAndLocalPrefix.match(phone)
                 if r:
-                    err.append({"class": 30921, "subclass": stablehash64(tag), "text": T_("Concerns tag: `{0}`", '='.join([tag, phone])), "fix": {tag: "+" + self.code + " " + r.group(1)}})
+                    err.append(
+                        {
+                            "class": 30921,
+                            "subclass": stablehash64(tag),
+                            "text": T_("Concerns tag: `{0}`", "=".join([tag, phone])),
+                            "fix": {tag: "+" + self.code + " " + r.group(1)},
+                        }
+                    )
                     continue
 
             if self.MissingInternationalPrefix:
                 r = self.MissingInternationalPrefix.match(phone)
                 if r:
-                    err.append({"class": 30923, "subclass": stablehash64(tag), "text": T_("Concerns tag: `{0}`", '='.join([tag, phone])), "fix": {tag: "+" + self.code + " " + r.group(1)}})
+                    err.append(
+                        {
+                            "class": 30923,
+                            "subclass": stablehash64(tag),
+                            "text": T_("Concerns tag: `{0}`", "=".join([tag, phone])),
+                            "fix": {tag: "+" + self.code + " " + r.group(1)},
+                        }
+                    )
                     continue
 
             if self.BadShort:
                 r = self.BadShort.match(phone)
                 if r:
-                    err.append({"class": 30922, "subclass": stablehash64(tag), "text": T_("Concerns tag: `{0}`", '='.join([tag, phone])), "fix": {tag: r.group(1)}})
+                    err.append(
+                        {
+                            "class": 30922,
+                            "subclass": stablehash64(tag),
+                            "text": T_("Concerns tag: `{0}`", "=".join([tag, phone])),
+                            "fix": {tag: r.group(1)},
+                        }
+                    )
                     continue
 
             # Last
             if self.Format:
                 r = self.Format.match(phone)
                 if not r:
-                    err.append({"class": 30920, "subclass": stablehash64(tag), "text": T_("Concerns tag: `{0}`", '='.join([tag, phone])) })
+                    err.append(
+                        {
+                            "class": 30920,
+                            "subclass": stablehash64(tag),
+                            "text": T_("Concerns tag: `{0}`", "=".join([tag, phone])),
+                        }
+                    )
                     continue
 
         return err
@@ -181,26 +299,38 @@ class Phone(Plugin):
 ###########################################################################
 from plugins.Plugin import TestPluginCommon
 
+
 class Test(TestPluginCommon):
     def test_FR(self):
         p = Phone(None)
+
         class _config:
-            options = {"country": "FR", "phone_code": "33", "phone_len": 9, "phone_len_short": [4, 6], "phone_format": r"^([+]%s([- ./]*[0-9]){8}[0-9])|[0-9]{4}|[0-9]{6}$", "phone_international": "00", "phone_local_prefix": "0"}
+            options = {
+                "country": "FR",
+                "phone_code": "33",
+                "phone_len": 9,
+                "phone_len_short": [4, 6],
+                "phone_format": r"^([+]%s([- ./]*[0-9]){8}[0-9])|[0-9]{4}|[0-9]{6}$",
+                "phone_international": "00",
+                "phone_local_prefix": "0",
+            }
+
         class father:
             config = _config()
+
         p.father = father()
         p.init(None)
 
-        for (bad, good) in (
-            (u"+330102030405", u"+33 102030405"),
-            (u"0033 102030405", u"+33 102030405"),
-            (u"12 / 13", u"12; 13"),
+        for bad, good in (
+            ("+330102030405", "+33 102030405"),
+            ("0033 102030405", "+33 102030405"),
+            ("12 / 13", "12; 13"),
             # Preserve formatting
-            (u"+33 0102030405", u"+33 102030405"),
-            (u"+33  01 02 03 04 05", u"+33 1 02 03 04 05"),
-            (u"+33  3631", u"3631"),
-            (u"0102030405", u"+33 102030405"),
-            (u"01 02 03 04 05", u"+33 1 02 03 04 05"),
+            ("+33 0102030405", "+33 102030405"),
+            ("+33  01 02 03 04 05", "+33 1 02 03 04 05"),
+            ("+33  3631", "3631"),
+            ("0102030405", "+33 102030405"),
+            ("01 02 03 04 05", "+33 1 02 03 04 05"),
         ):
             # Check the bad number's error and fix
             err = p.node(None, {"phone": bad})
@@ -208,27 +338,38 @@ class Test(TestPluginCommon):
             self.assertEqual(err[0]["fix"]["phone"], good)
 
             # The correct number does not need fixing
-            assert not p.node(None, {"phone": good}), ("phone='{0}'".format(good))
+            assert not p.node(None, {"phone": good}), "phone='{0}'".format(good)
 
         # Verify we got no error for other correct numbers
-        for good in (u"3631", u"118987", u"1;2"):
-            assert not p.node(None, {"phone": good}), ("phone='{0}'".format(good))
+        for good in ("3631", "118987", "1;2"):
+            assert not p.node(None, {"phone": good}), "phone='{0}'".format(good)
 
-        assert len(p.node(None, {"phone": "09.72.42.42.42", "fax": "09.72.42.42.42"})) == 2
+        assert (
+            len(p.node(None, {"phone": "09.72.42.42.42", "fax": "09.72.42.42.42"})) == 2
+        )
 
     def test_NC(self):
         p = Phone(None)
+
         class _config:
-            options = {"country": "NC", "phone_code": "687", "phone_len": 6, "phone_format": r"^[+]%s([- ./]*[0-9]){5}[0-9]$", "phone_international": "00"}
+            options = {
+                "country": "NC",
+                "phone_code": "687",
+                "phone_len": 6,
+                "phone_format": r"^[+]%s([- ./]*[0-9]){5}[0-9]$",
+                "phone_international": "00",
+            }
+
         class father:
             config = _config()
+
         p.father = father()
         p.init(None)
 
-        for (bad, good) in (
-            (u"43 43 43", u"+687 43 43 43"),
-            (u"434343", u"+687 434343"),
-            (u"00687297969", u"+687297969"),
+        for bad, good in (
+            ("43 43 43", "+687 43 43 43"),
+            ("434343", "+687 434343"),
+            ("00687297969", "+687297969"),
         ):
             # Check the bad number's error and fix
             err = p.node(None, {"phone": bad})
@@ -236,50 +377,65 @@ class Test(TestPluginCommon):
             self.assertEqual(err[0]["fix"]["phone"], good)
 
             # The correct number does not need fixing
-            assert not p.node(None, {"phone": good}), ("phone='{0}'".format(good))
+            assert not p.node(None, {"phone": good}), "phone='{0}'".format(good)
 
         # Verify we got error for other correct numbers
-        for bad in (u"3631"):
-            assert p.node(None, {"phone": bad}), ("phone='{0}'".format(bad))
+        for bad in "3631":
+            assert p.node(None, {"phone": bad}), "phone='{0}'".format(bad)
 
     def test_CA(self):
         p = Phone(None)
+
         class _config:
-            options = {"country": "CA", "phone_code": "1", "phone_len": 10, "phone_format": r"^[+]%s[- ][0-9]{3}[- ][0-9]{3}[- ][0-9]{4}$"}
+            options = {
+                "country": "CA",
+                "phone_code": "1",
+                "phone_len": 10,
+                "phone_format": r"^[+]%s[- ][0-9]{3}[- ][0-9]{3}[- ][0-9]{4}$",
+            }
+
         class father:
             config = _config()
+
         p.father = father()
         p.init(None)
 
-        for (bad, good) in (
-            (u"800-555-0000", u"+1 800-555-0000"),
-        ):
+        for bad, good in (("800-555-0000", "+1 800-555-0000"),):
             # Check the bad number's error and fix
             err = p.node(None, {"phone": bad})
             self.check_err(err, ("phone='{0}'".format(bad)))
             self.assertEqual(err[0]["fix"]["phone"], good)
 
             # The correct number does not need fixing
-            assert not p.node(None, {"phone": good}), ("phone='{0}'".format(good))
+            assert not p.node(None, {"phone": good}), "phone='{0}'".format(good)
 
         # Verify we got error for other correct numbers
-        for bad in (u"3631", u"(123) 123-4567", "+1 123 1234567"):
-            assert p.node(None, {"phone": bad}), ("phone='{0}'".format(bad))
+        for bad in ("3631", "(123) 123-4567", "+1 123 1234567"):
+            assert p.node(None, {"phone": bad}), "phone='{0}'".format(bad)
 
     def test_ES(self):
         p = Phone(None)
+
         class _config:
-            options = {"country": "ES", "phone_code": "34", "phone_len": 9, "phone_len_short": [3, 4, 5], "phone_international": "00"}
+            options = {
+                "country": "ES",
+                "phone_code": "34",
+                "phone_len": 9,
+                "phone_len_short": [3, 4, 5],
+                "phone_international": "00",
+            }
+
         class father:
             config = _config()
+
         p.father = father()
         p.init(None)
 
-        for (bad, good) in (
-            (u"923 555 000", u"+34 923 555 000"),
-            (u"923 55 50 00", u"+34 923 55 50 00"),
-            (u"923555000", u"+34 923555000"),
-            (u"0034923555000", u"+34923555000"),
+        for bad, good in (
+            ("923 555 000", "+34 923 555 000"),
+            ("923 55 50 00", "+34 923 55 50 00"),
+            ("923555000", "+34 923555000"),
+            ("0034923555000", "+34923555000"),
         ):
             # Check the bad number's error and fix
             err = p.node(None, {"phone": bad})
@@ -287,25 +443,35 @@ class Test(TestPluginCommon):
             self.assertEqual(err[0]["fix"]["phone"], good)
 
             # The correct number does not need fixing
-            assert not p.node(None, {"phone": good}), ("phone='{0}'".format(good))
+            assert not p.node(None, {"phone": good}), "phone='{0}'".format(good)
 
     def test_IT(self):
         p = Phone(None)
+
         class _config:
-            options = {"country": "IT", "phone_code": "39", "phone_len": [6, 11], "phone_len_short": [3, 4], "phone_international": "00", "phone_format": r"^(?:(?:[+]%s[- ]*[03])|[18])[0-9]+(?:[- ][0-9]+)?(?:(?:[- ][0-9]+)|$)$"}
+            options = {
+                "country": "IT",
+                "phone_code": "39",
+                "phone_len": [6, 11],
+                "phone_len_short": [3, 4],
+                "phone_international": "00",
+                "phone_format": r"^(?:(?:[+]%s[- ]*[03])|[18])[0-9]+(?:[- ][0-9]+)?(?:(?:[- ][0-9]+)|$)$",
+            }
+
         class father:
             config = _config()
+
         p.father = father()
         p.init(None)
 
-        for (bad, good) in (
-            (u"0212345", u"+39 0212345"),
-            (u"02 12345", u"+39 02 12345"),
-            (u"0171 1234567", u"+39 0171 1234567"),
-            (u"01711234567", u"+39 01711234567"),
-            (u"003901711234567", u"+3901711234567"),
-            (u"333 123456", u"+39 333 123456"),
-            (u"333 123 4567", u"+39 333 123 4567"),
+        for bad, good in (
+            ("0212345", "+39 0212345"),
+            ("02 12345", "+39 02 12345"),
+            ("0171 1234567", "+39 0171 1234567"),
+            ("01711234567", "+39 01711234567"),
+            ("003901711234567", "+3901711234567"),
+            ("333 123456", "+39 333 123456"),
+            ("333 123 4567", "+39 333 123 4567"),
         ):
             # Check the bad number's error and fix
             err = p.node(None, {"phone": bad})
@@ -313,8 +479,8 @@ class Test(TestPluginCommon):
             self.assertEqual(err[0]["fix"]["phone"], good)
 
             # The correct number does not need fixing
-            assert not p.node(None, {"phone": good}), ("phone='{0}'".format(good))
+            assert not p.node(None, {"phone": good}), "phone='{0}'".format(good)
 
         # Verify we got no error for other correct numbers
-        for good in (u"800 123", u"112", u"1515"):
-            assert not p.node(None, {"phone": good}), ("phone='{0}'".format(good))
+        for good in ("800 123", "112", "1515"):
+            assert not p.node(None, {"phone": good}), "phone='{0}'".format(good)
