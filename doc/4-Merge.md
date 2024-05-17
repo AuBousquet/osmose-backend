@@ -20,7 +20,7 @@ We aim here to have configuration over code. Nevertheless this configuration is 
 The configuration can be seen as a chain:
 - Content is fetched from a `Source`: remote or local file or archive.
 - File format reader: the `Parser` with implementation available for multiple formats like CSV, JSON, GeoJSON, GTFS, SHP... It imports the data into the database.
-- The reader make data available to `Load`. Thos one pre-process and filters data to a convenient schema.
+- The reader make data available to `Load`. Those one pre-process and filters data to a convenient schema.
 - The `Conflate` allows to compare and report from
   - the OSM data filtered by `Select`,
   - the OpenData converted to OSM tags with `Mapping`
@@ -279,7 +279,7 @@ from .Analyser_Merge import Conflate, Mapping
 ```
 
 ### Cache
-Once the data is converted to OSM tags format is stored in a cache for future reuse. This cache is update on data source fetch update or in analyzer source code update.
+Once the data is converted to OSM tags format is stored in a cache for future reuse. This cache is updated on data source fetch update or on analyzer source code update.
 
 
 ## Conflation

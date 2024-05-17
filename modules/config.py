@@ -31,6 +31,9 @@ dir_osmose = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # path to a temporary space, that doesn't need to be backup
 dir_work = "/home/%s/data/work" % (username)
 
+# path to the local data folder,
+local_data_dir = "/home/%s/data" % (username)
+
 # frontend which will get results
 url_frontend_update = os.environ.get(
     "URL_FRONTEND_UPDATE", "https://osmose.openstreetmap.fr/control/send-update"

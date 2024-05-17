@@ -44,6 +44,7 @@ class template_config:
 
     updt_url = modules.config.url_frontend_update
     dir_work = modules.config.dir_work
+    local_data_dir = modules.config.local_data_dir
     dir_tmp = modules.config.dir_tmp
     dir_cache = modules.config.dir_cache
     dir_scripts = modules.config.dir_osmose
